@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+
+[project]
+name = "fontra-glyphs"
+description = "A plugin for Fontra, supporting the glyphs file format"
+readme = "README.md"
+authors = [
+    { name = "Just van Rossum", email = "justvanrossum@gmail.com" }
+]
+keywords = ["font", "fonts"]
+license = {text = "GNU General Public License v3"}
+dependencies = ["fontra"]
+dynamic = ["version"]
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
+    "Environment :: Other Environment",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: JavaScript",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Topic :: Multimedia :: Graphics",
+]
+
+
+[project.entry-points."fontra.filesystem.backends"]
+glyphspackage = "fontra_glyphs.backend:GlyphsPackageBackend"
+glyphs = "fontra_glyphs.backend:GlyphsBackend"
+
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fontra_glyphs"]
+
+
+[tool.hatch.version]
+source = "vcs"
+
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/fontra_glyphs/_version.py"
+
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+asyncio_mode = "auto"
