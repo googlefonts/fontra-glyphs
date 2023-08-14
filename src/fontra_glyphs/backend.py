@@ -40,6 +40,12 @@ class GlyphsBackend:
 
         axes = []
         for dsAxis in self.ufoBuilder.designspace.axes:
+            if (
+                len(self.ufoBuilder.designspace.axes) == 1
+                and dsAxis.minimum == dsAxis.maximum
+            ):
+                # This is a fake noop to make the designspace happy: we don't need it
+                continue
             axis = GlobalAxis(
                 minValue=dsAxis.minimum,
                 defaultValue=dsAxis.default,
