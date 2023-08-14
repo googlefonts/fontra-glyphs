@@ -8,9 +8,9 @@ from fontra.core.classes import (
     VariableGlyph,
 )
 from fontra.core.packedpath import PackedPathPointPen
+from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.misc.transform import DecomposedTransform
-from glyphsLib.builder import UFOBuilder
-from glyphsLib.builder.axes import get_axis_definitions
+from glyphsLib.builder.axes import get_axis_definitions, to_designspace_axes
 
 
 class GlyphsBackend:
@@ -21,14 +21,17 @@ class GlyphsBackend:
     def __init__(self, gsFont):
         self.gsFont = gsFont
 
+        dsAxes = gsAxesToDesignSpaceAxes(self.gsFont)
+        if len(dsAxes) == 1 and dsAxes[0].minimum == dsAxes[0].maximim:
+            # This is a fake noop axis to make the designspace happy: we don't need it
+            dsAxes = []
+
         self.locationByMasterID = {}
         for master in self.gsFont.masters:
             location = {}
             for axis_def in get_axis_definitions(self.gsFont):
                 location[axis_def.name] = axis_def.get_design_loc(master)
             self.locationByMasterID[master.id] = location
-
-        self.ufoBuilder = UFOBuilder(self.gsFont, minimal=True)
 
         glyphMap = {}
         for glyph in self.gsFont.glyphs:
@@ -39,13 +42,7 @@ class GlyphsBackend:
         self.glyphMap = glyphMap
 
         axes = []
-        for dsAxis in self.ufoBuilder.designspace.axes:
-            if (
-                len(self.ufoBuilder.designspace.axes) == 1
-                and dsAxis.minimum == dsAxis.maximum
-            ):
-                # This is a fake noop to make the designspace happy: we don't need it
-                continue
+        for dsAxis in dsAxes:
             axis = GlobalAxis(
                 minValue=dsAxis.minimum,
                 defaultValue=dsAxis.default,
@@ -130,3 +127,18 @@ def gsLayerToFontraLayer(gsLayer):
             xAdvance=gsLayer.width, path=pen.getPath(), components=components
         )
     )
+
+
+class MinimalUFOBuilder:
+    def __init__(self, gsFont):
+        self.font = gsFont
+        self.designspace = DesignSpaceDocument()
+        self.minimize_glyphs_diffs = False
+
+    to_designspace_axes = to_designspace_axes
+
+
+def gsAxesToDesignSpaceAxes(gsFont):
+    builder = MinimalUFOBuilder(gsFont)
+    builder.to_designspace_axes()
+    return builder.designspace.axes
