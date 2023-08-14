@@ -1,5 +1,4 @@
 import glyphsLib
-import glyphsLib.builder
 from fontra.core.classes import (
     Component,
     GlobalAxis,
@@ -10,6 +9,7 @@ from fontra.core.classes import (
 )
 from fontra.core.packedpath import PackedPathPointPen
 from fontTools.misc.transform import DecomposedTransform
+from glyphsLib.builder import UFOBuilder
 from glyphsLib.builder.axes import get_axis_definitions
 
 
@@ -28,7 +28,7 @@ class GlyphsBackend:
                 location[axis_def.name] = axis_def.get_design_loc(master)
             self.locationByMasterID[master.id] = location
 
-        self.ufoBuilder = glyphsLib.builder.UFOBuilder(self.gsFont, minimal=True)
+        self.ufoBuilder = UFOBuilder(self.gsFont, minimal=True)
 
         glyphMap = {}
         for glyph in self.gsFont.glyphs:
