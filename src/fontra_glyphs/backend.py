@@ -22,7 +22,7 @@ class GlyphsBackend:
         self.gsFont = gsFont
 
         dsAxes = gsAxesToDesignSpaceAxes(self.gsFont)
-        if len(dsAxes) == 1 and dsAxes[0].minimum == dsAxes[0].maximim:
+        if len(dsAxes) == 1 and dsAxes[0].minimum == dsAxes[0].maximum:
             # This is a fake noop axis to make the designspace happy: we don't need it
             dsAxes = []
 
