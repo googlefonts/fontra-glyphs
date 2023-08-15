@@ -29,8 +29,8 @@ class GlyphsBackend:
         self.locationByMasterID = {}
         for master in self.gsFont.masters:
             location = {}
-            for axis_def in get_axis_definitions(self.gsFont):
-                location[axis_def.name] = axis_def.get_design_loc(master)
+            for axisDef in get_axis_definitions(self.gsFont):
+                location[axisDef.name] = axisDef.get_design_loc(master)
             self.locationByMasterID[master.id] = location
 
         glyphMap = {}
