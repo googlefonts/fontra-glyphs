@@ -76,8 +76,8 @@ class GlyphsBackend:
         if glyphName not in self.gsFont.glyphs:
             return None
         gsGlyph = self.gsFont.glyphs[glyphName]
-        axes = gsLocalAxesToFontraLocalAxes(gsGlyph)
-        axesByName = {axis.name: axis for axis in axes}
+        localAxes = gsLocalAxesToFontraLocalAxes(gsGlyph)
+        localAxesByName = {axis.name: axis for axis in localAxes}
         sources = []
         layers = {}
         seenLocations = []
@@ -90,11 +90,11 @@ class GlyphsBackend:
             layerName = f"{sourceName} {i}"
 
             smartLocation = {
-                disambiguateLocalAxisName(name, self.axisNames): axesByName[
+                disambiguateLocalAxisName(name, self.axisNames): localAxesByName[
                     name
                 ].minValue
                 if poleValue == Pole.MIN
-                else axesByName[name].maxValue
+                else localAxesByName[name].maxValue
                 for name, poleValue in gsLayer.smartComponentPoleMapping.items()
             }
 
@@ -120,7 +120,7 @@ class GlyphsBackend:
             )
             layers[layerName] = gsLayerToFontraLayer(gsLayer, self.axisNames)
 
-        glyph = VariableGlyph(glyphName, axes=axes, sources=sources, layers=layers)
+        glyph = VariableGlyph(glyphName, axes=localAxes, sources=sources, layers=layers)
         return glyph
 
     def _getBraceLayerLocation(self, gsLayer):
