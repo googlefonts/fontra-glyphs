@@ -58,6 +58,7 @@ class GlyphsBackend:
                 axis.mapping = [[a, b] for a, b in dsAxis.map]
             axes.append(axis)
         self.axes = axes
+        self.axisNames = {axis.name for axis in axes}
 
     async def getGlyphMap(self):
         return self.glyphMap
@@ -87,15 +88,16 @@ class GlyphsBackend:
             masterName = self.gsFont.masters[gsLayer.associatedMasterId].name
             sourceName = gsLayer.name or masterName
             layerName = f"{sourceName} {i}"
-            # TODO FIXME: smart component axis names can clash with global
-            # axis names. In Glyphs these do not clash, for in Fontra we need
-            # to disambiguate
+
             smartLocation = {
-                name: axesByName[name].minValue
+                disambiguateLocalAxisName(name, self.axisNames): axesByName[
+                    name
+                ].minValue
                 if poleValue == Pole.MIN
                 else axesByName[name].maxValue
                 for name, poleValue in gsLayer.smartComponentPoleMapping.items()
             }
+
             location = {
                 **self.locationByMasterID[gsLayer.associatedMasterId],
                 **self._getBraceLayerLocation(gsLayer),
@@ -116,7 +118,7 @@ class GlyphsBackend:
                     inactive=inactive,
                 )
             )
-            layers[layerName] = gsLayerToFontraLayer(gsLayer)
+            layers[layerName] = gsLayerToFontraLayer(gsLayer, self.axisNames)
 
         glyph = VariableGlyph(glyphName, axes=axes, sources=sources, layers=layers)
         return glyph
@@ -138,12 +140,12 @@ class GlyphsPackageBackend(GlyphsBackend):
     pass
 
 
-def gsLayerToFontraLayer(gsLayer):
+def gsLayerToFontraLayer(gsLayer, globalAxisNames):
     pen = PackedPathPointPen()
     gsLayer.drawPoints(pen)
 
     components = [
-        gsComponentToFontraComponent(gsComponent, gsLayer)
+        gsComponentToFontraComponent(gsComponent, gsLayer, globalAxisNames)
         for gsComponent in gsLayer.components
     ]
 
@@ -154,13 +156,20 @@ def gsLayerToFontraLayer(gsLayer):
     )
 
 
-def gsComponentToFontraComponent(gsComponent, gsLayer):
+def gsComponentToFontraComponent(gsComponent, gsLayer, globalAxisNames):
     component = Component(
         name=gsComponent.name,
         transformation=DecomposedTransform.fromTransform(gsComponent.transform),
-        location=dict(gsComponent.smartComponentValues),
+        location={
+            disambiguateLocalAxisName(name, globalAxisNames): value
+            for name, value in gsComponent.smartComponentValues.items()
+        },
     )
     return component
+
+
+def disambiguateLocalAxisName(axisName, globalAxisNames):
+    return f"{axisName} (local)" if axisName in globalAxisNames else axisName
 
 
 class MinimalUFOBuilder:
