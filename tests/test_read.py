@@ -15,6 +15,27 @@ glyphsPackagePath = dataDir / "GlyphsUnitTestSans3.glyphspackage"
 
 expectedGlyphDataDir = dataDir / "fontra-glyphs"
 
+expectedAxes = [
+    {
+        "defaultValue": 400,
+        "hidden": False,
+        "label": "Weight",
+        "mapping": [
+            [100, 17],
+            [200, 30],
+            [300, 55],
+            [357, 75],
+            [400, 90],
+            [500, 133],
+            [700, 179],
+            [900, 220],
+        ],
+        "maxValue": 900,
+        "minValue": 100,
+        "name": "Weight",
+        "tag": "wght",
+    },
+]
 
 expectedGlyphMap = {
     "A": [65],
@@ -36,6 +57,8 @@ expectedGlyphMap = {
 async def test_read(fontPath):
     font = getFileSystemBackend(fontPath)
     with contextlib.closing(font):
+        axes = await font.getGlobalAxes()
+        assert expectedAxes == [asdict(axis) for axis in axes]
         glyphMap = await font.getGlyphMap()
         assert expectedGlyphMap == glyphMap
         for glyphName in glyphMap:
