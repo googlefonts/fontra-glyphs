@@ -28,11 +28,14 @@ class GlyphsBackend:
             # This is a fake noop axis to make the designspace happy: we don't need it
             dsAxes = []
 
+        self.axisNames = {axis.name for axis in dsAxes}
+
         self.locationByMasterID = {}
         for master in self.gsFont.masters:
             location = {}
             for axisDef in get_axis_definitions(self.gsFont):
-                location[axisDef.name] = axisDef.get_design_loc(master)
+                if axisDef.name in self.axisNames:
+                    location[axisDef.name] = axisDef.get_design_loc(master)
             self.locationByMasterID[master.id] = location
 
         glyphMap = {}
@@ -58,7 +61,6 @@ class GlyphsBackend:
                 axis.mapping = [[a, b] for a, b in dsAxis.map]
             axes.append(axis)
         self.axes = axes
-        self.axisNames = {axis.name for axis in axes}
 
     async def getGlyphMap(self):
         return self.glyphMap
