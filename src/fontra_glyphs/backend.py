@@ -79,6 +79,7 @@ class GlyphsBackend:
         axesByName = {axis.name: axis for axis in axes}
         sources = []
         layers = {}
+        seenLocations = []
         for i, gsLayer in enumerate(gsGlyph.layers):
             if not gsLayer.associatedMasterId:
                 continue
@@ -101,8 +102,19 @@ class GlyphsBackend:
                 **smartLocation,
             }
 
+            if location in seenLocations:
+                inactive = True
+            else:
+                seenLocations.append(location)
+                inactive = False
+
             sources.append(
-                Source(name=sourceName, location=location, layerName=layerName)
+                Source(
+                    name=sourceName,
+                    location=location,
+                    layerName=layerName,
+                    inactive=inactive,
+                )
             )
             layers[layerName] = gsLayerToFontraLayer(gsLayer)
 
