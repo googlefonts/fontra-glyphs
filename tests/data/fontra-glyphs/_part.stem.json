@@ -1,0 +1,310 @@
+{
+  "name": "_part.stem",
+  "axes": [
+    {
+      "name": "height",
+      "minValue": 0,
+      "defaultValue": 0,
+      "maxValue": 100
+    }
+  ],
+  "sources": [
+    {
+      "name": "Light",
+      "layerName": "Light 0",
+      "location": {
+        "Weight": 17,
+        "height": 0
+      },
+      "inactive": false,
+      "customData": {}
+    },
+    {
+      "name": "Regular",
+      "layerName": "Regular 1",
+      "location": {
+        "Weight": 90,
+        "height": 0
+      },
+      "inactive": false,
+      "customData": {}
+    },
+    {
+      "name": "Bold",
+      "layerName": "Bold 2",
+      "location": {
+        "Weight": 220,
+        "height": 0
+      },
+      "inactive": false,
+      "customData": {}
+    },
+    {
+      "name": "TallStem",
+      "layerName": "TallStem 3",
+      "location": {
+        "Weight": 17,
+        "height": 100
+      },
+      "inactive": false,
+      "customData": {}
+    },
+    {
+      "name": "TallStem",
+      "layerName": "TallStem 4",
+      "location": {
+        "Weight": 90,
+        "height": 100
+      },
+      "inactive": false,
+      "customData": {}
+    },
+    {
+      "name": "TallStem",
+      "layerName": "TallStem 5",
+      "location": {
+        "Weight": 220,
+        "height": 100
+      },
+      "inactive": false,
+      "customData": {}
+    }
+  ],
+  "layers": {
+    "Light 0": {
+      "glyph": {
+        "path": {
+          "coordinates": [
+            117,
+            306,
+            119,
+            368,
+            115,
+            470,
+            100,
+            470,
+            100,
+            0,
+            117,
+            0
+          ],
+          "pointTypes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "contourInfo": [
+            {
+              "endPoint": 5,
+              "isClosed": true
+            }
+          ]
+        },
+        "components": [],
+        "xAdvance": 600,
+        "yAdvance": null,
+        "verticalOrigin": null
+      },
+      "customData": {}
+    },
+    "Regular 1": {
+      "glyph": {
+        "path": {
+          "coordinates": [
+            167,
+            286,
+            149,
+            393,
+            139,
+            480,
+            77,
+            480,
+            77,
+            0,
+            167,
+            0
+          ],
+          "pointTypes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "contourInfo": [
+            {
+              "endPoint": 5,
+              "isClosed": true
+            }
+          ]
+        },
+        "components": [],
+        "xAdvance": 600,
+        "yAdvance": null,
+        "verticalOrigin": null
+      },
+      "customData": {}
+    },
+    "Bold 2": {
+      "glyph": {
+        "path": {
+          "coordinates": [
+            250,
+            256,
+            181,
+            385,
+            162,
+            490,
+            30,
+            490,
+            30,
+            0,
+            250,
+            0
+          ],
+          "pointTypes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "contourInfo": [
+            {
+              "endPoint": 5,
+              "isClosed": true
+            }
+          ]
+        },
+        "components": [],
+        "xAdvance": 600,
+        "yAdvance": null,
+        "verticalOrigin": null
+      },
+      "customData": {}
+    },
+    "TallStem 3": {
+      "glyph": {
+        "path": {
+          "coordinates": [
+            117,
+            306,
+            117,
+            368,
+            117,
+            800,
+            100,
+            800,
+            100,
+            0,
+            117,
+            0
+          ],
+          "pointTypes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "contourInfo": [
+            {
+              "endPoint": 5,
+              "isClosed": true
+            }
+          ]
+        },
+        "components": [],
+        "xAdvance": 600,
+        "yAdvance": null,
+        "verticalOrigin": null
+      },
+      "customData": {}
+    },
+    "TallStem 4": {
+      "glyph": {
+        "path": {
+          "coordinates": [
+            167,
+            286,
+            167,
+            393,
+            167,
+            800,
+            77,
+            800,
+            77,
+            0,
+            167,
+            0
+          ],
+          "pointTypes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "contourInfo": [
+            {
+              "endPoint": 5,
+              "isClosed": true
+            }
+          ]
+        },
+        "components": [],
+        "xAdvance": 600,
+        "yAdvance": null,
+        "verticalOrigin": null
+      },
+      "customData": {}
+    },
+    "TallStem 5": {
+      "glyph": {
+        "path": {
+          "coordinates": [
+            250,
+            256,
+            250,
+            385,
+            250,
+            800,
+            30,
+            800,
+            30,
+            0,
+            250,
+            0
+          ],
+          "pointTypes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "contourInfo": [
+            {
+              "endPoint": 5,
+              "isClosed": true
+            }
+          ]
+        },
+        "components": [],
+        "xAdvance": 600,
+        "yAdvance": null,
+        "verticalOrigin": null
+      },
+      "customData": {}
+    }
+  },
+  "customData": {}
+}

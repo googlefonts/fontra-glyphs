@@ -1,0 +1,183 @@
+{
+  "name": "dieresis",
+  "axes": [],
+  "sources": [
+    {
+      "name": "Light",
+      "layerName": "Light 0",
+      "location": {
+        "Weight": 17
+      },
+      "inactive": false,
+      "customData": {}
+    },
+    {
+      "name": "Regular",
+      "layerName": "Regular 1",
+      "location": {
+        "Weight": 90
+      },
+      "inactive": false,
+      "customData": {}
+    },
+    {
+      "name": "Bold",
+      "layerName": "Bold 2",
+      "location": {
+        "Weight": 220
+      },
+      "inactive": false,
+      "customData": {}
+    }
+  ],
+  "layers": {
+    "Light 0": {
+      "glyph": {
+        "path": {
+          "coordinates": [
+            289,
+            650,
+            261,
+            650,
+            261,
+            621,
+            289,
+            621,
+            116,
+            650,
+            88,
+            650,
+            88,
+            621,
+            116,
+            621
+          ],
+          "pointTypes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "contourInfo": [
+            {
+              "endPoint": 3,
+              "isClosed": true
+            },
+            {
+              "endPoint": 7,
+              "isClosed": true
+            }
+          ]
+        },
+        "components": [],
+        "xAdvance": 600,
+        "yAdvance": null,
+        "verticalOrigin": null
+      },
+      "customData": {}
+    },
+    "Regular 1": {
+      "glyph": {
+        "path": {
+          "coordinates": [
+            349,
+            700,
+            252,
+            700,
+            252,
+            601,
+            349,
+            601,
+            149,
+            700,
+            52,
+            700,
+            52,
+            601,
+            149,
+            601
+          ],
+          "pointTypes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "contourInfo": [
+            {
+              "endPoint": 3,
+              "isClosed": true
+            },
+            {
+              "endPoint": 7,
+              "isClosed": true
+            }
+          ]
+        },
+        "components": [],
+        "xAdvance": 600,
+        "yAdvance": null,
+        "verticalOrigin": null
+      },
+      "customData": {}
+    },
+    "Bold 2": {
+      "glyph": {
+        "path": {
+          "coordinates": [
+            482,
+            735,
+            298,
+            735,
+            298,
+            547,
+            482,
+            547,
+            232,
+            735,
+            48,
+            735,
+            48,
+            547,
+            232,
+            547
+          ],
+          "pointTypes": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "contourInfo": [
+            {
+              "endPoint": 3,
+              "isClosed": true
+            },
+            {
+              "endPoint": 7,
+              "isClosed": true
+            }
+          ]
+        },
+        "components": [],
+        "xAdvance": 600,
+        "yAdvance": null,
+        "verticalOrigin": null
+      },
+      "customData": {}
+    }
+  },
+  "customData": {}
+}

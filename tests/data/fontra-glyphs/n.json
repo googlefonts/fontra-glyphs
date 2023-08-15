@@ -1,0 +1,171 @@
+{
+  "name": "n",
+  "axes": [],
+  "sources": [
+    {
+      "name": "Light",
+      "layerName": "Light 0",
+      "location": {
+        "Weight": 17
+      },
+      "inactive": false,
+      "customData": {}
+    },
+    {
+      "name": "Regular",
+      "layerName": "Regular 1",
+      "location": {
+        "Weight": 90
+      },
+      "inactive": false,
+      "customData": {}
+    },
+    {
+      "name": "Bold",
+      "layerName": "Bold 2",
+      "location": {
+        "Weight": 220
+      },
+      "inactive": false,
+      "customData": {}
+    }
+  ],
+  "layers": {
+    "Light 0": {
+      "glyph": {
+        "path": {
+          "coordinates": [],
+          "pointTypes": [],
+          "contourInfo": []
+        },
+        "components": [
+          {
+            "name": "_part.shoulder",
+            "transformation": {
+              "translateX": 0,
+              "translateY": 0,
+              "rotation": 0.0,
+              "scaleX": 1.0,
+              "scaleY": 1.0,
+              "skewX": 0.0,
+              "skewY": 0.0,
+              "tCenterX": 0,
+              "tCenterY": 0
+            },
+            "location": {}
+          },
+          {
+            "name": "_part.stem",
+            "transformation": {
+              "translateX": 0,
+              "translateY": 0,
+              "rotation": 0.0,
+              "scaleX": 1.0,
+              "scaleY": 1.0,
+              "skewX": 0.0,
+              "skewY": 0.0,
+              "tCenterX": 0,
+              "tCenterY": 0
+            },
+            "location": {}
+          }
+        ],
+        "xAdvance": 501,
+        "yAdvance": null,
+        "verticalOrigin": null
+      },
+      "customData": {}
+    },
+    "Regular 1": {
+      "glyph": {
+        "path": {
+          "coordinates": [],
+          "pointTypes": [],
+          "contourInfo": []
+        },
+        "components": [
+          {
+            "name": "_part.shoulder",
+            "transformation": {
+              "translateX": 0,
+              "translateY": 0,
+              "rotation": 0.0,
+              "scaleX": 1.0,
+              "scaleY": 1.0,
+              "skewX": 0.0,
+              "skewY": 0.0,
+              "tCenterX": 0,
+              "tCenterY": 0
+            },
+            "location": {}
+          },
+          {
+            "name": "_part.stem",
+            "transformation": {
+              "translateX": 0,
+              "translateY": 0,
+              "rotation": 0.0,
+              "scaleX": 1.0,
+              "scaleY": 1.0,
+              "skewX": 0.0,
+              "skewY": 0.0,
+              "tCenterX": 0,
+              "tCenterY": 0
+            },
+            "location": {}
+          }
+        ],
+        "xAdvance": 528,
+        "yAdvance": null,
+        "verticalOrigin": null
+      },
+      "customData": {}
+    },
+    "Bold 2": {
+      "glyph": {
+        "path": {
+          "coordinates": [],
+          "pointTypes": [],
+          "contourInfo": []
+        },
+        "components": [
+          {
+            "name": "_part.shoulder",
+            "transformation": {
+              "translateX": 0,
+              "translateY": 0,
+              "rotation": 0.0,
+              "scaleX": 1.0,
+              "scaleY": 1.0,
+              "skewX": 0.0,
+              "skewY": 0.0,
+              "tCenterX": 0,
+              "tCenterY": 0
+            },
+            "location": {}
+          },
+          {
+            "name": "_part.stem",
+            "transformation": {
+              "translateX": 0,
+              "translateY": 0,
+              "rotation": 0.0,
+              "scaleX": 1.0,
+              "scaleY": 1.0,
+              "skewX": 0.0,
+              "skewY": 0.0,
+              "tCenterX": 0,
+              "tCenterY": 0
+            },
+            "location": {}
+          }
+        ],
+        "xAdvance": 560,
+        "yAdvance": null,
+        "verticalOrigin": null
+      },
+      "customData": {}
+    }
+  },
+  "customData": {}
+}
