@@ -3,6 +3,7 @@ from fontra.core.classes import (
     Component,
     GlobalAxis,
     Layer,
+    LocalAxis,
     Source,
     StaticGlyph,
     VariableGlyph,
@@ -11,6 +12,7 @@ from fontra.core.packedpath import PackedPathPointPen
 from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.misc.transform import DecomposedTransform
 from glyphsLib.builder.axes import get_axis_definitions, to_designspace_axes
+from glyphsLib.builder.smart_components import Pole
 
 
 class GlyphsBackend:
@@ -73,6 +75,8 @@ class GlyphsBackend:
         if glyphName not in self.gsFont.glyphs:
             return None
         gsGlyph = self.gsFont.glyphs[glyphName]
+        axes = gsLocalAxesToFontraLocalAxes(gsGlyph)
+        axesByName = {axis.name: axis for axis in axes}
         sources = []
         layers = {}
         for i, gsLayer in enumerate(gsGlyph.layers):
@@ -82,9 +86,19 @@ class GlyphsBackend:
             masterName = self.gsFont.masters[gsLayer.associatedMasterId].name
             sourceName = gsLayer.name or masterName
             layerName = f"{sourceName} {i}"
+            # TODO FIXME: smart component axis names can clash with global
+            # axis names. In Glyphs these do not clash, for in Fontra we need
+            # to disambiguate
+            smartLocation = {
+                name: axesByName[name].minValue
+                if poleValue == Pole.MIN
+                else axesByName[name].maxValue
+                for name, poleValue in gsLayer.smartComponentPoleMapping.items()
+            }
             location = {
                 **self.locationByMasterID[gsLayer.associatedMasterId],
                 **self._getBraceLayerLocation(gsLayer),
+                **smartLocation,
             }
 
             sources.append(
@@ -92,7 +106,7 @@ class GlyphsBackend:
             )
             layers[layerName] = gsLayerToFontraLayer(gsLayer)
 
-        glyph = VariableGlyph(glyphName, sources=sources, layers=layers)
+        glyph = VariableGlyph(glyphName, axes=axes, sources=sources, layers=layers)
         return glyph
 
     def _getBraceLayerLocation(self, gsLayer):
@@ -115,18 +129,26 @@ class GlyphsPackageBackend(GlyphsBackend):
 def gsLayerToFontraLayer(gsLayer):
     pen = PackedPathPointPen()
     gsLayer.drawPoints(pen)
+
     components = [
-        Component(
-            name=compo.name,
-            transformation=DecomposedTransform.fromTransform(compo.transform),
-        )
-        for compo in gsLayer.components
+        gsComponentToFontraComponent(gsComponent, gsLayer)
+        for gsComponent in gsLayer.components
     ]
+
     return Layer(
         glyph=StaticGlyph(
             xAdvance=gsLayer.width, path=pen.getPath(), components=components
         )
     )
+
+
+def gsComponentToFontraComponent(gsComponent, gsLayer):
+    component = Component(
+        name=gsComponent.name,
+        transformation=DecomposedTransform.fromTransform(gsComponent.transform),
+        location=dict(gsComponent.smartComponentValues),
+    )
+    return component
 
 
 class MinimalUFOBuilder:
@@ -142,3 +164,18 @@ def gsAxesToDesignSpaceAxes(gsFont):
     builder = MinimalUFOBuilder(gsFont)
     builder.to_designspace_axes()
     return builder.designspace.axes
+
+
+def gsLocalAxesToFontraLocalAxes(gsGlyph):
+    basePoleMapping = gsGlyph.layers[0].smartComponentPoleMapping
+    return [
+        LocalAxis(
+            name=axis.name,
+            minValue=axis.bottomValue,
+            defaultValue=axis.bottomValue
+            if basePoleMapping[axis.name] == Pole.MIN
+            else axis.topValue,
+            maxValue=axis.topValue,
+        )
+        for axis in gsGlyph.smartComponentAxes
+    ]
