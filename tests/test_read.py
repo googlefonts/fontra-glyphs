@@ -1,11 +1,11 @@
 import contextlib
 import json
 import pathlib
-import pytest
 from dataclasses import asdict
-from fontTools.misc.filenames import userNameToFileName
-from fontra.backends import getFileSystemBackend
 
+import pytest
+from fontra.backends import getFileSystemBackend
+from fontTools.misc.filenames import userNameToFileName
 
 dataDir = pathlib.Path(__file__).resolve().parent / "data"
 
