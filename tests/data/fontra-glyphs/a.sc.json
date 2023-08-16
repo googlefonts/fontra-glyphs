@@ -4,7 +4,7 @@
   "sources": [
     {
       "name": "Light",
-      "layerName": "Light 0",
+      "layerName": "Light (layer #0)",
       "location": {
         "Weight": 17
       },
@@ -13,7 +13,7 @@
     },
     {
       "name": "Regular",
-      "layerName": "Regular 1",
+      "layerName": "Regular (layer #1)",
       "location": {
         "Weight": 90
       },
@@ -22,7 +22,7 @@
     },
     {
       "name": "Bold",
-      "layerName": "Bold 2",
+      "layerName": "Bold (layer #2)",
       "location": {
         "Weight": 220
       },
@@ -31,7 +31,7 @@
     }
   ],
   "layers": {
-    "Light 0": {
+    "Light (layer #0)": {
       "glyph": {
         "path": {
           "coordinates": [
@@ -57,7 +57,7 @@
       },
       "customData": {}
     },
-    "Regular 1": {
+    "Regular (layer #1)": {
       "glyph": {
         "path": {
           "coordinates": [
@@ -83,7 +83,7 @@
       },
       "customData": {}
     },
-    "Bold 2": {
+    "Bold (layer #2)": {
       "glyph": {
         "path": {
           "coordinates": [

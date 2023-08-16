@@ -4,7 +4,7 @@
   "sources": [
     {
       "name": "Light",
-      "layerName": "Light 0",
+      "layerName": "Light (layer #0)",
       "location": {
         "Weight": 17
       },
@@ -13,7 +13,7 @@
     },
     {
       "name": "Regular",
-      "layerName": "Regular 1",
+      "layerName": "Regular (layer #1)",
       "location": {
         "Weight": 90
       },
@@ -22,7 +22,7 @@
     },
     {
       "name": "Bold",
-      "layerName": "Bold 2",
+      "layerName": "Bold (layer #2)",
       "location": {
         "Weight": 220
       },
@@ -30,8 +30,8 @@
       "customData": {}
     },
     {
-      "name": "{155, 100}",
-      "layerName": "{155, 100} 3",
+      "name": "Regular / {155, 100}",
+      "layerName": "Regular / {155, 100} (layer #3)",
       "location": {
         "Weight": 155.0
       },
@@ -40,7 +40,7 @@
     }
   ],
   "layers": {
-    "Light 0": {
+    "Light (layer #0)": {
       "glyph": {
         "path": {
           "coordinates": [
@@ -69,7 +69,7 @@
       },
       "customData": {}
     },
-    "Regular 1": {
+    "Regular (layer #1)": {
       "glyph": {
         "path": {
           "coordinates": [
@@ -98,7 +98,7 @@
       },
       "customData": {}
     },
-    "Bold 2": {
+    "Bold (layer #2)": {
       "glyph": {
         "path": {
           "coordinates": [
@@ -127,7 +127,7 @@
       },
       "customData": {}
     },
-    "{155, 100} 3": {
+    "Regular / {155, 100} (layer #3)": {
       "glyph": {
         "path": {
           "coordinates": [

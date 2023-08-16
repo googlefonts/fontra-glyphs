@@ -17,106 +17,94 @@
   "sources": [
     {
       "name": "Light",
-      "layerName": "Light 0",
+      "layerName": "Light (layer #0)",
       "location": {
-        "Weight": 17,
-        "crotchDepth": 0,
-        "shoulderWidth": 100
+        "Weight": 17
       },
       "inactive": false,
       "customData": {}
     },
     {
       "name": "Regular",
-      "layerName": "Regular 1",
+      "layerName": "Regular (layer #1)",
       "location": {
-        "Weight": 90,
-        "crotchDepth": 0,
-        "shoulderWidth": 100
+        "Weight": 90
       },
       "inactive": false,
       "customData": {}
     },
     {
       "name": "Bold",
-      "layerName": "Bold 2",
+      "layerName": "Bold (layer #2)",
       "location": {
-        "Weight": 220,
-        "crotchDepth": 0,
-        "shoulderWidth": 100
+        "Weight": 220
       },
       "inactive": false,
       "customData": {}
     },
     {
-      "name": "NarrowShoulder",
-      "layerName": "NarrowShoulder 3",
+      "name": "Light / NarrowShoulder",
+      "layerName": "Light / NarrowShoulder (layer #3)",
       "location": {
         "Weight": 17,
-        "crotchDepth": 0,
         "shoulderWidth": 0
       },
       "inactive": false,
       "customData": {}
     },
     {
-      "name": "LowCrotch",
-      "layerName": "LowCrotch 4",
+      "name": "Light / LowCrotch",
+      "layerName": "Light / LowCrotch (layer #4)",
       "location": {
         "Weight": 17,
-        "crotchDepth": -100,
-        "shoulderWidth": 100
+        "crotchDepth": -100
       },
       "inactive": false,
       "customData": {}
     },
     {
-      "name": "NarrowShoulder",
-      "layerName": "NarrowShoulder 5",
+      "name": "Regular / NarrowShoulder",
+      "layerName": "Regular / NarrowShoulder (layer #5)",
       "location": {
         "Weight": 90,
-        "crotchDepth": 0,
         "shoulderWidth": 0
       },
       "inactive": false,
       "customData": {}
     },
     {
-      "name": "LowCrotch",
-      "layerName": "LowCrotch 6",
+      "name": "Regular / LowCrotch",
+      "layerName": "Regular / LowCrotch (layer #6)",
       "location": {
         "Weight": 90,
-        "crotchDepth": -100,
-        "shoulderWidth": 100
+        "crotchDepth": -100
       },
       "inactive": false,
       "customData": {}
     },
     {
-      "name": "NarrowShoulder",
-      "layerName": "NarrowShoulder 7",
+      "name": "Bold / NarrowShoulder",
+      "layerName": "Bold / NarrowShoulder (layer #7)",
       "location": {
         "Weight": 220,
-        "crotchDepth": 0,
         "shoulderWidth": 0
       },
       "inactive": false,
       "customData": {}
     },
     {
-      "name": "LowCrotch",
-      "layerName": "LowCrotch 8",
+      "name": "Bold / LowCrotch",
+      "layerName": "Bold / LowCrotch (layer #8)",
       "location": {
         "Weight": 220,
-        "crotchDepth": -100,
-        "shoulderWidth": 100
+        "crotchDepth": -100
       },
       "inactive": false,
       "customData": {}
     }
   ],
   "layers": {
-    "Light 0": {
+    "Light (layer #0)": {
       "glyph": {
         "path": {
           "coordinates": [
@@ -139,7 +127,7 @@
       },
       "customData": {}
     },
-    "Regular 1": {
+    "Regular (layer #1)": {
       "glyph": {
         "path": {
           "coordinates": [
@@ -162,7 +150,7 @@
       },
       "customData": {}
     },
-    "Bold 2": {
+    "Bold (layer #2)": {
       "glyph": {
         "path": {
           "coordinates": [
@@ -185,7 +173,7 @@
       },
       "customData": {}
     },
-    "NarrowShoulder 3": {
+    "Light / NarrowShoulder (layer #3)": {
       "glyph": {
         "path": {
           "coordinates": [
@@ -208,7 +196,7 @@
       },
       "customData": {}
     },
-    "LowCrotch 4": {
+    "Light / LowCrotch (layer #4)": {
       "glyph": {
         "path": {
           "coordinates": [
@@ -231,7 +219,7 @@
       },
       "customData": {}
     },
-    "NarrowShoulder 5": {
+    "Regular / NarrowShoulder (layer #5)": {
       "glyph": {
         "path": {
           "coordinates": [
@@ -254,7 +242,7 @@
       },
       "customData": {}
     },
-    "LowCrotch 6": {
+    "Regular / LowCrotch (layer #6)": {
       "glyph": {
         "path": {
           "coordinates": [
@@ -277,7 +265,7 @@
       },
       "customData": {}
     },
-    "NarrowShoulder 7": {
+    "Bold / NarrowShoulder (layer #7)": {
       "glyph": {
         "path": {
           "coordinates": [
@@ -300,7 +288,7 @@
       },
       "customData": {}
     },
-    "LowCrotch 8": {
+    "Bold / LowCrotch (layer #8)": {
       "glyph": {
         "path": {
           "coordinates": [

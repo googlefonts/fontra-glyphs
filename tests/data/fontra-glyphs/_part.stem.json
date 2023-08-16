@@ -11,37 +11,34 @@
   "sources": [
     {
       "name": "Light",
-      "layerName": "Light 0",
+      "layerName": "Light (layer #0)",
       "location": {
-        "Weight": 17,
-        "height": 0
+        "Weight": 17
       },
       "inactive": false,
       "customData": {}
     },
     {
       "name": "Regular",
-      "layerName": "Regular 1",
+      "layerName": "Regular (layer #1)",
       "location": {
-        "Weight": 90,
-        "height": 0
+        "Weight": 90
       },
       "inactive": false,
       "customData": {}
     },
     {
       "name": "Bold",
-      "layerName": "Bold 2",
+      "layerName": "Bold (layer #2)",
       "location": {
-        "Weight": 220,
-        "height": 0
+        "Weight": 220
       },
       "inactive": false,
       "customData": {}
     },
     {
-      "name": "TallStem",
-      "layerName": "TallStem 3",
+      "name": "Light / TallStem",
+      "layerName": "Light / TallStem (layer #3)",
       "location": {
         "Weight": 17,
         "height": 100
@@ -50,8 +47,8 @@
       "customData": {}
     },
     {
-      "name": "TallStem",
-      "layerName": "TallStem 4",
+      "name": "Regular / TallStem",
+      "layerName": "Regular / TallStem (layer #4)",
       "location": {
         "Weight": 90,
         "height": 100
@@ -60,8 +57,8 @@
       "customData": {}
     },
     {
-      "name": "TallStem",
-      "layerName": "TallStem 5",
+      "name": "Bold / TallStem",
+      "layerName": "Bold / TallStem (layer #5)",
       "location": {
         "Weight": 220,
         "height": 100
@@ -71,7 +68,7 @@
     }
   ],
   "layers": {
-    "Light 0": {
+    "Light (layer #0)": {
       "glyph": {
         "path": {
           "coordinates": [117, 306, 119, 368, 115, 470, 100, 470, 100, 0, 117, 0],
@@ -90,7 +87,7 @@
       },
       "customData": {}
     },
-    "Regular 1": {
+    "Regular (layer #1)": {
       "glyph": {
         "path": {
           "coordinates": [167, 286, 149, 393, 139, 480, 77, 480, 77, 0, 167, 0],
@@ -109,7 +106,7 @@
       },
       "customData": {}
     },
-    "Bold 2": {
+    "Bold (layer #2)": {
       "glyph": {
         "path": {
           "coordinates": [250, 256, 181, 385, 162, 490, 30, 490, 30, 0, 250, 0],
@@ -128,7 +125,7 @@
       },
       "customData": {}
     },
-    "TallStem 3": {
+    "Light / TallStem (layer #3)": {
       "glyph": {
         "path": {
           "coordinates": [117, 306, 117, 368, 117, 800, 100, 800, 100, 0, 117, 0],
@@ -147,7 +144,7 @@
       },
       "customData": {}
     },
-    "TallStem 4": {
+    "Regular / TallStem (layer #4)": {
       "glyph": {
         "path": {
           "coordinates": [167, 286, 167, 393, 167, 800, 77, 800, 77, 0, 167, 0],
@@ -166,7 +163,7 @@
       },
       "customData": {}
     },
-    "TallStem 5": {
+    "Bold / TallStem (layer #5)": {
       "glyph": {
         "path": {
           "coordinates": [250, 256, 250, 385, 250, 800, 30, 800, 30, 0, 250, 0],
