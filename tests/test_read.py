@@ -1,4 +1,3 @@
-import contextlib
 import json
 import pathlib
 from dataclasses import asdict
@@ -14,6 +13,12 @@ glyphs3Path = dataDir / "GlyphsUnitTestSans3.glyphs"
 glyphsPackagePath = dataDir / "GlyphsUnitTestSans3.glyphspackage"
 
 expectedGlyphDataDir = dataDir / "fontra-glyphs"
+
+
+@pytest.fixture(scope="module", params=[glyphs2Path, glyphs3Path, glyphsPackagePath])
+def testFont(request):
+    return getFileSystemBackend(request.param)
+
 
 expectedAxes = [
     {
@@ -53,20 +58,23 @@ expectedGlyphMap = {
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("fontPath", [glyphs2Path, glyphs3Path, glyphsPackagePath])
-async def test_read(fontPath):
-    font = getFileSystemBackend(fontPath)
-    with contextlib.closing(font):
-        axes = await font.getGlobalAxes()
-        assert expectedAxes == [asdict(axis) for axis in axes]
-        glyphMap = await font.getGlyphMap()
-        assert expectedGlyphMap == glyphMap
-        for glyphName in glyphMap:
-            glyph = await font.getGlyph(glyphName)
-            glyphPath = expectedGlyphDataDir / userNameToFileName(
-                glyphName, suffix=".json"
-            )
-            expectedGlyphDict = json.loads(glyphPath.read_text())
-            glyphDict = json.loads(json.dumps(asdict(glyph)))
-            assert expectedGlyphDict == glyphDict
-            # glyphPath.write_text(json.dumps(glyphDict, indent=2))
+async def test_axes(testFont):
+    axes = await testFont.getGlobalAxes()
+    assert expectedAxes == [asdict(axis) for axis in axes]
+
+
+@pytest.mark.asyncio
+async def test_glyphMap(testFont):
+    glyphMap = await testFont.getGlyphMap()
+    assert expectedGlyphMap == glyphMap
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("glyphName", list(expectedGlyphMap))
+async def test_glyphRead(testFont, glyphName):
+    glyph = await testFont.getGlyph(glyphName)
+    glyphPath = expectedGlyphDataDir / userNameToFileName(glyphName, suffix=".json")
+    glyphDict = json.loads(json.dumps(asdict(glyph)))
+    # glyphPath.write_text(json.dumps(glyphDict, indent=2))
+    expectedGlyphDict = json.loads(glyphPath.read_text())
+    assert expectedGlyphDict == glyphDict
