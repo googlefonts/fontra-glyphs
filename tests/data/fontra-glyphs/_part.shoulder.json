@@ -25,24 +25,6 @@
       "customData": {}
     },
     {
-      "name": "Regular",
-      "layerName": "Regular (layer #1)",
-      "location": {
-        "Weight": 90
-      },
-      "inactive": false,
-      "customData": {}
-    },
-    {
-      "name": "Bold",
-      "layerName": "Bold (layer #2)",
-      "location": {
-        "Weight": 220
-      },
-      "inactive": false,
-      "customData": {}
-    },
-    {
       "name": "Light / NarrowShoulder",
       "layerName": "Light / NarrowShoulder (layer #3)",
       "location": {
@@ -63,6 +45,15 @@
       "customData": {}
     },
     {
+      "name": "Regular",
+      "layerName": "Regular (layer #1)",
+      "location": {
+        "Weight": 90
+      },
+      "inactive": false,
+      "customData": {}
+    },
+    {
       "name": "Regular / NarrowShoulder",
       "layerName": "Regular / NarrowShoulder (layer #5)",
       "location": {
@@ -78,6 +69,15 @@
       "location": {
         "Weight": 90,
         "crotchDepth": -100
+      },
+      "inactive": false,
+      "customData": {}
+    },
+    {
+      "name": "Bold",
+      "layerName": "Bold (layer #2)",
+      "location": {
+        "Weight": 220
       },
       "inactive": false,
       "customData": {}
@@ -122,52 +122,6 @@
         },
         "components": [],
         "xAdvance": 501,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
-    },
-    "Regular (layer #1)": {
-      "glyph": {
-        "path": {
-          "coordinates": [
-            131, 409, 167, 246, 167, 355, 203, 402, 277, 402, 315, 402, 345, 390, 365,
-            370, 365, 0, 455, 0, 455, 423, 425, 452, 380, 490, 294, 490, 205, 490, 170,
-            452, 155, 409
-          ],
-          "pointTypes": [0, 0, 2, 2, 8, 2, 2, 0, 0, 0, 0, 2, 2, 8, 2, 2, 0],
-          "contourInfo": [
-            {
-              "endPoint": 16,
-              "isClosed": true
-            }
-          ]
-        },
-        "components": [],
-        "xAdvance": 528,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
-    },
-    "Bold (layer #2)": {
-      "glyph": {
-        "path": {
-          "coordinates": [
-            162, 401, 250, 229, 250, 268, 259, 283, 284, 283, 295, 283, 304, 280, 310,
-            276, 310, 0, 530, 0, 530, 448, 490, 478, 430, 501, 357, 501, 259, 501, 209,
-            461, 188, 401
-          ],
-          "pointTypes": [0, 0, 2, 2, 8, 2, 2, 0, 0, 0, 0, 2, 2, 8, 2, 2, 0],
-          "contourInfo": [
-            {
-              "endPoint": 16,
-              "isClosed": true
-            }
-          ]
-        },
-        "components": [],
-        "xAdvance": 560,
         "yAdvance": null,
         "verticalOrigin": null
       },
@@ -219,6 +173,29 @@
       },
       "customData": {}
     },
+    "Regular (layer #1)": {
+      "glyph": {
+        "path": {
+          "coordinates": [
+            131, 409, 167, 246, 167, 355, 203, 402, 277, 402, 315, 402, 345, 390, 365,
+            370, 365, 0, 455, 0, 455, 423, 425, 452, 380, 490, 294, 490, 205, 490, 170,
+            452, 155, 409
+          ],
+          "pointTypes": [0, 0, 2, 2, 8, 2, 2, 0, 0, 0, 0, 2, 2, 8, 2, 2, 0],
+          "contourInfo": [
+            {
+              "endPoint": 16,
+              "isClosed": true
+            }
+          ]
+        },
+        "components": [],
+        "xAdvance": 528,
+        "yAdvance": null,
+        "verticalOrigin": null
+      },
+      "customData": {}
+    },
     "Regular / NarrowShoulder (layer #5)": {
       "glyph": {
         "path": {
@@ -260,6 +237,29 @@
         },
         "components": [],
         "xAdvance": 528,
+        "yAdvance": null,
+        "verticalOrigin": null
+      },
+      "customData": {}
+    },
+    "Bold (layer #2)": {
+      "glyph": {
+        "path": {
+          "coordinates": [
+            162, 401, 250, 229, 250, 268, 259, 283, 284, 283, 295, 283, 304, 280, 310,
+            276, 310, 0, 530, 0, 530, 448, 490, 478, 430, 501, 357, 501, 259, 501, 209,
+            461, 188, 401
+          ],
+          "pointTypes": [0, 0, 2, 2, 8, 2, 2, 0, 0, 0, 0, 2, 2, 8, 2, 2, 0],
+          "contourInfo": [
+            {
+              "endPoint": 16,
+              "isClosed": true
+            }
+          ]
+        },
+        "components": [],
+        "xAdvance": 560,
         "yAdvance": null,
         "verticalOrigin": null
       },
