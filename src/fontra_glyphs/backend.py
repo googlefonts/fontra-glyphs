@@ -117,14 +117,20 @@ class GlyphsBackend:
             if not gsLayer.associatedMasterId:
                 continue
 
+            braceLocation = self._getBraceLayerLocation(gsLayer)
+            smartLocation = self._getSmartLocation(gsLayer, localAxesByName)
             masterName = self.gsFont.masters[gsLayer.associatedMasterId].name
-            sourceName = gsLayer.name or masterName
+            if braceLocation or smartLocation:
+                sourceName = f"{masterName} / {gsLayer.name}"
+                print(sourceName, braceLocation, smartLocation)
+            else:
+                sourceName = gsLayer.name or masterName
             layerName = f"{sourceName} {i}"
 
             location = {
                 **self.locationByMasterID[gsLayer.associatedMasterId],
-                **self._getBraceLayerLocation(gsLayer),
-                **self._getSmartLocation(gsLayer, localAxesByName),
+                **braceLocation,
+                **smartLocation,
             }
 
             if location in seenLocations:
@@ -207,13 +213,16 @@ class GlyphsBackend:
         )
 
     def _getSmartLocation(self, gsLayer, localAxesByName):
-        return {
-            disambiguateLocalAxisName(name, self.axisNames): localAxesByName[
-                name
-            ].minValue
+        location = {
+            name: localAxesByName[name].minValue
             if poleValue == Pole.MIN
             else localAxesByName[name].maxValue
             for name, poleValue in gsLayer.smartComponentPoleMapping.items()
+        }
+        return {
+            disambiguateLocalAxisName(name, self.axisNames): value
+            for name, value in location.items()
+            if value != localAxesByName[name].defaultValue
         }
 
     def close(self):
