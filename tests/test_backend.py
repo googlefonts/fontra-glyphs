@@ -42,6 +42,13 @@ expectedAxes = [
     },
 ]
 
+
+@pytest.mark.asyncio
+async def test_axes(testFont):
+    axes = await testFont.getGlobalAxes()
+    assert expectedAxes == [asdict(axis) for axis in axes]
+
+
 expectedGlyphMap = {
     "A": [65],
     "Adieresis": [196],
@@ -55,12 +62,6 @@ expectedGlyphMap = {
     "m": [109],
     "n": [110],
 }
-
-
-@pytest.mark.asyncio
-async def test_axes(testFont):
-    axes = await testFont.getGlobalAxes()
-    assert expectedAxes == [asdict(axis) for axis in axes]
 
 
 @pytest.mark.asyncio
