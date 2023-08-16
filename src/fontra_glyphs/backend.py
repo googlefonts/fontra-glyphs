@@ -112,11 +112,23 @@ class GlyphsBackend:
         localAxesByName = {axis.name: axis for axis in localAxes}
         sources = []
         layers = {}
-        seenLocations = []
-        for i, gsLayer in enumerate(gsGlyph.layers):
-            if not gsLayer.associatedMasterId:
-                continue
 
+        seenMasterIDs = {}
+        gsLayers = []
+        for i, gsLayer in enumerate(gsGlyph.layers):
+            gsLayers.append((i, gsLayer))
+            assert gsLayer.associatedMasterId
+            # We use a dict as a set, because we need the insertion order
+            seenMasterIDs[gsLayer.associatedMasterId] = None
+
+        masterOrder = {masterID: i for i, masterID in enumerate(seenMasterIDs)}
+        gsLayers = sorted(
+            gsLayers, key=lambda i_gsLayer: masterOrder[i_gsLayer[1].associatedMasterId]
+        )
+
+        seenLocations = []
+        seenMasterIDs = {}
+        for i, gsLayer in gsLayers:
             braceLocation = self._getBraceLayerLocation(gsLayer)
             smartLocation = self._getSmartLocation(gsLayer, localAxesByName)
             masterName = self.gsFont.masters[gsLayer.associatedMasterId].name
