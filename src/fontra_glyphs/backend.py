@@ -1,4 +1,7 @@
+import pathlib
+
 import glyphsLib
+import openstep_plist
 from fontra.core.classes import (
     Component,
     GlobalAxis,
@@ -18,10 +21,30 @@ from glyphsLib.builder.smart_components import Pole
 class GlyphsBackend:
     @classmethod
     def fromPath(cls, path):
-        return cls(glyphsLib.load(path))
+        self = cls()
+        self._setupFromPath(path)
+        return self
 
-    def __init__(self, gsFont):
+    def _setupFromPath(self, path):
+        gsFont = glyphsLib.classes.GSFont()
+
+        rawFontData, rawGlyphsData = self._loadFiles(path)
+
+        parser = glyphsLib.parser.Parser(current_type=gsFont.__class__)
+        parser.parse_into_object(gsFont, rawFontData)
+
         self.gsFont = gsFont
+
+        # Fill the glyphs list with dummy placeholder glyphs
+        self.gsFont.glyphs = [
+            glyphsLib.classes.GSGlyph() for i in range(len(rawGlyphsData))
+        ]
+        self.rawGlyphsData = rawGlyphsData
+
+        self.glyphNameToIndex = {
+            glyphData["glyphname"]: i for i, glyphData in enumerate(rawGlyphsData)
+        }
+        self.parsedGlyphNames = set()
 
         dsAxes = gsAxesToDesignSpaceAxes(self.gsFont)
         if len(dsAxes) == 1 and dsAxes[0].minimum == dsAxes[0].maximum:
@@ -38,13 +61,7 @@ class GlyphsBackend:
                     location[axisDef.name] = axisDef.get_design_loc(master)
             self.locationByMasterID[master.id] = location
 
-        glyphMap = {}
-        for glyph in self.gsFont.glyphs:
-            codePoints = glyph.unicode
-            if not isinstance(codePoints, list):
-                codePoints = [codePoints] if codePoints else []
-            glyphMap[glyph.name] = [int(codePoint, 16) for codePoint in codePoints]
-        self.glyphMap = glyphMap
+        self.glyphMap = self._readGlyphMap(rawGlyphsData)
 
         axes = []
         for dsAxis in dsAxes:
@@ -62,6 +79,15 @@ class GlyphsBackend:
             axes.append(axis)
         self.axes = axes
 
+    @staticmethod
+    def _loadFiles(path):
+        with open(path, "r", encoding="utf-8") as fp:
+            rawFontData = openstep_plist.load(fp, use_numbers=True)
+
+        rawGlyphsData = rawFontData["glyphs"]
+        rawFontData["glyphs"] = []
+        return rawFontData, rawGlyphsData
+
     async def getGlyphMap(self):
         return self.glyphMap
 
@@ -75,9 +101,13 @@ class GlyphsBackend:
         return {}
 
     async def getGlyph(self, glyphName):
-        if glyphName not in self.gsFont.glyphs:
+        if glyphName not in self.glyphNameToIndex:
             return None
+
+        self._ensureGlyphIsParsed(glyphName)
+
         gsGlyph = self.gsFont.glyphs[glyphName]
+
         localAxes = gsLocalAxesToFontraLocalAxes(gsGlyph)
         localAxesByName = {axis.name: axis for axis in localAxes}
         sources = []
@@ -116,6 +146,57 @@ class GlyphsBackend:
         glyph = VariableGlyph(glyphName, axes=localAxes, sources=sources, layers=layers)
         return glyph
 
+    def _readGlyphMap(self, rawGlyphsData):
+        formatVersion = self.gsFont.format_version
+        glyphMap = {}
+
+        for glyphData in rawGlyphsData:
+            glyphName = glyphData["glyphname"]
+            codePoints = glyphData.get("unicode")
+            if codePoints is None:
+                codePoints = []
+            elif formatVersion == 2:
+                if isinstance(codePoints, str):
+                    codePoints = [
+                        int(codePoint, 16) for codePoint in codePoints.split(",")
+                    ]
+                else:
+                    assert isinstance(codePoints, int)
+                    # The plist parser turned it into an int, but it was a hex string
+                    codePoints = [int(str(codePoints), 16)]
+            elif isinstance(codePoints, int):
+                codePoints = [codePoints]
+            else:
+                assert all(isinstance(codePoint, int) for codePoint in codePoints)
+            glyphMap[glyphName] = codePoints
+
+        return glyphMap
+
+    def _ensureGlyphIsParsed(self, glyphName):
+        if glyphName in self.parsedGlyphNames:
+            return
+
+        glyphIndex = self.glyphNameToIndex[glyphName]
+        rawGlyphData = self.rawGlyphsData[glyphIndex]
+        self.rawGlyphsData[glyphIndex] = None
+        self.parsedGlyphNames.add(glyphName)
+
+        gsGlyph = glyphsLib.classes.GSGlyph()
+        p = glyphsLib.parser.Parser(
+            current_type=gsGlyph.__class__, format_version=self.gsFont.format_version
+        )
+        p.parse_into_object(gsGlyph, rawGlyphData)
+        self.gsFont.glyphs[glyphIndex] = gsGlyph
+
+        # Load all component dependencies
+        componentNames = set()
+        for layer in gsGlyph.layers:
+            for component in layer.components:
+                componentNames.add(component.name)
+
+        for compoName in sorted(componentNames):
+            self._ensureGlyphIsParsed(compoName)
+
     def _getBraceLayerLocation(self, gsLayer):
         if not gsLayer._is_brace_layer():
             return {}
@@ -140,7 +221,41 @@ class GlyphsBackend:
 
 
 class GlyphsPackageBackend(GlyphsBackend):
-    pass
+    @staticmethod
+    def _loadFiles(path):
+        packagePath = pathlib.Path(path)
+        fontInfoPath = packagePath / "fontinfo.plist"
+        orderPath = packagePath / "order.plist"
+        glyphsPath = packagePath / "glyphs"
+
+        glyphOrder = []
+        if orderPath.exists():
+            with open(orderPath, "r", encoding="utf-8") as fp:
+                glyphOrder = openstep_plist.load(fp)
+        glyphNameToIndex = {glyphName: i for i, glyphName in enumerate(glyphOrder)}
+
+        with open(fontInfoPath, "r", encoding="utf-8") as fp:
+            rawFontData = openstep_plist.load(fp, use_numbers=True)
+
+        rawFontData["glyphs"] = []
+
+        rawGlyphsData = []
+        for glyphfile in glyphsPath.glob("*.glyph"):
+            with open(glyphfile, "r") as fp:
+                glyphData = openstep_plist.load(fp, use_numbers=True)
+            rawGlyphsData.append(glyphData)
+
+        def sortKey(glyphData):
+            glyphName = glyphData["glyphname"]
+            index = glyphNameToIndex.get(glyphName)
+            if index is not None:
+                return (0, index)
+            else:
+                return (1, glyphName)
+
+        rawGlyphsData.sort(key=sortKey)
+
+        return rawFontData, rawGlyphsData
 
 
 def gsLayerToFontraLayer(gsLayer, globalAxisNames):
