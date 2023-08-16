@@ -125,7 +125,7 @@ class GlyphsBackend:
                 print(sourceName, braceLocation, smartLocation)
             else:
                 sourceName = gsLayer.name or masterName
-            layerName = f"{sourceName} {i}"
+            layerName = f"{sourceName} (layer #{i})"
 
             location = {
                 **self.locationByMasterID[gsLayer.associatedMasterId],
