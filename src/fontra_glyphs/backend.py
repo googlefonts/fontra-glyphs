@@ -46,10 +46,12 @@ class GlyphsBackend:
         }
         self.parsedGlyphNames = set()
 
-        dsAxes = gsAxesToDesignSpaceAxes(self.gsFont)
-        if len(dsAxes) == 1 and dsAxes[0].minimum == dsAxes[0].maximum:
-            # This is a fake noop axis to make the designspace happy: we don't need it
-            dsAxes = []
+        dsAxes = [
+            dsAxis
+            for dsAxis in gsAxesToDesignSpaceAxes(self.gsFont)
+            # Ignore axes without any range
+            if dsAxis.minimum != dsAxis.maximum
+        ]
 
         self.axisNames = {axis.name for axis in dsAxes}
 
