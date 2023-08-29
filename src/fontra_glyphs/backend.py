@@ -111,7 +111,7 @@ class GlyphsBackend:
         gsGlyph = self.gsFont.glyphs[glyphName]
 
         customData = {}
-        if gsGlyph.color:
+        if gsGlyph.color is not None:
             customData["com.glyphsapp.glyph-color"] = gsGlyph.color
 
         localAxes = gsLocalAxesToFontraLocalAxes(gsGlyph)
