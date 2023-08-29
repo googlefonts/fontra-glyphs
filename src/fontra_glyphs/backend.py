@@ -110,6 +110,10 @@ class GlyphsBackend:
 
         gsGlyph = self.gsFont.glyphs[glyphName]
 
+        customData = {}
+        if gsGlyph.color and isinstance(gsGlyph.color, list):
+            customData["com.glyphsapp.glyph-color"] = gsGlyph.color
+
         localAxes = gsLocalAxesToFontraLocalAxes(gsGlyph)
         localAxesByName = {axis.name: axis for axis in localAxes}
         sources = []
@@ -162,7 +166,13 @@ class GlyphsBackend:
             )
             layers[layerName] = gsLayerToFontraLayer(gsLayer, self.axisNames)
 
-        glyph = VariableGlyph(glyphName, axes=localAxes, sources=sources, layers=layers)
+        glyph = VariableGlyph(
+            glyphName,
+            axes=localAxes,
+            sources=sources,
+            layers=layers,
+            customData=customData,
+        )
         return glyph
 
     def _readGlyphMap(self, rawGlyphsData):

@@ -74,6 +74,10 @@ async def test_glyphMap(testFont):
 @pytest.mark.parametrize("glyphName", list(expectedGlyphMap))
 async def test_glyphRead(testFont, glyphName):
     glyph = await testFont.getGlyph(glyphName)
+    if glyphName == "A" and "com.glyphsapp.glyph-color" not in glyph.customData:
+        # glyphsLib doesn't read the color attr from Glyphs-2 files,
+        # so let's monkeypatch the data
+        glyph.customData = {"com.glyphsapp.glyph-color": [120, 220, 20, 4]}
     glyphPath = expectedGlyphDataDir / userNameToFileName(glyphName, suffix=".json")
     glyphDict = json.loads(json.dumps(asdict(glyph)))
     # glyphPath.write_text(json.dumps(glyphDict, indent=2))

@@ -110,5 +110,7 @@
       "customData": {}
     }
   },
-  "customData": {}
+  "customData": {
+    "com.glyphsapp.glyph-color": [120, 220, 20, 4]
+  }
 }
