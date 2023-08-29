@@ -74,7 +74,7 @@ async def test_glyphMap(testFont):
 @pytest.mark.parametrize("glyphName", list(expectedGlyphMap))
 async def test_glyphRead(testFont, glyphName):
     glyph = await testFont.getGlyph(glyphName)
-    if glyphName == "A" and not glyph.customData:
+    if glyphName == "A" and "com.glyphsapp.glyph-color" not in glyph.customData:
         # glyphsLib doesn't read the color attr from Glyphs-2 files,
         # so lets monkeypatch
         glyph.customData = {"com.glyphsapp.glyph-color": [120, 220, 20, 4]}
