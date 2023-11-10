@@ -11,7 +11,7 @@ from fontra.core.classes import (
     StaticGlyph,
     VariableGlyph,
 )
-from fontra.core.packedpath import PackedPathPointPen
+from fontra.core.path import PackedPathPointPen
 from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.misc.transform import DecomposedTransform
 from glyphsLib.builder.axes import get_axis_definitions, to_designspace_axes
