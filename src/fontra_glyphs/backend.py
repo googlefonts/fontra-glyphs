@@ -167,7 +167,7 @@ class GlyphsBackend:
             layers[layerName] = gsLayerToFontraLayer(gsLayer, self.axisNames)
 
         glyph = VariableGlyph(
-            glyphName,
+            name=glyphName,
             axes=localAxes,
             sources=sources,
             layers=layers,
