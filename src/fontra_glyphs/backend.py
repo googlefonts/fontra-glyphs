@@ -99,7 +99,7 @@ class GlyphsBackend:
     async def getUnitsPerEm(self):
         return self.gsFont.upm
 
-    async def getFontLib(self):
+    async def getCustomData(self):
         return {}
 
     async def getGlyph(self, glyphName):
