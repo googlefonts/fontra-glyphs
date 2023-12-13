@@ -20,9 +20,7 @@
       "layerName": "Light (layer #0)",
       "location": {
         "Weight": 17
-      },
-      "inactive": false,
-      "customData": {}
+      }
     },
     {
       "name": "Light / NarrowShoulder",
@@ -30,9 +28,7 @@
       "location": {
         "Weight": 17,
         "shoulderWidth": 0
-      },
-      "inactive": false,
-      "customData": {}
+      }
     },
     {
       "name": "Light / LowCrotch",
@@ -40,18 +36,14 @@
       "location": {
         "Weight": 17,
         "crotchDepth": -100
-      },
-      "inactive": false,
-      "customData": {}
+      }
     },
     {
       "name": "Regular",
       "layerName": "Regular (layer #1)",
       "location": {
         "Weight": 90
-      },
-      "inactive": false,
-      "customData": {}
+      }
     },
     {
       "name": "Regular / NarrowShoulder",
@@ -59,9 +51,7 @@
       "location": {
         "Weight": 90,
         "shoulderWidth": 0
-      },
-      "inactive": false,
-      "customData": {}
+      }
     },
     {
       "name": "Regular / LowCrotch",
@@ -69,18 +59,14 @@
       "location": {
         "Weight": 90,
         "crotchDepth": -100
-      },
-      "inactive": false,
-      "customData": {}
+      }
     },
     {
       "name": "Bold",
       "layerName": "Bold (layer #2)",
       "location": {
         "Weight": 220
-      },
-      "inactive": false,
-      "customData": {}
+      }
     },
     {
       "name": "Bold / NarrowShoulder",
@@ -88,9 +74,7 @@
       "location": {
         "Weight": 220,
         "shoulderWidth": 0
-      },
-      "inactive": false,
-      "customData": {}
+      }
     },
     {
       "name": "Bold / LowCrotch",
@@ -98,9 +82,7 @@
       "location": {
         "Weight": 220,
         "crotchDepth": -100
-      },
-      "inactive": false,
-      "customData": {}
+      }
     }
   ],
   "layers": {
@@ -120,12 +102,8 @@
             }
           ]
         },
-        "components": [],
-        "xAdvance": 501,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 501
+      }
     },
     "Light / NarrowShoulder (layer #3)": {
       "glyph": {
@@ -143,12 +121,8 @@
             }
           ]
         },
-        "components": [],
-        "xAdvance": 501,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 501
+      }
     },
     "Light / LowCrotch (layer #4)": {
       "glyph": {
@@ -166,12 +140,8 @@
             }
           ]
         },
-        "components": [],
-        "xAdvance": 501,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 501
+      }
     },
     "Regular (layer #1)": {
       "glyph": {
@@ -189,12 +159,8 @@
             }
           ]
         },
-        "components": [],
-        "xAdvance": 528,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 528
+      }
     },
     "Regular / NarrowShoulder (layer #5)": {
       "glyph": {
@@ -212,12 +178,8 @@
             }
           ]
         },
-        "components": [],
-        "xAdvance": 528,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 528
+      }
     },
     "Regular / LowCrotch (layer #6)": {
       "glyph": {
@@ -235,12 +197,8 @@
             }
           ]
         },
-        "components": [],
-        "xAdvance": 528,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 528
+      }
     },
     "Bold (layer #2)": {
       "glyph": {
@@ -258,12 +216,8 @@
             }
           ]
         },
-        "components": [],
-        "xAdvance": 560,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 560
+      }
     },
     "Bold / NarrowShoulder (layer #7)": {
       "glyph": {
@@ -281,12 +235,8 @@
             }
           ]
         },
-        "components": [],
-        "xAdvance": 560,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 560
+      }
     },
     "Bold / LowCrotch (layer #8)": {
       "glyph": {
@@ -304,13 +254,8 @@
             }
           ]
         },
-        "components": [],
-        "xAdvance": 560,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 560
+      }
     }
-  },
-  "customData": {}
+  }
 }

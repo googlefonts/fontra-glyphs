@@ -1,10 +1,13 @@
 import pathlib
+from os import PathLike
+from typing import Any
 
 import glyphsLib
 import openstep_plist
 from fontra.core.classes import (
     Component,
     GlobalAxis,
+    GlobalDiscreteAxis,
     Layer,
     LocalAxis,
     Source,
@@ -12,6 +15,7 @@ from fontra.core.classes import (
     VariableGlyph,
 )
 from fontra.core.path import PackedPathPointPen
+from fontra.core.protocols import ReadableFontBackend
 from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.misc.transform import DecomposedTransform
 from glyphsLib.builder.axes import get_axis_definitions, to_designspace_axes
@@ -20,12 +24,12 @@ from glyphsLib.builder.smart_components import Pole
 
 class GlyphsBackend:
     @classmethod
-    def fromPath(cls, path):
+    def fromPath(cls, path: PathLike) -> ReadableFontBackend:
         self = cls()
         self._setupFromPath(path)
         return self
 
-    def _setupFromPath(self, path):
+    def _setupFromPath(self, path: PathLike) -> None:
         gsFont = glyphsLib.classes.GSFont()
 
         rawFontData, rawGlyphsData = self._loadFiles(path)
@@ -44,7 +48,7 @@ class GlyphsBackend:
         self.glyphNameToIndex = {
             glyphData["glyphname"]: i for i, glyphData in enumerate(rawGlyphsData)
         }
-        self.parsedGlyphNames = set()
+        self.parsedGlyphNames: set[str] = set()
 
         dsAxes = [
             dsAxis
@@ -65,7 +69,7 @@ class GlyphsBackend:
 
         self.glyphMap = self._readGlyphMap(rawGlyphsData)
 
-        axes = []
+        axes: list[GlobalAxis | GlobalDiscreteAxis] = []
         for dsAxis in dsAxes:
             axis = GlobalAxis(
                 minValue=dsAxis.minimum,
@@ -82,7 +86,7 @@ class GlyphsBackend:
         self.axes = axes
 
     @staticmethod
-    def _loadFiles(path):
+    def _loadFiles(path: PathLike) -> tuple[dict[str, Any], list[Any]]:
         with open(path, "r", encoding="utf-8") as fp:
             rawFontData = openstep_plist.load(fp, use_numbers=True)
 
@@ -90,19 +94,19 @@ class GlyphsBackend:
         rawFontData["glyphs"] = []
         return rawFontData, rawGlyphsData
 
-    async def getGlyphMap(self):
+    async def getGlyphMap(self) -> dict[str, list[int]]:
         return self.glyphMap
 
-    async def getGlobalAxes(self):
+    async def getGlobalAxes(self) -> list[GlobalAxis | GlobalDiscreteAxis]:
         return self.axes
 
-    async def getUnitsPerEm(self):
+    async def getUnitsPerEm(self) -> int:
         return self.gsFont.upm
 
-    async def getCustomData(self):
+    async def getCustomData(self) -> dict[str, Any]:
         return {}
 
-    async def getGlyph(self, glyphName):
+    async def getGlyph(self, glyphName: str) -> VariableGlyph | None:
         if glyphName not in self.glyphNameToIndex:
             return None
 
@@ -119,7 +123,7 @@ class GlyphsBackend:
         sources = []
         layers = {}
 
-        seenMasterIDs = {}
+        seenMasterIDs: dict[str, None] = {}
         gsLayers = []
         for i, gsLayer in enumerate(gsGlyph.layers):
             gsLayers.append((i, gsLayer))
@@ -133,7 +137,6 @@ class GlyphsBackend:
         )
 
         seenLocations = []
-        seenMasterIDs = {}
         for i, gsLayer in gsLayers:
             braceLocation = self._getBraceLayerLocation(gsLayer)
             smartLocation = self._getSmartLocation(gsLayer, localAxesByName)
@@ -175,7 +178,7 @@ class GlyphsBackend:
         )
         return glyph
 
-    def _readGlyphMap(self, rawGlyphsData):
+    def _readGlyphMap(self, rawGlyphsData: list) -> dict[str, list[int]]:
         formatVersion = self.gsFont.format_version
         glyphMap = {}
 
@@ -201,7 +204,7 @@ class GlyphsBackend:
 
         return glyphMap
 
-    def _ensureGlyphIsParsed(self, glyphName):
+    def _ensureGlyphIsParsed(self, glyphName: str) -> None:
         if glyphName in self.parsedGlyphNames:
             return
 
@@ -248,13 +251,13 @@ class GlyphsBackend:
             if value != localAxesByName[name].defaultValue
         }
 
-    def close(self):
+    def close(self) -> None:
         pass
 
 
 class GlyphsPackageBackend(GlyphsBackend):
     @staticmethod
-    def _loadFiles(path):
+    def _loadFiles(path: PathLike) -> tuple[dict[str, Any], list[Any]]:
         packagePath = pathlib.Path(path)
         fontInfoPath = packagePath / "fontinfo.plist"
         orderPath = packagePath / "order.plist"

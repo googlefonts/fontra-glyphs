@@ -14,9 +14,7 @@
       "layerName": "Light (layer #0)",
       "location": {
         "Weight": 17
-      },
-      "inactive": false,
-      "customData": {}
+      }
     },
     {
       "name": "Light / TallStem",
@@ -24,18 +22,14 @@
       "location": {
         "Weight": 17,
         "height": 100
-      },
-      "inactive": false,
-      "customData": {}
+      }
     },
     {
       "name": "Regular",
       "layerName": "Regular (layer #1)",
       "location": {
         "Weight": 90
-      },
-      "inactive": false,
-      "customData": {}
+      }
     },
     {
       "name": "Regular / TallStem",
@@ -43,18 +37,14 @@
       "location": {
         "Weight": 90,
         "height": 100
-      },
-      "inactive": false,
-      "customData": {}
+      }
     },
     {
       "name": "Bold",
       "layerName": "Bold (layer #2)",
       "location": {
         "Weight": 220
-      },
-      "inactive": false,
-      "customData": {}
+      }
     },
     {
       "name": "Bold / TallStem",
@@ -62,9 +52,7 @@
       "location": {
         "Weight": 220,
         "height": 100
-      },
-      "inactive": false,
-      "customData": {}
+      }
     }
   ],
   "layers": {
@@ -80,12 +68,8 @@
             }
           ]
         },
-        "components": [],
-        "xAdvance": 600,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 600
+      }
     },
     "Light / TallStem (layer #3)": {
       "glyph": {
@@ -99,12 +83,8 @@
             }
           ]
         },
-        "components": [],
-        "xAdvance": 600,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 600
+      }
     },
     "Regular (layer #1)": {
       "glyph": {
@@ -118,12 +98,8 @@
             }
           ]
         },
-        "components": [],
-        "xAdvance": 600,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 600
+      }
     },
     "Regular / TallStem (layer #4)": {
       "glyph": {
@@ -137,12 +113,8 @@
             }
           ]
         },
-        "components": [],
-        "xAdvance": 600,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 600
+      }
     },
     "Bold (layer #2)": {
       "glyph": {
@@ -156,12 +128,8 @@
             }
           ]
         },
-        "components": [],
-        "xAdvance": 600,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 600
+      }
     },
     "Bold / TallStem (layer #5)": {
       "glyph": {
@@ -175,13 +143,8 @@
             }
           ]
         },
-        "components": [],
-        "xAdvance": 600,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 600
+      }
     }
-  },
-  "customData": {}
+  }
 }

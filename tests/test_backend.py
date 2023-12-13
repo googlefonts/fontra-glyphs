@@ -1,9 +1,9 @@
 import json
 import pathlib
-from dataclasses import asdict
 
 import pytest
 from fontra.backends import getFileSystemBackend
+from fontra.core.classes import unstructure
 from fontTools.misc.filenames import userNameToFileName
 
 dataDir = pathlib.Path(__file__).resolve().parent / "data"
@@ -46,7 +46,7 @@ expectedAxes = [
 @pytest.mark.asyncio
 async def test_axes(testFont):
     axes = await testFont.getGlobalAxes()
-    assert expectedAxes == [asdict(axis) for axis in axes]
+    assert expectedAxes == [unstructure(axis) for axis in axes]
 
 
 expectedGlyphMap = {
@@ -79,7 +79,7 @@ async def test_glyphRead(testFont, glyphName):
         # so let's monkeypatch the data
         glyph.customData = {"com.glyphsapp.glyph-color": [120, 220, 20, 4]}
     glyphPath = expectedGlyphDataDir / userNameToFileName(glyphName, suffix=".json")
-    glyphDict = json.loads(json.dumps(asdict(glyph)))
+    glyphDict = json.loads(json.dumps(unstructure(glyph)))
     # glyphPath.write_text(json.dumps(glyphDict, indent=2))
     expectedGlyphDict = json.loads(glyphPath.read_text())
     assert expectedGlyphDict == glyphDict

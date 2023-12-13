@@ -54,3 +54,15 @@ testpaths = [
     "tests",
 ]
 asyncio_mode = "auto"
+
+[[tool.mypy.overrides]]
+module = "fontTools.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "glyphsLib.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "openstep_plist"
+ignore_missing_imports = true
