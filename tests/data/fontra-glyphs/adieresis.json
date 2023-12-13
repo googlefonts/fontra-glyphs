@@ -1,171 +1,77 @@
 {
   "name": "adieresis",
-  "axes": [],
   "sources": [
     {
       "name": "Light",
       "layerName": "Light (layer #0)",
       "location": {
         "Weight": 17
-      },
-      "inactive": false,
-      "customData": {}
+      }
     },
     {
       "name": "Regular",
       "layerName": "Regular (layer #1)",
       "location": {
         "Weight": 90
-      },
-      "inactive": false,
-      "customData": {}
+      }
     },
     {
       "name": "Bold",
       "layerName": "Bold (layer #2)",
       "location": {
         "Weight": 220
-      },
-      "inactive": false,
-      "customData": {}
+      }
     }
   ],
   "layers": {
     "Light (layer #0)": {
       "glyph": {
-        "path": {
-          "coordinates": [],
-          "pointTypes": [],
-          "contourInfo": []
-        },
         "components": [
           {
-            "name": "a",
-            "transformation": {
-              "translateX": 0,
-              "translateY": 0,
-              "rotation": 0.0,
-              "scaleX": 1.0,
-              "scaleY": 1.0,
-              "skewX": 0.0,
-              "skewY": 0.0,
-              "tCenterX": 0,
-              "tCenterY": 0
-            },
-            "location": {}
+            "name": "a"
           },
           {
             "name": "dieresis",
             "transformation": {
               "translateX": 39,
-              "translateY": 1,
-              "rotation": 0.0,
-              "scaleX": 1.0,
-              "scaleY": 1.0,
-              "skewX": 0.0,
-              "skewY": 0.0,
-              "tCenterX": 0,
-              "tCenterY": 0
-            },
-            "location": {}
+              "translateY": 1
+            }
           }
         ],
-        "xAdvance": 456,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 456
+      }
     },
     "Regular (layer #1)": {
       "glyph": {
-        "path": {
-          "coordinates": [],
-          "pointTypes": [],
-          "contourInfo": []
-        },
         "components": [
           {
-            "name": "a",
-            "transformation": {
-              "translateX": 0,
-              "translateY": 0,
-              "rotation": 0.0,
-              "scaleX": 1.0,
-              "scaleY": 1.0,
-              "skewX": 0.0,
-              "skewY": 0.0,
-              "tCenterX": 0,
-              "tCenterY": 0
-            },
-            "location": {}
+            "name": "a"
           },
           {
             "name": "dieresis",
             "transformation": {
-              "translateX": 47,
-              "translateY": 0,
-              "rotation": 0.0,
-              "scaleX": 1.0,
-              "scaleY": 1.0,
-              "skewX": 0.0,
-              "skewY": 0.0,
-              "tCenterX": 0,
-              "tCenterY": 0
-            },
-            "location": {}
+              "translateX": 47
+            }
           }
         ],
-        "xAdvance": 496,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 496
+      }
     },
     "Bold (layer #2)": {
       "glyph": {
-        "path": {
-          "coordinates": [],
-          "pointTypes": [],
-          "contourInfo": []
-        },
         "components": [
           {
-            "name": "a",
-            "transformation": {
-              "translateX": 0,
-              "translateY": 0,
-              "rotation": 0.0,
-              "scaleX": 1.0,
-              "scaleY": 1.0,
-              "skewX": 0.0,
-              "skewY": 0.0,
-              "tCenterX": 0,
-              "tCenterY": 0
-            },
-            "location": {}
+            "name": "a"
           },
           {
             "name": "dieresis",
             "transformation": {
-              "translateX": -9,
-              "translateY": 0,
-              "rotation": 0.0,
-              "scaleX": 1.0,
-              "scaleY": 1.0,
-              "skewX": 0.0,
-              "skewY": 0.0,
-              "tCenterX": 0,
-              "tCenterY": 0
-            },
-            "location": {}
+              "translateX": -9
+            }
           }
         ],
-        "xAdvance": 518,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 518
+      }
     }
-  },
-  "customData": {}
+  }
 }

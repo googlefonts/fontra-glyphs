@@ -1,33 +1,26 @@
 {
   "name": "A",
-  "axes": [],
   "sources": [
     {
       "name": "Light",
       "layerName": "Light (layer #0)",
       "location": {
         "Weight": 17
-      },
-      "inactive": false,
-      "customData": {}
+      }
     },
     {
       "name": "Regular",
       "layerName": "Regular (layer #1)",
       "location": {
         "Weight": 90
-      },
-      "inactive": false,
-      "customData": {}
+      }
     },
     {
       "name": "Bold",
       "layerName": "Bold (layer #2)",
       "location": {
         "Weight": 220
-      },
-      "inactive": false,
-      "customData": {}
+      }
     }
   ],
   "layers": {
@@ -50,12 +43,8 @@
             }
           ]
         },
-        "components": [],
-        "xAdvance": 593,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 593
+      }
     },
     "Regular (layer #1)": {
       "glyph": {
@@ -76,12 +65,8 @@
             }
           ]
         },
-        "components": [],
-        "xAdvance": 657,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 657
+      }
     },
     "Bold (layer #2)": {
       "glyph": {
@@ -102,12 +87,8 @@
             }
           ]
         },
-        "components": [],
-        "xAdvance": 753,
-        "yAdvance": null,
-        "verticalOrigin": null
-      },
-      "customData": {}
+        "xAdvance": 753
+      }
     }
   },
   "customData": {
