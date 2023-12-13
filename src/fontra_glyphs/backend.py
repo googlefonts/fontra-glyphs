@@ -29,7 +29,7 @@ class GlyphsBackend:
         self._setupFromPath(path)
         return self
 
-    def _setupFromPath(self, path):
+    def _setupFromPath(self, path: PathLike) -> None:
         gsFont = glyphsLib.classes.GSFont()
 
         rawFontData, rawGlyphsData = self._loadFiles(path)
@@ -48,7 +48,7 @@ class GlyphsBackend:
         self.glyphNameToIndex = {
             glyphData["glyphname"]: i for i, glyphData in enumerate(rawGlyphsData)
         }
-        self.parsedGlyphNames = set()
+        self.parsedGlyphNames: set[str] = set()
 
         dsAxes = [
             dsAxis
@@ -69,7 +69,7 @@ class GlyphsBackend:
 
         self.glyphMap = self._readGlyphMap(rawGlyphsData)
 
-        axes = []
+        axes: list[GlobalAxis | GlobalDiscreteAxis] = []
         for dsAxis in dsAxes:
             axis = GlobalAxis(
                 minValue=dsAxis.minimum,
@@ -86,7 +86,7 @@ class GlyphsBackend:
         self.axes = axes
 
     @staticmethod
-    def _loadFiles(path):
+    def _loadFiles(path: PathLike) -> tuple[dict[str, Any], list[Any]]:
         with open(path, "r", encoding="utf-8") as fp:
             rawFontData = openstep_plist.load(fp, use_numbers=True)
 
@@ -178,7 +178,7 @@ class GlyphsBackend:
         )
         return glyph
 
-    def _readGlyphMap(self, rawGlyphsData):
+    def _readGlyphMap(self, rawGlyphsData: list) -> dict[str, list[int]]:
         formatVersion = self.gsFont.format_version
         glyphMap = {}
 
@@ -204,7 +204,7 @@ class GlyphsBackend:
 
         return glyphMap
 
-    def _ensureGlyphIsParsed(self, glyphName):
+    def _ensureGlyphIsParsed(self, glyphName: str) -> None:
         if glyphName in self.parsedGlyphNames:
             return
 
@@ -257,7 +257,7 @@ class GlyphsBackend:
 
 class GlyphsPackageBackend(GlyphsBackend):
     @staticmethod
-    def _loadFiles(path):
+    def _loadFiles(path: PathLike) -> tuple[dict[str, Any], list[Any]]:
         packagePath = pathlib.Path(path)
         fontInfoPath = packagePath / "fontinfo.plist"
         orderPath = packagePath / "order.plist"
