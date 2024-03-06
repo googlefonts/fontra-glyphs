@@ -3,7 +3,7 @@ import pathlib
 
 import pytest
 from fontra.backends import getFileSystemBackend
-from fontra.core.classes import unstructure
+from fontra.core.classes import GlobalAxis, structure, unstructure
 from fontTools.misc.filenames import userNameToFileName
 
 dataDir = pathlib.Path(__file__).resolve().parent / "data"
@@ -21,32 +21,35 @@ def testFont(request):
 
 
 expectedAxes = [
-    {
-        "defaultValue": 400,
-        "hidden": False,
-        "label": "Weight",
-        "mapping": [
-            [100, 17],
-            [200, 30],
-            [300, 55],
-            [357, 75],
-            [400, 90],
-            [500, 133],
-            [700, 179],
-            [900, 220],
-        ],
-        "maxValue": 900,
-        "minValue": 100,
-        "name": "Weight",
-        "tag": "wght",
-    },
+    structure(
+        {
+            "defaultValue": 400,
+            "hidden": False,
+            "label": "Weight",
+            "mapping": [
+                [100, 17],
+                [200, 30],
+                [300, 55],
+                [357, 75],
+                [400, 90],
+                [500, 133],
+                [700, 179],
+                [900, 220],
+            ],
+            "maxValue": 900,
+            "minValue": 100,
+            "name": "Weight",
+            "tag": "wght",
+        },
+        GlobalAxis,
+    ),
 ]
 
 
 @pytest.mark.asyncio
 async def test_axes(testFont):
     axes = await testFont.getGlobalAxes()
-    assert expectedAxes == [unstructure(axis) for axis in axes]
+    assert expectedAxes == axes
 
 
 expectedGlyphMap = {
