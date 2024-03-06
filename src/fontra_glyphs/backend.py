@@ -240,11 +240,9 @@ class GlyphsBackend:
 
     def _getSmartLocation(self, gsLayer, localAxesByName):
         location = {
-            name: (
-                localAxesByName[name].minValue
-                if poleValue == Pole.MIN
-                else localAxesByName[name].maxValue
-            )
+            name: localAxesByName[name].minValue
+            if poleValue == Pole.MIN
+            else localAxesByName[name].maxValue
             for name, poleValue in gsLayer.smartComponentPoleMapping.items()
         }
         return {
@@ -348,11 +346,9 @@ def gsLocalAxesToFontraLocalAxes(gsGlyph):
         LocalAxis(
             name=axis.name,
             minValue=axis.bottomValue,
-            defaultValue=(
-                axis.bottomValue
-                if basePoleMapping[axis.name] == Pole.MIN
-                else axis.topValue
-            ),
+            defaultValue=axis.bottomValue
+            if basePoleMapping[axis.name] == Pole.MIN
+            else axis.topValue,
             maxValue=axis.topValue,
         )
         for axis in gsGlyph.smartComponentAxes
