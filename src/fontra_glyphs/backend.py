@@ -253,7 +253,7 @@ class GlyphsBackend:
             if value != localAxesByName[name].defaultValue
         }
 
-    def close(self) -> None:
+    async def aclose(self) -> None:
         pass
 
 
