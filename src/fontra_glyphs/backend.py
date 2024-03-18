@@ -23,6 +23,26 @@ from fontTools.misc.transform import DecomposedTransform
 from glyphsLib.builder.axes import get_axis_definitions, to_designspace_axes
 from glyphsLib.builder.smart_components import Pole
 
+rootInfoNames = [
+    "familyName",
+    "versionMajor",
+    "versionMinor",
+]
+
+
+infoNamesMapping = [
+    # (Fontra, Glyphs)
+    ("copyright", "copyrights"),
+    ("designer", "designers"),
+    ("designerURL", "designerURL"),
+    ("licenseDescription", "licenses"),
+    # ("licenseInfoURL", "licensesURL"),  # Not defined in glyphsLib
+    ("manufacturer", "manufacturers"),
+    ("manufacturerURL", "manufacturerURL"),
+    ("trademark", "trademarks"),
+    ("vendorID", "vendorID"),
+]
+
 
 class GlyphsBackend:
     @classmethod
@@ -100,7 +120,19 @@ class GlyphsBackend:
         return self.glyphMap
 
     async def getFontInfo(self) -> FontInfo:
-        return FontInfo()
+        infoDict = {}
+        for name in rootInfoNames:
+            value = getattr(self.gsFont, name, None)
+            if value is not None:
+                infoDict[name] = value
+
+        properties = {p.key: p.value for p in self.gsFont.properties}
+        for fontraName, glyphsName in infoNamesMapping:
+            value = properties.get(glyphsName)
+            if value is not None:
+                infoDict[fontraName] = value
+
+        return FontInfo(**infoDict)
 
     async def getSources(self) -> dict[str, GlobalSource]:
         return {}
