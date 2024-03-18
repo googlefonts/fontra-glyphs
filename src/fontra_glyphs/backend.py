@@ -6,8 +6,10 @@ import glyphsLib
 import openstep_plist
 from fontra.core.classes import (
     Component,
+    FontInfo,
     GlobalAxis,
     GlobalDiscreteAxis,
+    GlobalSource,
     Layer,
     LocalAxis,
     Source,
@@ -20,6 +22,26 @@ from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.misc.transform import DecomposedTransform
 from glyphsLib.builder.axes import get_axis_definitions, to_designspace_axes
 from glyphsLib.builder.smart_components import Pole
+
+rootInfoNames = [
+    "familyName",
+    "versionMajor",
+    "versionMinor",
+]
+
+
+infoNamesMapping = [
+    # (Fontra, Glyphs)
+    ("copyright", "copyrights"),
+    ("designer", "designers"),
+    ("designerURL", "designerURL"),
+    ("licenseDescription", "licenses"),
+    # ("licenseInfoURL", "licensesURL"),  # Not defined in glyphsLib
+    ("manufacturer", "manufacturers"),
+    ("manufacturerURL", "manufacturerURL"),
+    ("trademark", "trademarks"),
+    ("vendorID", "vendorID"),
+]
 
 
 class GlyphsBackend:
@@ -96,6 +118,24 @@ class GlyphsBackend:
 
     async def getGlyphMap(self) -> dict[str, list[int]]:
         return self.glyphMap
+
+    async def getFontInfo(self) -> FontInfo:
+        infoDict = {}
+        for name in rootInfoNames:
+            value = getattr(self.gsFont, name, None)
+            if value is not None:
+                infoDict[name] = value
+
+        properties = {p.key: p.value for p in self.gsFont.properties}
+        for fontraName, glyphsName in infoNamesMapping:
+            value = properties.get(glyphsName)
+            if value is not None:
+                infoDict[fontraName] = value
+
+        return FontInfo(**infoDict)
+
+    async def getSources(self) -> dict[str, GlobalSource]:
+        return {}
 
     async def getGlobalAxes(self) -> list[GlobalAxis | GlobalDiscreteAxis]:
         return self.axes

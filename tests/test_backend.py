@@ -3,7 +3,7 @@ import pathlib
 
 import pytest
 from fontra.backends import getFileSystemBackend
-from fontra.core.classes import GlobalAxis, structure, unstructure
+from fontra.core.classes import FontInfo, GlobalAxis, structure, unstructure
 from fontTools.misc.filenames import userNameToFileName
 
 dataDir = pathlib.Path(__file__).resolve().parent / "data"
@@ -71,6 +71,31 @@ expectedGlyphMap = {
 async def test_glyphMap(testFont):
     glyphMap = await testFont.getGlyphMap()
     assert expectedGlyphMap == glyphMap
+
+
+expectedFontInfo = FontInfo(
+    familyName="Glyphs Unit Test Sans",
+    versionMajor=1,
+    versionMinor=0,
+    copyright=None,
+    trademark=None,
+    description=None,
+    sampleText=None,
+    designer=None,
+    designerURL=None,
+    manufacturer=None,
+    manufacturerURL=None,
+    licenseDescription=None,
+    licenseInfoURL=None,
+    vendorID=None,
+    customData={},
+)
+
+
+@pytest.mark.asyncio
+async def test_fontInfo(testFont):
+    fontInfo = await testFont.getFontInfo()
+    assert expectedFontInfo == fontInfo
 
 
 @pytest.mark.asyncio
