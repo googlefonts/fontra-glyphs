@@ -6,8 +6,10 @@ import glyphsLib
 import openstep_plist
 from fontra.core.classes import (
     Component,
+    FontInfo,
     GlobalAxis,
     GlobalDiscreteAxis,
+    GlobalSource,
     Layer,
     LocalAxis,
     Source,
@@ -96,6 +98,12 @@ class GlyphsBackend:
 
     async def getGlyphMap(self) -> dict[str, list[int]]:
         return self.glyphMap
+
+    async def getFontInfo(self) -> FontInfo:
+        return FontInfo()
+
+    async def getSources(self) -> dict[str, GlobalSource]:
+        return {}
 
     async def getGlobalAxes(self) -> list[GlobalAxis | GlobalDiscreteAxis]:
         return self.axes
