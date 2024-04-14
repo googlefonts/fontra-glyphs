@@ -5,14 +5,15 @@ from typing import Any
 import glyphsLib
 import openstep_plist
 from fontra.core.classes import (
+    Axes,
     Component,
+    DiscreteFontAxis,
+    FontAxis,
     FontInfo,
-    GlobalAxis,
-    GlobalDiscreteAxis,
-    GlobalSource,
+    FontSource,
+    GlyphAxis,
+    GlyphSource,
     Layer,
-    LocalAxis,
-    Source,
     StaticGlyph,
     VariableGlyph,
 )
@@ -91,9 +92,9 @@ class GlyphsBackend:
 
         self.glyphMap = self._readGlyphMap(rawGlyphsData)
 
-        axes: list[GlobalAxis | GlobalDiscreteAxis] = []
+        axes: list[FontAxis | DiscreteFontAxis] = []
         for dsAxis in dsAxes:
-            axis = GlobalAxis(
+            axis = FontAxis(
                 minValue=dsAxis.minimum,
                 defaultValue=dsAxis.default,
                 maxValue=dsAxis.maximum,
@@ -134,11 +135,11 @@ class GlyphsBackend:
 
         return FontInfo(**infoDict)
 
-    async def getSources(self) -> dict[str, GlobalSource]:
+    async def getSources(self) -> dict[str, FontSource]:
         return {}
 
-    async def getGlobalAxes(self) -> list[GlobalAxis | GlobalDiscreteAxis]:
-        return self.axes
+    async def getAxes(self) -> Axes:
+        return Axes(axes=self.axes)
 
     async def getUnitsPerEm(self) -> int:
         return self.gsFont.upm
@@ -200,7 +201,7 @@ class GlyphsBackend:
                 inactive = False
 
             sources.append(
-                Source(
+                GlyphSource(
                     name=sourceName,
                     location=location,
                     layerName=layerName,
@@ -385,7 +386,7 @@ def gsAxesToDesignSpaceAxes(gsFont):
 def gsLocalAxesToFontraLocalAxes(gsGlyph):
     basePoleMapping = gsGlyph.layers[0].smartComponentPoleMapping
     return [
-        LocalAxis(
+        GlyphAxis(
             name=axis.name,
             minValue=axis.bottomValue,
             defaultValue=(
