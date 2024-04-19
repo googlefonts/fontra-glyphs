@@ -5,6 +5,7 @@ from typing import Any
 import glyphsLib
 import openstep_plist
 from fontra.core.classes import (
+    Anchor,
     Axes,
     Component,
     DiscreteFontAxis,
@@ -345,9 +346,14 @@ def gsLayerToFontraLayer(gsLayer, globalAxisNames):
         for gsComponent in gsLayer.components
     ]
 
+    anchors = [gsAnchorToFontraAnchor(gsAnchor) for gsAnchor in gsLayer.anchors]
+
     return Layer(
         glyph=StaticGlyph(
-            xAdvance=gsLayer.width, path=pen.getPath(), components=components
+            xAdvance=gsLayer.width,
+            path=pen.getPath(),
+            components=components,
+            anchors=anchors,
         )
     )
 
@@ -366,6 +372,19 @@ def gsComponentToFontraComponent(gsComponent, gsLayer, globalAxisNames):
 
 def disambiguateLocalAxisName(axisName, globalAxisNames):
     return f"{axisName} (local)" if axisName in globalAxisNames else axisName
+
+
+def gsAnchorToFontraAnchor(gsAnchor):
+    anchor = Anchor(
+        name=gsAnchor.name,
+        x=gsAnchor.position.x,
+        y=gsAnchor.position.y,
+        # TODO: gsAnchor.orientation – If the position of the anchor
+        # is relative to the LSB (0), center (2) or RSB (1).
+        # Details: https://docu.glyphsapp.com/#GSAnchor.orientation
+        customData=gsAnchor.userData if gsAnchor.userData else dict(),
+    )
+    return anchor
 
 
 class MinimalUFOBuilder:

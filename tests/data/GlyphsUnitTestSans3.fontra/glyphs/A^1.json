@@ -88,7 +88,27 @@
 }
 ]
 },
-"xAdvance": 753
+"xAdvance": 753,
+"anchors": [
+{
+"name": "bottom",
+"x": 377,
+"y": 0,
+"customData": {}
+},
+{
+"name": "ogonek",
+"x": 678,
+"y": 10,
+"customData": {}
+},
+{
+"name": "top",
+"x": 377,
+"y": 700,
+"customData": {}
+}
+]
 }
 },
 "Light (layer #0)": {
@@ -155,7 +175,27 @@
 }
 ]
 },
-"xAdvance": 593
+"xAdvance": 593,
+"anchors": [
+{
+"name": "bottom",
+"x": 297,
+"y": 0,
+"customData": {}
+},
+{
+"name": "ogonek",
+"x": 548,
+"y": 0,
+"customData": {}
+},
+{
+"name": "top",
+"x": 297,
+"y": 700,
+"customData": {}
+}
+]
 }
 },
 "Regular (layer #1)": {
@@ -222,7 +262,27 @@
 }
 ]
 },
-"xAdvance": 657
+"xAdvance": 657,
+"anchors": [
+{
+"name": "bottom",
+"x": 329,
+"y": 0,
+"customData": {}
+},
+{
+"name": "ogonek",
+"x": 591,
+"y": 10,
+"customData": {}
+},
+{
+"name": "top",
+"x": 329,
+"y": 700,
+"customData": {}
+}
+]
 }
 }
 },
