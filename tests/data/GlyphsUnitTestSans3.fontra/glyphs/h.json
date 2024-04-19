@@ -1,0 +1,85 @@
+{
+"name": "h",
+"sources": [
+{
+"name": "Light",
+"layerName": "Light (layer #0)",
+"location": {
+"Weight": 17
+}
+},
+{
+"name": "Regular",
+"layerName": "Regular (layer #1)",
+"location": {
+"Weight": 90
+}
+},
+{
+"name": "Bold",
+"layerName": "Bold (layer #2)",
+"location": {
+"Weight": 220
+}
+}
+],
+"layers": {
+"Bold (layer #2)": {
+"glyph": {
+"components": [
+{
+"name": "_part.stem",
+"location": {
+"height": 100
+}
+},
+{
+"name": "_part.shoulder",
+"location": {
+"crotchDepth": -80.20097
+}
+}
+],
+"xAdvance": 560
+}
+},
+"Light (layer #0)": {
+"glyph": {
+"components": [
+{
+"name": "_part.stem",
+"location": {
+"height": 100
+}
+},
+{
+"name": "_part.shoulder",
+"location": {
+"crotchDepth": -80.20097
+}
+}
+],
+"xAdvance": 511
+}
+},
+"Regular (layer #1)": {
+"glyph": {
+"components": [
+{
+"name": "_part.stem",
+"location": {
+"height": 100
+}
+},
+{
+"name": "_part.shoulder",
+"location": {
+"crotchDepth": -80.20097
+}
+}
+],
+"xAdvance": 532
+}
+}
+}
+}

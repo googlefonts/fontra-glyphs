@@ -1,0 +1,181 @@
+{
+"name": "dieresis",
+"sources": [
+{
+"name": "Light",
+"layerName": "Light (layer #0)",
+"location": {
+"Weight": 17
+}
+},
+{
+"name": "Regular",
+"layerName": "Regular (layer #1)",
+"location": {
+"Weight": 90
+}
+},
+{
+"name": "Bold",
+"layerName": "Bold (layer #2)",
+"location": {
+"Weight": 220
+}
+}
+],
+"layers": {
+"Bold (layer #2)": {
+"glyph": {
+"path": {
+"contours": [
+{
+"points": [
+{
+"x": 482,
+"y": 735
+},
+{
+"x": 298,
+"y": 735
+},
+{
+"x": 298,
+"y": 547
+},
+{
+"x": 482,
+"y": 547
+}
+],
+"isClosed": true
+},
+{
+"points": [
+{
+"x": 232,
+"y": 735
+},
+{
+"x": 48,
+"y": 735
+},
+{
+"x": 48,
+"y": 547
+},
+{
+"x": 232,
+"y": 547
+}
+],
+"isClosed": true
+}
+]
+},
+"xAdvance": 600
+}
+},
+"Light (layer #0)": {
+"glyph": {
+"path": {
+"contours": [
+{
+"points": [
+{
+"x": 289,
+"y": 650
+},
+{
+"x": 261,
+"y": 650
+},
+{
+"x": 261,
+"y": 621
+},
+{
+"x": 289,
+"y": 621
+}
+],
+"isClosed": true
+},
+{
+"points": [
+{
+"x": 116,
+"y": 650
+},
+{
+"x": 88,
+"y": 650
+},
+{
+"x": 88,
+"y": 621
+},
+{
+"x": 116,
+"y": 621
+}
+],
+"isClosed": true
+}
+]
+},
+"xAdvance": 600
+}
+},
+"Regular (layer #1)": {
+"glyph": {
+"path": {
+"contours": [
+{
+"points": [
+{
+"x": 349,
+"y": 700
+},
+{
+"x": 252,
+"y": 700
+},
+{
+"x": 252,
+"y": 601
+},
+{
+"x": 349,
+"y": 601
+}
+],
+"isClosed": true
+},
+{
+"points": [
+{
+"x": 149,
+"y": 700
+},
+{
+"x": 52,
+"y": 700
+},
+{
+"x": 52,
+"y": 601
+},
+{
+"x": 149,
+"y": 601
+}
+],
+"isClosed": true
+}
+]
+},
+"xAdvance": 600
+}
+}
+}
+}

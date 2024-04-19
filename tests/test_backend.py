@@ -1,23 +1,25 @@
-import json
 import pathlib
 
 import pytest
 from fontra.backends import getFileSystemBackend
-from fontra.core.classes import Axes, FontInfo, structure, unstructure
-from fontTools.misc.filenames import userNameToFileName
+from fontra.core.classes import Axes, FontInfo, structure
 
 dataDir = pathlib.Path(__file__).resolve().parent / "data"
 
 glyphs2Path = dataDir / "GlyphsUnitTestSans.glyphs"
 glyphs3Path = dataDir / "GlyphsUnitTestSans3.glyphs"
 glyphsPackagePath = dataDir / "GlyphsUnitTestSans3.glyphspackage"
-
-expectedGlyphDataDir = dataDir / "fontra-glyphs"
+referenceFontPath = dataDir / "GlyphsUnitTestSans3.fontra"
 
 
 @pytest.fixture(scope="module", params=[glyphs2Path, glyphs3Path, glyphsPackagePath])
 def testFont(request):
     return getFileSystemBackend(request.param)
+
+
+@pytest.fixture(scope="module")
+def referenceFont(request):
+    return getFileSystemBackend(referenceFontPath)
 
 
 expectedAxes = structure(
@@ -102,14 +104,12 @@ async def test_fontInfo(testFont):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("glyphName", list(expectedGlyphMap))
-async def test_glyphRead(testFont, glyphName):
+async def test_glyphRead(testFont, referenceFont, glyphName):
     glyph = await testFont.getGlyph(glyphName)
     if glyphName == "A" and "com.glyphsapp.glyph-color" not in glyph.customData:
         # glyphsLib doesn't read the color attr from Glyphs-2 files,
         # so let's monkeypatch the data
         glyph.customData = {"com.glyphsapp.glyph-color": [120, 220, 20, 4]}
-    glyphPath = expectedGlyphDataDir / userNameToFileName(glyphName, suffix=".json")
-    glyphDict = json.loads(json.dumps(unstructure(glyph)))
-    # glyphPath.write_text(json.dumps(glyphDict, indent=2))
-    expectedGlyphDict = json.loads(glyphPath.read_text())
-    assert expectedGlyphDict == glyphDict
+
+    referenceGlyph = await referenceFont.getGlyph(glyphName)
+    assert referenceGlyph == glyph

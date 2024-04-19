@@ -1,0 +1,288 @@
+{
+"name": "_part.stem",
+"axes": [
+{
+"name": "height",
+"minValue": 0,
+"defaultValue": 0,
+"maxValue": 100
+}
+],
+"sources": [
+{
+"name": "Light",
+"layerName": "Light (layer #0)",
+"location": {
+"Weight": 17
+}
+},
+{
+"name": "Light / TallStem",
+"layerName": "Light / TallStem (layer #3)",
+"location": {
+"Weight": 17,
+"height": 100
+}
+},
+{
+"name": "Regular",
+"layerName": "Regular (layer #1)",
+"location": {
+"Weight": 90
+}
+},
+{
+"name": "Regular / TallStem",
+"layerName": "Regular / TallStem (layer #4)",
+"location": {
+"Weight": 90,
+"height": 100
+}
+},
+{
+"name": "Bold",
+"layerName": "Bold (layer #2)",
+"location": {
+"Weight": 220
+}
+},
+{
+"name": "Bold / TallStem",
+"layerName": "Bold / TallStem (layer #5)",
+"location": {
+"Weight": 220,
+"height": 100
+}
+}
+],
+"layers": {
+"Bold (layer #2)": {
+"glyph": {
+"path": {
+"contours": [
+{
+"points": [
+{
+"x": 250,
+"y": 256
+},
+{
+"x": 181,
+"y": 385
+},
+{
+"x": 162,
+"y": 490
+},
+{
+"x": 30,
+"y": 490
+},
+{
+"x": 30,
+"y": 0
+},
+{
+"x": 250,
+"y": 0
+}
+],
+"isClosed": true
+}
+]
+},
+"xAdvance": 600
+}
+},
+"Bold / TallStem (layer #5)": {
+"glyph": {
+"path": {
+"contours": [
+{
+"points": [
+{
+"x": 250,
+"y": 256
+},
+{
+"x": 250,
+"y": 385
+},
+{
+"x": 250,
+"y": 800
+},
+{
+"x": 30,
+"y": 800
+},
+{
+"x": 30,
+"y": 0
+},
+{
+"x": 250,
+"y": 0
+}
+],
+"isClosed": true
+}
+]
+},
+"xAdvance": 600
+}
+},
+"Light (layer #0)": {
+"glyph": {
+"path": {
+"contours": [
+{
+"points": [
+{
+"x": 117,
+"y": 306
+},
+{
+"x": 119,
+"y": 368
+},
+{
+"x": 115,
+"y": 470
+},
+{
+"x": 100,
+"y": 470
+},
+{
+"x": 100,
+"y": 0
+},
+{
+"x": 117,
+"y": 0
+}
+],
+"isClosed": true
+}
+]
+},
+"xAdvance": 600
+}
+},
+"Light / TallStem (layer #3)": {
+"glyph": {
+"path": {
+"contours": [
+{
+"points": [
+{
+"x": 117,
+"y": 306
+},
+{
+"x": 117,
+"y": 368
+},
+{
+"x": 117,
+"y": 800
+},
+{
+"x": 100,
+"y": 800
+},
+{
+"x": 100,
+"y": 0
+},
+{
+"x": 117,
+"y": 0
+}
+],
+"isClosed": true
+}
+]
+},
+"xAdvance": 600
+}
+},
+"Regular (layer #1)": {
+"glyph": {
+"path": {
+"contours": [
+{
+"points": [
+{
+"x": 167,
+"y": 286
+},
+{
+"x": 149,
+"y": 393
+},
+{
+"x": 139,
+"y": 480
+},
+{
+"x": 77,
+"y": 480
+},
+{
+"x": 77,
+"y": 0
+},
+{
+"x": 167,
+"y": 0
+}
+],
+"isClosed": true
+}
+]
+},
+"xAdvance": 600
+}
+},
+"Regular / TallStem (layer #4)": {
+"glyph": {
+"path": {
+"contours": [
+{
+"points": [
+{
+"x": 167,
+"y": 286
+},
+{
+"x": 167,
+"y": 393
+},
+{
+"x": 167,
+"y": 800
+},
+{
+"x": 77,
+"y": 800
+},
+{
+"x": 77,
+"y": 0
+},
+{
+"x": 167,
+"y": 0
+}
+],
+"isClosed": true
+}
+]
+},
+"xAdvance": 600
+}
+}
+}
+}
