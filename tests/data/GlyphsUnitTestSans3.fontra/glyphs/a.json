@@ -256,19 +256,19 @@
 {
 "name": "bottom",
 "x": 184,
-"y": 184,
+"y": 0,
 "customData": {}
 },
 {
 "name": "ogonek",
 "x": 488,
-"y": 488,
+"y": 0,
 "customData": {}
 },
 {
 "name": "top",
 "x": 258,
-"y": 258,
+"y": 490,
 "customData": {}
 }
 ]
@@ -499,19 +499,19 @@
 {
 "name": "bottom",
 "x": 218,
-"y": 218,
+"y": 0,
 "customData": {}
 },
 {
 "name": "ogonek",
 "x": 369,
-"y": 369,
+"y": 0,
 "customData": {}
 },
 {
 "name": "top",
 "x": 226,
-"y": 226,
+"y": 471,
 "customData": {}
 }
 ]
@@ -742,19 +742,19 @@
 {
 "name": "bottom",
 "x": 218,
-"y": 218,
+"y": 0,
 "customData": {}
 },
 {
 "name": "ogonek",
 "x": 423,
-"y": 423,
+"y": 0,
 "customData": {}
 },
 {
 "name": "top",
 "x": 248,
-"y": 248,
+"y": 480,
 "customData": {}
 }
 ]
@@ -985,19 +985,19 @@
 {
 "name": "bottom",
 "x": 189,
-"y": 189,
+"y": 0,
 "customData": {}
 },
 {
 "name": "ogonek",
 "x": 446,
-"y": 446,
+"y": 0,
 "customData": {}
 },
 {
 "name": "top",
 "x": 237,
-"y": 237,
+"y": 485,
 "customData": {}
 }
 ]

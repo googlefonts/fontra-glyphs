@@ -93,19 +93,19 @@
 {
 "name": "bottom",
 "x": 307,
-"y": 307,
+"y": 0,
 "customData": {}
 },
 {
 "name": "ogonek",
 "x": 608,
-"y": 608,
+"y": 0,
 "customData": {}
 },
 {
 "name": "top",
 "x": 307,
-"y": 307,
+"y": 552,
 "customData": {}
 }
 ]
@@ -180,19 +180,19 @@
 {
 "name": "bottom",
 "x": 240,
-"y": 240,
+"y": 0,
 "customData": {}
 },
 {
 "name": "ogonek",
 "x": 445,
-"y": 445,
+"y": 0,
 "customData": {}
 },
 {
 "name": "top",
 "x": 240,
-"y": 240,
+"y": 528,
 "customData": {}
 }
 ]
@@ -267,19 +267,19 @@
 {
 "name": "bottom",
 "x": 268,
-"y": 268,
+"y": 0,
 "customData": {}
 },
 {
 "name": "ogonek",
 "x": 511,
-"y": 511,
+"y": 0,
 "customData": {}
 },
 {
 "name": "top",
 "x": 268,
-"y": 268,
+"y": 540,
 "customData": {}
 }
 ]
