@@ -370,6 +370,10 @@ def gsComponentToFontraComponent(gsComponent, gsLayer, globalAxisNames):
     return component
 
 
+def disambiguateLocalAxisName(axisName, globalAxisNames):
+    return f"{axisName} (local)" if axisName in globalAxisNames else axisName
+
+
 def gsAnchorToFontraAnchor(gsAnchor):
     anchor = Anchor(
         name=gsAnchor.name,
@@ -381,10 +385,6 @@ def gsAnchorToFontraAnchor(gsAnchor):
         customData=gsAnchor.userData if gsAnchor.userData else dict(),
     )
     return anchor
-
-
-def disambiguateLocalAxisName(axisName, globalAxisNames):
-    return f"{axisName} (local)" if axisName in globalAxisNames else axisName
 
 
 class MinimalUFOBuilder:
