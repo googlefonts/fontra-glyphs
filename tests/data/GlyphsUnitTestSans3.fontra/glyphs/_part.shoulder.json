@@ -175,7 +175,21 @@
 }
 ]
 },
-"xAdvance": 560
+"xAdvance": 560,
+"anchors": [
+{
+"name": "_connect",
+"x": 250,
+"y": 250,
+"customData": {}
+},
+{
+"name": "connect",
+"x": 530,
+"y": 530,
+"customData": {}
+}
+]
 }
 },
 "Bold / LowCrotch (layer #8)": {
@@ -267,7 +281,21 @@
 }
 ]
 },
-"xAdvance": 560
+"xAdvance": 560,
+"anchors": [
+{
+"name": "_connect",
+"x": 250,
+"y": 250,
+"customData": {}
+},
+{
+"name": "connect",
+"x": 530,
+"y": 530,
+"customData": {}
+}
+]
 }
 },
 "Bold / NarrowShoulder (layer #7)": {
@@ -359,7 +387,21 @@
 }
 ]
 },
-"xAdvance": 560
+"xAdvance": 560,
+"anchors": [
+{
+"name": "_connect",
+"x": 250,
+"y": 250,
+"customData": {}
+},
+{
+"name": "connect",
+"x": 520,
+"y": 520,
+"customData": {}
+}
+]
 }
 },
 "Light (layer #0)": {
@@ -451,7 +493,21 @@
 }
 ]
 },
-"xAdvance": 501
+"xAdvance": 501,
+"anchors": [
+{
+"name": "_connect",
+"x": 117,
+"y": 117,
+"customData": {}
+},
+{
+"name": "connect",
+"x": 411,
+"y": 411,
+"customData": {}
+}
+]
 }
 },
 "Light / LowCrotch (layer #4)": {
@@ -543,7 +599,21 @@
 }
 ]
 },
-"xAdvance": 501
+"xAdvance": 501,
+"anchors": [
+{
+"name": "_connect",
+"x": 117,
+"y": 117,
+"customData": {}
+},
+{
+"name": "connect",
+"x": 411,
+"y": 411,
+"customData": {}
+}
+]
 }
 },
 "Light / NarrowShoulder (layer #3)": {
@@ -635,7 +705,21 @@
 }
 ]
 },
-"xAdvance": 501
+"xAdvance": 501,
+"anchors": [
+{
+"name": "_connect",
+"x": 117,
+"y": 117,
+"customData": {}
+},
+{
+"name": "connect",
+"x": 381,
+"y": 381,
+"customData": {}
+}
+]
 }
 },
 "Regular (layer #1)": {
@@ -727,7 +811,21 @@
 }
 ]
 },
-"xAdvance": 528
+"xAdvance": 528,
+"anchors": [
+{
+"name": "_connect",
+"x": 167,
+"y": 167,
+"customData": {}
+},
+{
+"name": "connect",
+"x": 455,
+"y": 455,
+"customData": {}
+}
+]
 }
 },
 "Regular / LowCrotch (layer #6)": {
@@ -819,7 +917,21 @@
 }
 ]
 },
-"xAdvance": 528
+"xAdvance": 528,
+"anchors": [
+{
+"name": "_connect",
+"x": 167,
+"y": 167,
+"customData": {}
+},
+{
+"name": "connect",
+"x": 455,
+"y": 455,
+"customData": {}
+}
+]
 }
 },
 "Regular / NarrowShoulder (layer #5)": {
@@ -911,7 +1023,21 @@
 }
 ]
 },
-"xAdvance": 528
+"xAdvance": 528,
+"anchors": [
+{
+"name": "_connect",
+"x": 167,
+"y": 167,
+"customData": {}
+},
+{
+"name": "connect",
+"x": 425,
+"y": 425,
+"customData": {}
+}
+]
 }
 }
 }

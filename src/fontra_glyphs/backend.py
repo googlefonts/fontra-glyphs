@@ -378,9 +378,9 @@ def gsAnchorToFontraAnchor(gsAnchor):
         name=gsAnchor.name,
         x=gsAnchor.position.x,
         y=gsAnchor.position.x,
-        # TODO: =gsAnchor.orientation,
-        # Type: int If the position of the anchor is relaive to the LSB (0), center (2) or RSB (1).
-        customData=gsAnchor.userData,
+        # TODO: gsAnchor.orientation -> Type: int
+        # If the position of the anchor is relaive to the LSB (0), center (2) or RSB (1).
+        customData=gsAnchor.userData if gsAnchor.userData else dict(),
     )
     return anchor
 

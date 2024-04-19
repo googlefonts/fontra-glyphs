@@ -91,7 +91,15 @@
 }
 ]
 },
-"xAdvance": 600
+"xAdvance": 600,
+"anchors": [
+{
+"name": "connect",
+"x": 250,
+"y": 250,
+"customData": {}
+}
+]
 }
 },
 "Bold / TallStem (layer #5)": {
@@ -129,7 +137,15 @@
 }
 ]
 },
-"xAdvance": 600
+"xAdvance": 600,
+"anchors": [
+{
+"name": "connect",
+"x": 250,
+"y": 250,
+"customData": {}
+}
+]
 }
 },
 "Light (layer #0)": {
@@ -167,7 +183,15 @@
 }
 ]
 },
-"xAdvance": 600
+"xAdvance": 600,
+"anchors": [
+{
+"name": "connect",
+"x": 117,
+"y": 117,
+"customData": {}
+}
+]
 }
 },
 "Light / TallStem (layer #3)": {
@@ -205,7 +229,15 @@
 }
 ]
 },
-"xAdvance": 600
+"xAdvance": 600,
+"anchors": [
+{
+"name": "connect",
+"x": 117,
+"y": 117,
+"customData": {}
+}
+]
 }
 },
 "Regular (layer #1)": {
@@ -243,7 +275,15 @@
 }
 ]
 },
-"xAdvance": 600
+"xAdvance": 600,
+"anchors": [
+{
+"name": "connect",
+"x": 167,
+"y": 167,
+"customData": {}
+}
+]
 }
 },
 "Regular / TallStem (layer #4)": {
@@ -281,7 +321,15 @@
 }
 ]
 },
-"xAdvance": 600
+"xAdvance": 600,
+"anchors": [
+{
+"name": "connect",
+"x": 167,
+"y": 167,
+"customData": {}
+}
+]
 }
 }
 }
