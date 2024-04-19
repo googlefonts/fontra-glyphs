@@ -9,7 +9,6 @@ dataDir = pathlib.Path(__file__).resolve().parent / "data"
 glyphs2Path = dataDir / "GlyphsUnitTestSans.glyphs"
 glyphs3Path = dataDir / "GlyphsUnitTestSans3.glyphs"
 glyphsPackagePath = dataDir / "GlyphsUnitTestSans3.glyphspackage"
-
 referenceFontPath = dataDir / "GlyphsUnitTestSans3.fontra"
 
 
