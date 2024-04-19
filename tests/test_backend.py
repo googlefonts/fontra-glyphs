@@ -12,7 +12,7 @@ glyphs2Path = dataDir / "GlyphsUnitTestSans.glyphs"
 glyphs3Path = dataDir / "GlyphsUnitTestSans3.glyphs"
 glyphsPackagePath = dataDir / "GlyphsUnitTestSans3.glyphspackage"
 
-expectedGlyphDataDir = dataDir / "fontra-glyphs"
+expectedGlyphDataDir = dataDir / "GlyphsUnitTestSans3.fontra"
 
 
 @pytest.fixture(scope="module", params=[glyphs2Path, glyphs3Path, glyphsPackagePath])
@@ -108,7 +108,7 @@ async def test_glyphRead(testFont, glyphName):
         # glyphsLib doesn't read the color attr from Glyphs-2 files,
         # so let's monkeypatch the data
         glyph.customData = {"com.glyphsapp.glyph-color": [120, 220, 20, 4]}
-    glyphPath = expectedGlyphDataDir / userNameToFileName(glyphName, suffix=".json")
+    glyphPath = expectedGlyphDataDir / 'glyphs' / userNameToFileName(glyphName, suffix=".json")
     glyphDict = json.loads(json.dumps(unstructure(glyph)))
     # glyphPath.write_text(json.dumps(glyphDict, indent=2))
     expectedGlyphDict = json.loads(glyphPath.read_text())

@@ -161,3 +161,4 @@ cython_debug/
 
 # scm file
 src/fontra_glyphs/_version.py
+.DS_Store

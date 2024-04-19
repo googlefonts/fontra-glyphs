@@ -1,0 +1,56 @@
+{
+"unitsPerEm": 1000,
+"fontInfo": {
+"familyName": "Glyphs Unit Test Sans",
+"versionMajor": 1,
+"versionMinor": 0
+},
+"axes": {
+"axes": [
+{
+"name": "Weight",
+"label": "Weight",
+"tag": "wght",
+"minValue": 100,
+"defaultValue": 400,
+"maxValue": 900,
+"mapping": [
+[
+100,
+17
+],
+[
+200,
+30
+],
+[
+300,
+55
+],
+[
+357,
+75
+],
+[
+400,
+90
+],
+[
+500,
+133
+],
+[
+700,
+179
+],
+[
+900,
+220
+]
+]
+}
+]
+},
+"sources": {},
+"customData": {}
+}

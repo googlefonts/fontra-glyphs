@@ -1,0 +1,77 @@
+{
+"name": "adieresis",
+"sources": [
+{
+"name": "Light",
+"layerName": "Light (layer #0)",
+"location": {
+"Weight": 17
+}
+},
+{
+"name": "Regular",
+"layerName": "Regular (layer #1)",
+"location": {
+"Weight": 90
+}
+},
+{
+"name": "Bold",
+"layerName": "Bold (layer #2)",
+"location": {
+"Weight": 220
+}
+}
+],
+"layers": {
+"Bold (layer #2)": {
+"glyph": {
+"components": [
+{
+"name": "a"
+},
+{
+"name": "dieresis",
+"transformation": {
+"translateX": -9
+}
+}
+],
+"xAdvance": 518
+}
+},
+"Light (layer #0)": {
+"glyph": {
+"components": [
+{
+"name": "a"
+},
+{
+"name": "dieresis",
+"transformation": {
+"translateX": 39,
+"translateY": 1
+}
+}
+],
+"xAdvance": 456
+}
+},
+"Regular (layer #1)": {
+"glyph": {
+"components": [
+{
+"name": "a"
+},
+{
+"name": "dieresis",
+"transformation": {
+"translateX": 47
+}
+}
+],
+"xAdvance": 496
+}
+}
+}
+}
