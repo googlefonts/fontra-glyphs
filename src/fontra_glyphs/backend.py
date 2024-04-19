@@ -5,6 +5,7 @@ from typing import Any
 import glyphsLib
 import openstep_plist
 from fontra.core.classes import (
+    Anchor,
     Axes,
     Component,
     DiscreteFontAxis,
@@ -345,9 +346,17 @@ def gsLayerToFontraLayer(gsLayer, globalAxisNames):
         for gsComponent in gsLayer.components
     ]
 
+    anchors = [
+        gsAnchorToFontraAnchor(gsAnchor)
+        for gsAnchor in gsLayer.anchors
+    ]
+
     return Layer(
         glyph=StaticGlyph(
-            xAdvance=gsLayer.width, path=pen.getPath(), components=components
+            xAdvance=gsLayer.width,
+            path=pen.getPath(),
+            components=components,
+            anchors=anchors
         )
     )
 
@@ -362,6 +371,18 @@ def gsComponentToFontraComponent(gsComponent, gsLayer, globalAxisNames):
         },
     )
     return component
+
+
+def gsAnchorToFontraAnchor(gsAnchor):
+    anchor = Anchor(
+        name=gsAnchor.name,
+        x=gsAnchor.position.x,
+        y=gsAnchor.position.x,
+        # TODO: =gsAnchor.orientation,
+        # Type: int If the position of the anchor is relaive to the LSB (0), center (2) or RSB (1).
+        customData=gsAnchor.userData,
+    )
+    return anchor
 
 
 def disambiguateLocalAxisName(axisName, globalAxisNames):
