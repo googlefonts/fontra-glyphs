@@ -346,17 +346,14 @@ def gsLayerToFontraLayer(gsLayer, globalAxisNames):
         for gsComponent in gsLayer.components
     ]
 
-    anchors = [
-        gsAnchorToFontraAnchor(gsAnchor)
-        for gsAnchor in gsLayer.anchors
-    ]
+    anchors = [gsAnchorToFontraAnchor(gsAnchor) for gsAnchor in gsLayer.anchors]
 
     return Layer(
         glyph=StaticGlyph(
             xAdvance=gsLayer.width,
             path=pen.getPath(),
             components=components,
-            anchors=anchors
+            anchors=anchors,
         )
     )
 
