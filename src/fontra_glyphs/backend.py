@@ -323,11 +323,10 @@ def fixLocations(sources, smartAxisNames):
             if axis not in smartAxisNames:
                 locItemsToDelete.append((axis, value))
 
-    if locItemsToDelete:
-        for axis, value in locItemsToDelete:
-            for source in sources:
-                if source.location.get(axis) == value:
-                    del source.location[axis]
+    for axis, value in locItemsToDelete:
+        for source in sources:
+            if source.location.get(axis) == value:
+                del source.location[axis]
 
 
 class GlyphsPackageBackend(GlyphsBackend):
