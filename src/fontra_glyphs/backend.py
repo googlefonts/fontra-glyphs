@@ -212,7 +212,7 @@ class GlyphsBackend:
             )
             layers[layerName] = gsLayerToFontraLayer(gsLayer, self.axisNames)
 
-        fixLocations(sources, set(smartLocation))
+        fixSourceLocations(sources, set(smartLocation))
 
         glyph = VariableGlyph(
             name=glyphName,
@@ -300,33 +300,6 @@ class GlyphsBackend:
 
     async def aclose(self) -> None:
         pass
-
-
-def fixLocations(sources, smartAxisNames):
-    # If a set of sources is equally controlled by a font axis and a glyph axis
-    # (smart axis), then the font axis should be ignored. This makes our
-    # varLib-based variation model behave like Glyphs.
-    sets = defaultdict(set)
-    for i, source in enumerate(sources):
-        for locItem in source.location.items():
-            sets[locItem].add(i)
-
-    reverseSets = defaultdict(set)
-    for locItem, sourceIndices in sets.items():
-        reverseSets[tuple(sorted(sourceIndices))].add(locItem)
-
-    matches = [locItems for locItems in reverseSets.values() if len(locItems) > 1]
-
-    locItemsToDelete = []
-    for locItems in matches:
-        for axis, value in locItems:
-            if axis not in smartAxisNames:
-                locItemsToDelete.append((axis, value))
-
-    for axis, value in locItemsToDelete:
-        for source in sources:
-            if source.location.get(axis) == value:
-                del source.location[axis]
 
 
 class GlyphsPackageBackend(GlyphsBackend):
@@ -447,3 +420,30 @@ def gsLocalAxesToFontraLocalAxes(gsGlyph):
         )
         for axis in gsGlyph.smartComponentAxes
     ]
+
+
+def fixSourceLocations(sources, smartAxisNames):
+    # If a set of sources is equally controlled by a font axis and a glyph axis
+    # (smart axis), then the font axis should be ignored. This makes our
+    # varLib-based variation model behave like Glyphs.
+    sets = defaultdict(set)
+    for i, source in enumerate(sources):
+        for locItem in source.location.items():
+            sets[locItem].add(i)
+
+    reverseSets = defaultdict(set)
+    for locItem, sourceIndices in sets.items():
+        reverseSets[tuple(sorted(sourceIndices))].add(locItem)
+
+    matches = [locItems for locItems in reverseSets.values() if len(locItems) > 1]
+
+    locItemsToDelete = []
+    for locItems in matches:
+        for axis, value in locItems:
+            if axis not in smartAxisNames:
+                locItemsToDelete.append((axis, value))
+
+    for axis, value in locItemsToDelete:
+        for source in sources:
+            if source.location.get(axis) == value:
+                del source.location[axis]
