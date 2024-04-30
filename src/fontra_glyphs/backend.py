@@ -16,6 +16,7 @@ from fontra.core.classes import (
     GlyphAxis,
     GlyphSource,
     Layer,
+    OpenTypeFeatures,
     StaticGlyph,
     VariableGlyph,
 )
@@ -145,6 +146,10 @@ class GlyphsBackend:
 
     async def getUnitsPerEm(self) -> int:
         return self.gsFont.upm
+
+    async def getFeatures(self) -> OpenTypeFeatures:
+        # TODO: extract features
+        return OpenTypeFeatures()
 
     async def getCustomData(self) -> dict[str, Any]:
         return {}
