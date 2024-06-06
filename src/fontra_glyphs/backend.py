@@ -16,6 +16,7 @@ from fontra.core.classes import (
     GlyphAxis,
     GlyphSource,
     Kerning,
+    Guideline,
     Layer,
     OpenTypeFeatures,
     StaticGlyph,
@@ -140,7 +141,7 @@ class GlyphsBackend:
         return FontInfo(**infoDict)
 
     async def getSources(self) -> dict[str, FontSource]:
-        return {}
+        return gsMastersToFontraFontSources(self.gsFont)
 
     async def getAxes(self) -> Axes:
         return Axes(axes=self.axes)
@@ -400,6 +401,16 @@ def gsAnchorToFontraAnchor(gsAnchor):
     return anchor
 
 
+def gsGuidelineToFontraGuideline(gsGuideline):
+    return Guideline(
+        x=gsGuideline.position.x,
+        y=gsGuideline.position.y,
+        angle=gsGuideline.angle,
+        name=gsGuideline.name,
+        locked=gsGuideline.locked,
+    )
+
+
 class MinimalUFOBuilder:
     def __init__(self, gsFont):
         self.font = gsFont
@@ -457,3 +468,55 @@ def fixSourceLocations(sources, smartAxisNames):
         for source in sources:
             if source.location.get(axis) == value:
                 del source.location[axis]
+
+
+def gsMastersToFontraFontSources(gsFont):
+    sources = {}
+    for gsMaster in gsFont.masters:
+        sources[gsMaster.id] = FontSource(
+            name=gsMaster.name,
+            italicAngle=gsMaster.italicAngle,
+            location={},
+            verticalMetrics=gsVerticalMetricsToFontraVerticalMetrics(gsMaster),
+            guidelines=[
+                gsGuidelineToFontraGuideline(gsGuideline)
+                for gsGuideline in gsMaster.guides
+            ],
+        )
+    return sources
+
+
+def getZone(value, alignmentZones):
+    for zone in alignmentZones:
+        if zone.position == value:
+            return zone.size
+    return 0
+
+
+def gsVerticalMetricsToFontraVerticalMetrics(gsMaster):
+    verticalMetrics = {
+        "ascender": {
+            "value": gsMaster.ascender,
+            "zone": getZone(gsMaster.ascender, gsMaster.alignmentZones),
+        },
+        "capHeight": {
+            "value": gsMaster.capHeight,
+            "zone": getZone(gsMaster.capHeight, gsMaster.alignmentZones),
+        },
+        "xHeight": {
+            "value": gsMaster.xHeight,
+            "zone": getZone(gsMaster.xHeight, gsMaster.alignmentZones),
+        },
+        "baseline": {"value": 0, "zone": getZone(0, gsMaster.alignmentZones)},
+        "descender": {
+            "value": gsMaster.descender,
+            "zone": getZone(gsMaster.descender, gsMaster.alignmentZones),
+        },
+    }
+
+    for gsMetric in gsMaster.metrics:
+        verticalMetrics[gsMetric.name] = {
+            "value": gsMetric.position,
+            "zone": gsMetric.overshoot,
+        }
+    return verticalMetrics
