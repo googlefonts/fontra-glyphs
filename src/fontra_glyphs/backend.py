@@ -478,7 +478,7 @@ def gsMastersToFontraFontSources(gsFont):
             name=gsMaster.name,
             italicAngle=gsMaster.italicAngle,
             location={},
-            lineMetricsVerticalLayout=gsVerticalMetricsToFontraLineMetricsVertical(
+            lineMetricsHorizontalLayout=gsVerticalMetricsToFontraLineMetricsHorizontal(
                 gsFont, gsMaster
             ),
             guidelines=[
@@ -496,8 +496,8 @@ def gsToFontraZone(gsVerticalMetricsValue, gsAlignmentZones):
     return 0
 
 
-def gsVerticalMetricsToFontraLineMetricsVertical(gsFont, gsMaster):
-    lineMetricsVertical = {
+def gsVerticalMetricsToFontraLineMetricsHorizontal(gsFont, gsMaster):
+    lineMetricsHorizontal = {
         "ascender": LineMetric(
             value=gsMaster.ascender,
             zone=gsToFontraZone(gsMaster.ascender, gsMaster.alignmentZones),
@@ -528,9 +528,9 @@ def gsVerticalMetricsToFontraLineMetricsVertical(gsFont, gsMaster):
     #         gsMetricValue = gsMaster.metricValues[gsMetric.id]
     #         print('position: ', gsMetricValue.position)
     #         print('overshoot: ', gsMetricValue.overshoot)
-    #         lineMetricsVertical[gsMetric.name] = LineMetric(
+    #         lineMetricsHorizontal[gsMetric.name] = LineMetric(
     #             value=gsMetricValue.position,
     #             zone=gsToFontraZone(gsMetricValue.overshoot, gsMaster.alignmentZones)
     #         )
 
-    return lineMetricsVertical
+    return lineMetricsHorizontal

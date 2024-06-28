@@ -53,7 +53,7 @@
 "sources": {
 "C4872ECA-A3A9-40AB-960A-1DB2202F16DE": {
 "name": "Light",
-"lineMetricsVerticalLayout": {
+"lineMetricsHorizontalLayout": {
 "ascender": {
 "value": 800,
 "zone": 10
@@ -100,7 +100,7 @@
 },
 "3E7589AA-8194-470F-8E2F-13C1C581BE24": {
 "name": "Regular",
-"lineMetricsVerticalLayout": {
+"lineMetricsHorizontalLayout": {
 "ascender": {
 "value": 800,
 "zone": 12
@@ -158,7 +158,7 @@
 },
 "BFFFD157-90D3-4B85-B99D-9A2F366F03CA": {
 "name": "Bold",
-"lineMetricsVerticalLayout": {
+"lineMetricsHorizontalLayout": {
 "ascender": {
 "value": 800,
 "zone": 15
