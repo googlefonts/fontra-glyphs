@@ -493,11 +493,20 @@ def getNormalizedKeringDict(gsFont, gsMasterID, valueDicts):
 def gsKerningGroupsToFontraKerningGroups(gsFont):
     groups: dict[str, list[str]] = {}
     for gsGlyph in gsFont.glyphs:
-        if gsGlyph.leftKerningKey:
-            groups.setdefault(gsGlyph.leftKerningKey, []).append(gsGlyph.name)
-        if gsGlyph.rightKerningKey:
-            groups.setdefault(gsGlyph.rightKerningKey, []).append(gsGlyph.name)
+        # again, this works within Glyphsapp, but not with GlyphsLib
+        # kerningKeys somehow do not work with GlyphsLib.
+        # if gsGlyph.leftKerningKey:
+        #     groups.setdefault(gsGlyph.leftKerningKey, []).append(gsGlyph.name)
+        # if gsGlyph.rightKerningKey:
+        #     groups.setdefault(gsGlyph.rightKerningKey, []).append(gsGlyph.name)
 
+        # This is a workaround for the above issue
+        if gsGlyph.leftKerningGroup:
+            leftKerningKey = f"@MMK_R_{gsGlyph.leftKerningGroup}"
+            groups.setdefault(leftKerningKey, []).append(gsGlyph.name)
+        if gsGlyph.rightKerningGroup:
+            rightKerningKey = f"@MMK_L_{gsGlyph.rightKerningGroup}"
+            groups.setdefault(rightKerningKey, []).append(gsGlyph.name)
     return groups
 
 
