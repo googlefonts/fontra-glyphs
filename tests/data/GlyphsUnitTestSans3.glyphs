@@ -3470,7 +3470,7 @@ type = baseline;
 type = descender;
 },
 {
-name = "Custom Vertical Metrics";
+name = "Custom Vertical Metric";
 }
 );
 note = "Bla bla";
