@@ -496,33 +496,26 @@ def gsToFontraZone(gsVerticalMetricsValue, gsAlignmentZones):
     return 0
 
 
-def gsVerticalMetricToFontraLineMetric(value, zone):
-    lineMetric = LineMetric(
-        value=value,
-        zone=zone,
-    )
-    return lineMetric
-
-
 def gsVerticalMetricsToFontraLineMetricsVertical(gsFont, gsMaster):
     lineMetricsVertical = {
-        "ascender": gsVerticalMetricToFontraLineMetric(
-            gsMaster.ascender,
-            gsToFontraZone(gsMaster.ascender, gsMaster.alignmentZones),
+        "ascender": LineMetric(
+            value=gsMaster.ascender,
+            zone=gsToFontraZone(gsMaster.ascender, gsMaster.alignmentZones),
         ),
-        "capHeight": gsVerticalMetricToFontraLineMetric(
-            gsMaster.capHeight,
-            gsToFontraZone(gsMaster.capHeight, gsMaster.alignmentZones),
+        "capHeight": LineMetric(
+            value=gsMaster.capHeight,
+            zone=gsToFontraZone(gsMaster.capHeight, gsMaster.alignmentZones),
         ),
-        "xHeight": gsVerticalMetricToFontraLineMetric(
-            gsMaster.xHeight, gsToFontraZone(gsMaster.xHeight, gsMaster.alignmentZones)
+        "xHeight": LineMetric(
+            value=gsMaster.xHeight,
+            zone=gsToFontraZone(gsMaster.xHeight, gsMaster.alignmentZones),
         ),
-        "baseline": gsVerticalMetricToFontraLineMetric(
-            0, gsToFontraZone(0, gsMaster.alignmentZones)
+        "baseline": LineMetric(
+            value=0, zone=gsToFontraZone(0, gsMaster.alignmentZones)
         ),
-        "descender": gsVerticalMetricToFontraLineMetric(
-            gsMaster.descender,
-            gsToFontraZone(gsMaster.descender, gsMaster.alignmentZones),
+        "descender": LineMetric(
+            value=gsMaster.descender,
+            zone=gsToFontraZone(gsMaster.descender, gsMaster.alignmentZones),
         ),
     }
 
@@ -535,8 +528,9 @@ def gsVerticalMetricsToFontraLineMetricsVertical(gsFont, gsMaster):
     #         gsMetricValue = gsMaster.metricValues[gsMetric.id]
     #         print('position: ', gsMetricValue.position)
     #         print('overshoot: ', gsMetricValue.overshoot)
-    #         lineMetricsVertical[gsMetric.name] = gsVerticalMetricToFontraLineMetric(
-    #             gsMetricValue.position, getZone(gsMetricValue.overshoot, gsMaster.alignmentZones)
+    #         lineMetricsVertical[gsMetric.name] = LineMetric(
+    #             value=gsMetricValue.position,
+    #             zone=gsToFontraZone(gsMetricValue.overshoot, gsMaster.alignmentZones)
     #         )
 
     return lineMetricsVertical
