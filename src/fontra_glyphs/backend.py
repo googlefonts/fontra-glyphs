@@ -502,10 +502,10 @@ def gsKerningGroupsToFontraKerningGroups(gsFont):
 
         # This is a workaround for the above issue
         if gsGlyph.leftKerningGroup:
-            leftKerningKey = f"@MMK_R_{gsGlyph.leftKerningGroup}"
+            leftKerningKey = f"public.kern1.@MMK_R_{gsGlyph.leftKerningGroup}"
             groups.setdefault(leftKerningKey, []).append(gsGlyph.name)
         if gsGlyph.rightKerningGroup:
-            rightKerningKey = f"@MMK_L_{gsGlyph.rightKerningGroup}"
+            rightKerningKey = f"public.kern1.@MMK_L_{gsGlyph.rightKerningGroup}"
             groups.setdefault(rightKerningKey, []).append(gsGlyph.name)
     return groups
 

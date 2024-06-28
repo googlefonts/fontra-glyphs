@@ -2,16 +2,16 @@ TYPE
 kern
 
 GROUPS
-@MMK_L_A;A
-@MMK_L_A.sc;a.sc
-@MMK_L_V;V
-@MMK_L_a;a
-@MMK_L_n;n
-@MMK_R_A;A
-@MMK_R_A.sc;a.sc
-@MMK_R_V;V
-@MMK_R_a;a
-@MMK_R_n;n
+public.kern1.@MMK_L_A;A
+public.kern1.@MMK_L_A.sc;a.sc
+public.kern1.@MMK_L_V;V
+public.kern1.@MMK_L_a;a
+public.kern1.@MMK_L_n;n
+public.kern1.@MMK_R_A;A
+public.kern1.@MMK_R_A.sc;a.sc
+public.kern1.@MMK_R_V;V
+public.kern1.@MMK_R_a;a
+public.kern1.@MMK_R_n;n
 
 VALUES
 left;right;C4872ECA-A3A9-40AB-960A-1DB2202F16DE;3E7589AA-8194-470F-8E2F-13C1C581BE24;BFFFD157-90D3-4B85-B99D-9A2F366F03CA
