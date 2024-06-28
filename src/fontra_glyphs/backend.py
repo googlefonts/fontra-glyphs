@@ -15,8 +15,8 @@ from fontra.core.classes import (
     FontSource,
     GlyphAxis,
     GlyphSource,
-    Kerning,
     Guideline,
+    Kerning,
     Layer,
     OpenTypeFeatures,
     StaticGlyph,
@@ -477,7 +477,9 @@ def gsMastersToFontraFontSources(gsFont):
             name=gsMaster.name,
             italicAngle=gsMaster.italicAngle,
             location={},
-            verticalMetrics=gsVerticalMetricsToFontraVerticalMetrics(gsMaster),
+            lineMetricsVerticalLayout=gsVerticalMetricsToFontraLineMetricsVertical(
+                gsMaster
+            ),
             guidelines=[
                 gsGuidelineToFontraGuideline(gsGuideline)
                 for gsGuideline in gsMaster.guides
@@ -493,8 +495,8 @@ def getZone(value, alignmentZones):
     return 0
 
 
-def gsVerticalMetricsToFontraVerticalMetrics(gsMaster):
-    verticalMetrics = {
+def gsVerticalMetricsToFontraLineMetricsVertical(gsMaster):
+    lineMetricsVertical = {
         "ascender": {
             "value": gsMaster.ascender,
             "zone": getZone(gsMaster.ascender, gsMaster.alignmentZones),
@@ -515,8 +517,8 @@ def gsVerticalMetricsToFontraVerticalMetrics(gsMaster):
     }
 
     for gsMetric in gsMaster.metrics:
-        verticalMetrics[gsMetric.name] = {
+        lineMetricsVertical[gsMetric.name] = {
             "value": gsMetric.position,
             "zone": gsMetric.overshoot,
         }
-    return verticalMetrics
+    return lineMetricsVertical
