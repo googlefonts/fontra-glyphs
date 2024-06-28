@@ -15,6 +15,7 @@ from fontra.core.classes import (
     FontSource,
     GlyphAxis,
     GlyphSource,
+    Kerning,
     Layer,
     OpenTypeFeatures,
     StaticGlyph,
@@ -146,6 +147,10 @@ class GlyphsBackend:
 
     async def getUnitsPerEm(self) -> int:
         return self.gsFont.upm
+
+    async def getKerning(self) -> dict[str, Kerning]:
+        # TODO: extract kerning
+        return {}
 
     async def getFeatures(self) -> OpenTypeFeatures:
         # TODO: extract features
