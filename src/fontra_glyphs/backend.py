@@ -479,7 +479,7 @@ def gsMastersToFontraFontSources(gsFont):
             italicAngle=gsMaster.italicAngle,
             location={},
             lineMetricsVerticalLayout=gsVerticalMetricsToFontraLineMetricsVertical(
-                gsMaster
+                gsFont, gsMaster
             ),
             guidelines=[
                 gsGuidelineToFontraGuideline(gsGuideline)
@@ -504,7 +504,7 @@ def gsVerticalMetricToFontraLineMetric(value, zone):
     return lineMetric
 
 
-def gsVerticalMetricsToFontraLineMetricsVertical(gsMaster):
+def gsVerticalMetricsToFontraLineMetricsVertical(gsFont, gsMaster):
     lineMetricsVertical = {
         "ascender": gsVerticalMetricToFontraLineMetric(
             gsMaster.ascender, getZone(gsMaster.ascender, gsMaster.alignmentZones)
@@ -523,9 +523,17 @@ def gsVerticalMetricsToFontraLineMetricsVertical(gsMaster):
         ),
     }
 
-    for gsMetric in gsMaster.metrics:
-        lineMetricsVertical[gsMetric.name] = gsVerticalMetricToFontraLineMetric(
-            gsMetric.position, getZone(gsMetric.overshoot, gsMaster.alignmentZones)
-        )
+    # TODO: custom metrics https://docu.glyphsapp.com/#GSFontMaster.metrics
+    # Custom vertical metrics seem not to work with GlyphsLib, currently.
+    # The following code works within GlyphsApp, but not with GlyphsLib.
+    # for gsMetric in gsFont.metrics:
+    #     if gsMetric.name:
+    #         # if it has a name, it is a custom vertical metric
+    #         gsMetricValue = gsMaster.metricValues[gsMetric.id]
+    #         print('position: ', gsMetricValue.position)
+    #         print('overshoot: ', gsMetricValue.overshoot)
+    #         lineMetricsVertical[gsMetric.name] = gsVerticalMetricToFontraLineMetric(
+    #             gsMetricValue.position, getZone(gsMetricValue.overshoot, gsMaster.alignmentZones)
+    #         )
 
     return lineMetricsVertical
