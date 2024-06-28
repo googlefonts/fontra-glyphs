@@ -142,7 +142,7 @@ class GlyphsBackend:
         return FontInfo(**infoDict)
 
     async def getSources(self) -> dict[str, FontSource]:
-        return gsMastersToFontraFontSources(self.gsFont)
+        return gsMastersToFontraFontSources(self.gsFont, self.locationByMasterID)
 
     async def getAxes(self) -> Axes:
         return Axes(axes=self.axes)
@@ -471,13 +471,13 @@ def fixSourceLocations(sources, smartAxisNames):
                 del source.location[axis]
 
 
-def gsMastersToFontraFontSources(gsFont):
+def gsMastersToFontraFontSources(gsFont, locationByMasterID):
     sources = {}
     for gsMaster in gsFont.masters:
         sources[gsMaster.id] = FontSource(
             name=gsMaster.name,
             italicAngle=gsMaster.italicAngle,
-            location={},
+            location=locationByMasterID[gsMaster.id],
             lineMetricsHorizontalLayout=gsVerticalMetricsToFontraLineMetricsHorizontal(
                 gsFont, gsMaster
             ),
