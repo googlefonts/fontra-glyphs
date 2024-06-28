@@ -489,10 +489,10 @@ def gsMastersToFontraFontSources(gsFont):
     return sources
 
 
-def getZone(value, alignmentZones):
-    for zone in alignmentZones:
-        if zone.position == value:
-            return zone.size
+def gsToFontraZone(gsVerticalMetricsValue, gsAlignmentZones):
+    for gsZone in gsAlignmentZones:
+        if gsZone.position == gsVerticalMetricsValue:
+            return gsZone.size
     return 0
 
 
@@ -507,19 +507,22 @@ def gsVerticalMetricToFontraLineMetric(value, zone):
 def gsVerticalMetricsToFontraLineMetricsVertical(gsFont, gsMaster):
     lineMetricsVertical = {
         "ascender": gsVerticalMetricToFontraLineMetric(
-            gsMaster.ascender, getZone(gsMaster.ascender, gsMaster.alignmentZones)
+            gsMaster.ascender,
+            gsToFontraZone(gsMaster.ascender, gsMaster.alignmentZones),
         ),
         "capHeight": gsVerticalMetricToFontraLineMetric(
-            gsMaster.capHeight, getZone(gsMaster.capHeight, gsMaster.alignmentZones)
+            gsMaster.capHeight,
+            gsToFontraZone(gsMaster.capHeight, gsMaster.alignmentZones),
         ),
         "xHeight": gsVerticalMetricToFontraLineMetric(
-            gsMaster.xHeight, getZone(gsMaster.xHeight, gsMaster.alignmentZones)
+            gsMaster.xHeight, gsToFontraZone(gsMaster.xHeight, gsMaster.alignmentZones)
         ),
         "baseline": gsVerticalMetricToFontraLineMetric(
-            0, getZone(0, gsMaster.alignmentZones)
+            0, gsToFontraZone(0, gsMaster.alignmentZones)
         ),
         "descender": gsVerticalMetricToFontraLineMetric(
-            gsMaster.descender, getZone(gsMaster.descender, gsMaster.alignmentZones)
+            gsMaster.descender,
+            gsToFontraZone(gsMaster.descender, gsMaster.alignmentZones),
         ),
     }
 
