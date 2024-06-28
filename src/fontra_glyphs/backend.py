@@ -149,8 +149,9 @@ class GlyphsBackend:
         return self.gsFont.upm
 
     async def getKerning(self) -> dict[str, Kerning]:
-        # TODO: extract kerning
-        return {}
+        # TODO: RTL kerning: https://docu.glyphsapp.com/#GSFont.kerningRTL
+        # TODO: vertical kerning: https://docu.glyphsapp.com/#GSFont.kerningVertical
+        return gsKerningLTRToFontraKerningLTR(self.gsFont)
 
     async def getFeatures(self) -> OpenTypeFeatures:
         # TODO: extract features
@@ -457,3 +458,67 @@ def fixSourceLocations(sources, smartAxisNames):
         for source in sources:
             if source.location.get(axis) == value:
                 del source.location[axis]
+
+
+def getKerningNameFormID(gsFont, kernID):
+    # if starts with @, it's group kerning
+    if kernID[0] == "@":
+        return kernID, f"public.kern1.{kernID}"
+    # else it's a simple glyph name
+    try:
+        name = gsFont.glyphForId_(kernID).name
+        return name, name
+    except Exception:
+        return None, None
+
+
+def getNormalizedKeringDict(gsFont, gsMasterID, valueDicts):
+    kernDict = gsFont.kerning[gsMasterID]
+    for leftKernID in kernDict.keys():
+        leftKey, fontraLeftKey = getKerningNameFormID(gsFont, leftKernID)
+        if not leftKey:
+            continue
+
+        for rightKernID in kernDict[leftKernID].keys():
+            rightKey, fontraRightKey = getKerningNameFormID(gsFont, rightKernID)
+            if not rightKey:
+                continue
+
+            value = gsFont.kerningForPair(gsMasterID, leftKey, rightKey)
+            valueDicts[fontraLeftKey][fontraRightKey][gsMasterID] = value
+
+    return valueDicts
+
+
+def gsKerningGroupsToFontraKerningGroups(gsFont):
+    groups: dict[str, list[str]] = {}
+    for gsGlyph in gsFont.glyphs:
+        if gsGlyph.leftKerningKey:
+            groups.setdefault(gsGlyph.leftKerningKey, []).append(gsGlyph.name)
+        if gsGlyph.rightKerningKey:
+            groups.setdefault(gsGlyph.rightKerningKey, []).append(gsGlyph.name)
+
+    return groups
+
+
+def gsKerningLTRToFontraKerningLTR(gsFont):
+    groups = gsKerningGroupsToFontraKerningGroups(gsFont)
+    sourceIdentifiers = [gsMaster.id for gsMaster in gsFont.masters]
+    valueDicts: dict[str, dict[str, dict]] = defaultdict(lambda: defaultdict(dict))
+
+    for gsMaster in gsFont.masters:
+        valueDicts = getNormalizedKeringDict(gsFont, gsMaster.id, valueDicts)
+
+    values = {
+        left: {
+            right: [valueDict.get(key) for key in sourceIdentifiers]
+            for right, valueDict in rightDict.items()
+        }
+        for left, rightDict in valueDicts.items()
+    }
+
+    return {
+        "kern": Kerning(
+            groups=groups, sourceIdentifiers=sourceIdentifiers, values=values
+        )
+    }
