@@ -18,6 +18,7 @@ from fontra.core.classes import (
     Guideline,
     Kerning,
     Layer,
+    LineMetric,
     OpenTypeFeatures,
     StaticGlyph,
     VariableGlyph,
@@ -495,30 +496,36 @@ def getZone(value, alignmentZones):
     return 0
 
 
+def gsVerticalMetricToFontraLineMetric(value, zone):
+    lineMetric = LineMetric(
+        value=value,
+        zone=zone,
+    )
+    return lineMetric
+
+
 def gsVerticalMetricsToFontraLineMetricsVertical(gsMaster):
     lineMetricsVertical = {
-        "ascender": {
-            "value": gsMaster.ascender,
-            "zone": getZone(gsMaster.ascender, gsMaster.alignmentZones),
-        },
-        "capHeight": {
-            "value": gsMaster.capHeight,
-            "zone": getZone(gsMaster.capHeight, gsMaster.alignmentZones),
-        },
-        "xHeight": {
-            "value": gsMaster.xHeight,
-            "zone": getZone(gsMaster.xHeight, gsMaster.alignmentZones),
-        },
-        "baseline": {"value": 0, "zone": getZone(0, gsMaster.alignmentZones)},
-        "descender": {
-            "value": gsMaster.descender,
-            "zone": getZone(gsMaster.descender, gsMaster.alignmentZones),
-        },
+        "ascender": gsVerticalMetricToFontraLineMetric(
+            gsMaster.ascender, getZone(gsMaster.ascender, gsMaster.alignmentZones)
+        ),
+        "capHeight": gsVerticalMetricToFontraLineMetric(
+            gsMaster.capHeight, getZone(gsMaster.capHeight, gsMaster.alignmentZones)
+        ),
+        "xHeight": gsVerticalMetricToFontraLineMetric(
+            gsMaster.xHeight, getZone(gsMaster.xHeight, gsMaster.alignmentZones)
+        ),
+        "baseline": gsVerticalMetricToFontraLineMetric(
+            0, getZone(0, gsMaster.alignmentZones)
+        ),
+        "descender": gsVerticalMetricToFontraLineMetric(
+            gsMaster.descender, getZone(gsMaster.descender, gsMaster.alignmentZones)
+        ),
     }
 
     for gsMetric in gsMaster.metrics:
-        lineMetricsVertical[gsMetric.name] = {
-            "value": gsMetric.position,
-            "zone": gsMetric.overshoot,
-        }
+        lineMetricsVertical[gsMetric.name] = gsVerticalMetricToFontraLineMetric(
+            gsMetric.position, getZone(gsMetric.overshoot, gsMaster.alignmentZones)
+        )
+
     return lineMetricsVertical
