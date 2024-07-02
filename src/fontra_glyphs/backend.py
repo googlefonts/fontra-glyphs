@@ -460,7 +460,7 @@ def fixSourceLocations(sources, smartAxisNames):
                 del source.location[axis]
 
 
-def getKerningNameFormID(gsFont, kernID):
+def getKerningNameFromID(gsFont, kernID):
     # if starts with @, it's group kerning
     if kernID[0] == "@":
         return kernID, f"public.kern1.{kernID}"
@@ -472,15 +472,15 @@ def getKerningNameFormID(gsFont, kernID):
         return None, None
 
 
-def getNormalizedKeringDict(gsFont, gsMasterID, valueDicts):
+def getNormalizedKerningDict(gsFont, gsMasterID, valueDicts):
     kernDict = gsFont.kerning[gsMasterID]
     for leftKernID in kernDict.keys():
-        leftKey, fontraLeftKey = getKerningNameFormID(gsFont, leftKernID)
+        leftKey, fontraLeftKey = getKerningNameFromID(gsFont, leftKernID)
         if not leftKey:
             continue
 
         for rightKernID in kernDict[leftKernID].keys():
-            rightKey, fontraRightKey = getKerningNameFormID(gsFont, rightKernID)
+            rightKey, fontraRightKey = getKerningNameFromID(gsFont, rightKernID)
             if not rightKey:
                 continue
 
@@ -516,7 +516,7 @@ def gsKerningLTRToFontraKerningLTR(gsFont):
     valueDicts: dict[str, dict[str, dict]] = defaultdict(lambda: defaultdict(dict))
 
     for gsMaster in gsFont.masters:
-        valueDicts = getNormalizedKeringDict(gsFont, gsMaster.id, valueDicts)
+        valueDicts = getNormalizedKerningDict(gsFont, gsMaster.id, valueDicts)
 
     values = {
         left: {
