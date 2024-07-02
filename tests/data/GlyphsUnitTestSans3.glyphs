@@ -33,6 +33,25 @@ code = a.sc;
 name = smcp_target;
 }
 );
+customParameters = (
+{
+name = glyphOrder;
+value = (
+A,
+Adieresis,
+a,
+adieresis,
+h,
+m,
+n,
+a.sc,
+dieresis,
+_part.shoulder,
+_part.stem,
+V
+);
+}
+);
 date = "2015-06-08 08:53:00 +0000";
 familyName = "Glyphs Unit Test Sans";
 featurePrefixes = (
@@ -1157,6 +1176,7 @@ unicode = 228;
 },
 {
 glyphname = h;
+kernRight = nKernRight;
 layers = (
 {
 layerId = "C4872ECA-A3A9-40AB-960A-1DB2202F16DE";
@@ -1225,6 +1245,7 @@ unicode = 104;
 },
 {
 glyphname = m;
+kernRight = nKernRight;
 layers = (
 {
 layerId = "C4872ECA-A3A9-40AB-960A-1DB2202F16DE";
@@ -1307,7 +1328,7 @@ unicode = 109;
 {
 glyphname = n;
 kernLeft = n;
-kernRight = n;
+kernRight = nKernRight;
 layers = (
 {
 background = {
@@ -2315,6 +2336,74 @@ topName = High;
 topValue = 100;
 }
 );
+},
+{
+glyphname = V;
+kernLeft = V;
+kernRight = V;
+layers = (
+{
+layerId = "C4872ECA-A3A9-40AB-960A-1DB2202F16DE";
+shapes = (
+{
+closed = 1;
+nodes = (
+(527,700,l),
+(307,21,l),
+(289,21,l),
+(65,700,l),
+(45,700,l),
+(275,0,l),
+(321,0,l,{
+name = "Hello World";
+}),
+(548,700,l)
+);
+}
+);
+width = 593;
+},
+{
+layerId = "3E7589AA-8194-470F-8E2F-13C1C581BE24";
+shapes = (
+{
+closed = 1;
+nodes = (
+(521,700,l),
+(342,90,l),
+(313,90,l),
+(134,700,l),
+(40,700,l),
+(248,0,l),
+(412,0,l),
+(617,700,l)
+);
+}
+);
+width = 657;
+},
+{
+layerId = "BFFFD157-90D3-4B85-B99D-9A2F366F03CA";
+shapes = (
+{
+closed = 1;
+nodes = (
+(491,700,l),
+(385,230,l),
+(356,230,l),
+(253,700,l),
+(20,700,l),
+(205,0,l),
+(555,0,l),
+(733,700,l)
+);
+}
+);
+width = 753;
+}
+);
+metricRight = "=|V";
+unicode = 86;
 }
 );
 instances = (

@@ -96,7 +96,9 @@ class GlyphsBackend:
                     location[axisDef.name] = axisDef.get_design_loc(master)
             self.locationByMasterID[master.id] = location
 
-        self.glyphMap = self._readGlyphMap(rawGlyphsData)
+        self.glyphMap, self.glyphKernSides = self._readGlyphMapAndKernSides(
+            rawGlyphsData
+        )
 
         axes: list[FontAxis | DiscreteFontAxis] = []
         for dsAxis in dsAxes:
@@ -151,8 +153,9 @@ class GlyphsBackend:
         return self.gsFont.upm
 
     async def getKerning(self) -> dict[str, Kerning]:
-        # TODO: extract kerning
-        return {}
+        # TODO: RTL kerning: https://docu.glyphsapp.com/#GSFont.kerningRTL
+        # TODO: vertical kerning: https://docu.glyphsapp.com/#GSFont.kerningVertical
+        return gsKerningLTRToFontraKerningLTR(self.gsFont, self.glyphKernSides)
 
     async def getFeatures(self) -> OpenTypeFeatures:
         # TODO: extract features
@@ -235,12 +238,17 @@ class GlyphsBackend:
         )
         return glyph
 
-    def _readGlyphMap(self, rawGlyphsData: list) -> dict[str, list[int]]:
+    def _readGlyphMapAndKernSides(
+        self, rawGlyphsData: list
+    ) -> tuple[dict[str, list[int]], dict[str, tuple[str, str]]]:
         formatVersion = self.gsFont.format_version
         glyphMap = {}
+        kernSides = {}
 
         for glyphData in rawGlyphsData:
             glyphName = glyphData["glyphname"]
+
+            # extract code points
             codePoints = glyphData.get("unicode")
             if codePoints is None:
                 codePoints = []
@@ -259,7 +267,17 @@ class GlyphsBackend:
                 assert all(isinstance(codePoint, int) for codePoint in codePoints)
             glyphMap[glyphName] = codePoints
 
-        return glyphMap
+            # extract kern sides
+            if formatVersion == 2:
+                leftKernSide = glyphData.get("leftKerningGroup")
+                rightKernSide = glyphData.get("rightKerningGroup")
+            else:
+                leftKernSide = glyphData.get("kernLeft")
+                rightKernSide = glyphData.get("kernRight")
+            if leftKernSide is not None or rightKernSide is not None:
+                kernSides[glyphName] = (leftKernSide, rightKernSide)
+
+        return glyphMap, kernSides
 
     def _ensureGlyphIsParsed(self, glyphName: str) -> None:
         if glyphName in self.parsedGlyphNames:
@@ -470,6 +488,72 @@ def fixSourceLocations(sources, smartAxisNames):
             if source.location.get(axis) == value:
                 del source.location[axis]
 
+
+
+def getKerningNameFromID(gsFont, kernID):
+    if kernID[0] == "@":
+        # if starts with @, it's group kerning
+        return kernID
+    else:
+        # it's a simple glyph name
+        return gsFont.glyphForId_(kernID).name
+
+
+def getNormalizedKerningDict(gsFont, gsMasterID, valueDicts):
+    kernDict = gsFont.kerning[gsMasterID]
+    for leftKernID in kernDict.keys():
+        leftKey = getKerningNameFromID(gsFont, leftKernID)
+        if not leftKey:
+            continue
+
+        for rightKernID in kernDict[leftKernID].keys():
+            rightKey = getKerningNameFromID(gsFont, rightKernID)
+            if not rightKey:
+                continue
+
+            value = gsFont.kerningForPair(gsMasterID, leftKey, rightKey)
+            valueDicts[leftKey][rightKey][gsMasterID] = value
+
+    return valueDicts
+
+
+def gsKerningSidesToFontraKerningGroups(glyphKernSides):
+    groups = defaultdict(list)
+
+    for glyphName in glyphKernSides:
+        leftKernSide, rightKernSide = glyphKernSides[glyphName]
+
+        if leftKernSide is not None:
+            leftGroupName = f"@MMK_R_{leftKernSide}"
+            groups[leftGroupName].append(glyphName)
+
+        if rightKernSide is not None:
+            rightGroupName = f"@MMK_L_{rightKernSide}"
+            groups[rightGroupName].append(glyphName)
+    return dict(groups)
+
+
+def gsKerningLTRToFontraKerningLTR(gsFont, glyphKernSides):
+    groups = gsKerningSidesToFontraKerningGroups(glyphKernSides)
+    sourceIdentifiers = [gsMaster.id for gsMaster in gsFont.masters]
+    valueDicts: dict[str, dict[str, dict]] = defaultdict(lambda: defaultdict(dict))
+
+    for gsMaster in gsFont.masters:
+        valueDicts = getNormalizedKerningDict(gsFont, gsMaster.id, valueDicts)
+
+    values = {
+        left: {
+            right: [valueDict.get(key) for key in sourceIdentifiers]
+            for right, valueDict in rightDict.items()
+        }
+        for left, rightDict in valueDicts.items()
+    }
+
+    return {
+        "kern": Kerning(
+            groups=groups, sourceIdentifiers=sourceIdentifiers, values=values
+        )
+    }
 
 def gsMastersToFontraFontSources(gsFont, locationByMasterID):
     sources = {}
