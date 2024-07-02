@@ -50,22 +50,23 @@ infoNamesMapping = [
     ("vendorID", "vendorID"),
 ]
 
-_kernSides = ["left", "right", "top", "bottom"]
-GS_KERN_GROUP_PREFIXES = {side: f"@MMK_{side[0].upper()}_" for side in _kernSides}
+GS_KERN_GROUP_PREFIXES = {
+    side: f"@MMK_{side[0].upper()}_" for side in ["left", "right", "top", "bottom"]
+}
 FONTRA_KERN_GROUP_PREFIXES = {
     "left": "public.kern1.",
     "right": "public.kern2.",
     "top": "public.kern1.",
     "bottom": "public.kern2.",
 }
-FORMAT2_KERN_SIDES = [
+GS_FORMAT_2_KERN_SIDES = [
     # pair side, glyph side
     ("left", "rightKerningGroup"),
     ("right", "leftKerningGroup"),
-    ("top", "bottomKerningGroup"),
-    ("bottom", "topKerningGroup"),
+    ("top", "bottomKerningGroup"),  # FIXME: unsure if this exists in Glyphs-2 format
+    ("bottom", "topKerningGroup"),  # FIXME: same
 ]
-FORMAT3_KERN_SIDES = [
+GS_FORMAT_3_KERN_SIDES = [
     # pair side, glyph side
     ("left", "kernRight"),
     ("right", "kernLeft"),
@@ -370,7 +371,7 @@ def _readGlyphMapAndKerningGroups(
     glyphMap = {}
     kerningGroups: dict = defaultdict(lambda: defaultdict(list))
 
-    sideAttrs = FORMAT2_KERN_SIDES if formatVersion == 2 else FORMAT3_KERN_SIDES
+    sideAttrs = GS_FORMAT_2_KERN_SIDES if formatVersion == 2 else GS_FORMAT_3_KERN_SIDES
 
     for glyphData in rawGlyphsData:
         glyphName = glyphData["glyphname"]
