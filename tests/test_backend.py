@@ -51,7 +51,7 @@ expectedAxes = structure(
 
 
 @pytest.mark.asyncio
-async def test_axes(testFont):
+async def test_getAxes(testFont):
     axes = await testFont.getAxes()
     assert expectedAxes == axes
 
@@ -73,7 +73,7 @@ expectedGlyphMap = {
 
 
 @pytest.mark.asyncio
-async def test_glyphMap(testFont):
+async def test_getGlyphMap(testFont):
     glyphMap = await testFont.getGlyphMap()
     assert expectedGlyphMap == glyphMap
 
@@ -98,7 +98,7 @@ expectedFontInfo = FontInfo(
 
 
 @pytest.mark.asyncio
-async def test_fontInfo(testFont):
+async def test_getFontInfo(testFont):
     fontInfo = await testFont.getFontInfo()
     assert expectedFontInfo == fontInfo
 
