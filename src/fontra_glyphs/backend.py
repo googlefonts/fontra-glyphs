@@ -107,8 +107,9 @@ class GlyphsBackend:
                     location[axisDef.name] = axisDef.get_design_loc(master)
             self.locationByMasterID[master.id] = location
 
-        self.glyphMap, self.kerningGroups = self._readGlyphMapAndKerningGroups(
-            rawGlyphsData
+        self.glyphMap, self.kerningGroups = _readGlyphMapAndKerningGroups(
+            rawGlyphsData,
+            self.gsFont.format_version,
         )
 
         axes: list[FontAxis | DiscreteFontAxis] = []
@@ -256,47 +257,6 @@ class GlyphsBackend:
         )
         return glyph
 
-    def _readGlyphMapAndKerningGroups(
-        self, rawGlyphsData: list
-    ) -> tuple[dict[str, list[int]], dict[str, tuple[str, str]]]:
-        formatVersion = self.gsFont.format_version
-        glyphMap = {}
-        kerningGroups = defaultdict(list)
-
-        sideAttrs = FORMAT2_KERN_SIDES if formatVersion == 2 else FORMAT3_KERN_SIDES
-
-        for glyphData in rawGlyphsData:
-            glyphName = glyphData["glyphname"]
-
-            # extract code points
-            codePoints = glyphData.get("unicode")
-            if codePoints is None:
-                codePoints = []
-            elif formatVersion == 2:
-                if isinstance(codePoints, str):
-                    codePoints = [
-                        int(codePoint, 16) for codePoint in codePoints.split(",")
-                    ]
-                else:
-                    assert isinstance(codePoints, int)
-                    # The plist parser turned it into an int, but it was a hex string
-                    codePoints = [int(str(codePoints), 16)]
-            elif isinstance(codePoints, int):
-                codePoints = [codePoints]
-            else:
-                assert all(isinstance(codePoint, int) for codePoint in codePoints)
-            glyphMap[glyphName] = codePoints
-
-            # extract kern groups
-            for side, sideAttr in sideAttrs:
-                groupName = glyphData.get(sideAttr)
-                if groupName is not None:
-                    kerningGroups[FONTRA_KERN_GROUP_PREFIXES[side] + groupName].append(
-                        glyphName
-                    )
-
-        return glyphMap, kerningGroups
-
     def _ensureGlyphIsParsed(self, glyphName: str) -> None:
         if glyphName in self.parsedGlyphNames:
             return
@@ -386,6 +346,45 @@ class GlyphsPackageBackend(GlyphsBackend):
         rawGlyphsData.sort(key=sortKey)
 
         return rawFontData, rawGlyphsData
+
+
+def _readGlyphMapAndKerningGroups(
+    rawGlyphsData: list, formatVersion: int
+) -> tuple[dict[str, list[int]], dict[str, tuple[str, str]]]:
+    glyphMap = {}
+    kerningGroups = defaultdict(list)
+
+    sideAttrs = FORMAT2_KERN_SIDES if formatVersion == 2 else FORMAT3_KERN_SIDES
+
+    for glyphData in rawGlyphsData:
+        glyphName = glyphData["glyphname"]
+
+        # extract code points
+        codePoints = glyphData.get("unicode")
+        if codePoints is None:
+            codePoints = []
+        elif formatVersion == 2:
+            if isinstance(codePoints, str):
+                codePoints = [int(codePoint, 16) for codePoint in codePoints.split(",")]
+            else:
+                assert isinstance(codePoints, int)
+                # The plist parser turned it into an int, but it was a hex string
+                codePoints = [int(str(codePoints), 16)]
+        elif isinstance(codePoints, int):
+            codePoints = [codePoints]
+        else:
+            assert all(isinstance(codePoint, int) for codePoint in codePoints)
+        glyphMap[glyphName] = codePoints
+
+        # extract kern groups
+        for side, sideAttr in sideAttrs:
+            groupName = glyphData.get(sideAttr)
+            if groupName is not None:
+                kerningGroups[FONTRA_KERN_GROUP_PREFIXES[side] + groupName].append(
+                    glyphName
+                )
+
+    return glyphMap, kerningGroups
 
 
 def gsLayerToFontraLayer(gsLayer, globalAxisNames):
