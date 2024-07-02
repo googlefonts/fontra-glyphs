@@ -170,10 +170,15 @@ class GlyphsBackend:
         kerningLTR = gsKerningToFontraKerning(
             self.gsFont, self.kerningGroups, "kerning", "left", "right"
         )
+        kerningVertical = gsKerningToFontraKerning(
+            self.gsFont, self.kerningGroups, "kerningVertical", "top", "bottom"
+        )
 
         kerning = {}
         if kerningLTR.values:
             kerning["kern"] = kerningLTR
+        if kerningVertical.values:
+            kerning["vkrn"] = kerningLTR
         return kerning
 
     async def getFeatures(self) -> OpenTypeFeatures:
@@ -511,11 +516,16 @@ def translateGroupName(name, oldPrefix, newPrefix):
 
 
 def gsKerningToFontraKerning(gsFont, groups, kerningAttr, side1, side2):
-    sourceIdentifiers = [gsMaster.id for gsMaster in gsFont.masters]
+    sourceIdentifiers = []
     valueDicts: dict[str, dict[str, dict]] = defaultdict(lambda: defaultdict(dict))
 
     for gsMaster in gsFont.masters:
-        kernDict = getattr(gsFont, kerningAttr)[gsMaster.id]
+        kernDict = getattr(gsFont, kerningAttr).get(gsMaster.id)
+        if kernDict is None:
+            continue
+
+        sourceIdentifiers.append(gsMaster.id)
+
         for name1, name2Dict in kernDict.items():
             name1 = translateGroupName(
                 name1, GS_KERN_GROUP_PREFIXES[side1], FONTRA_KERN_GROUP_PREFIXES[side1]
