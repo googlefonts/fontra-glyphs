@@ -15,8 +15,10 @@ from fontra.core.classes import (
     FontSource,
     GlyphAxis,
     GlyphSource,
+    Guideline,
     Kerning,
     Layer,
+    LineMetric,
     OpenTypeFeatures,
     StaticGlyph,
     VariableGlyph,
@@ -142,7 +144,7 @@ class GlyphsBackend:
         return FontInfo(**infoDict)
 
     async def getSources(self) -> dict[str, FontSource]:
-        return {}
+        return gsMastersToFontraFontSources(self.gsFont, self.locationByMasterID)
 
     async def getAxes(self) -> Axes:
         return Axes(axes=self.axes)
@@ -418,6 +420,16 @@ def gsAnchorToFontraAnchor(gsAnchor):
     return anchor
 
 
+def gsGuidelineToFontraGuideline(gsGuideline):
+    return Guideline(
+        x=gsGuideline.position.x,
+        y=gsGuideline.position.y,
+        angle=gsGuideline.angle,
+        name=gsGuideline.name,
+        locked=gsGuideline.locked,
+    )
+
+
 class MinimalUFOBuilder:
     def __init__(self, gsFont):
         self.font = gsFont
@@ -475,6 +487,7 @@ def fixSourceLocations(sources, smartAxisNames):
         for source in sources:
             if source.location.get(axis) == value:
                 del source.location[axis]
+
 
 
 def getKerningNameFromID(gsFont, kernID):
@@ -541,3 +554,67 @@ def gsKerningLTRToFontraKerningLTR(gsFont, glyphKernSides):
             groups=groups, sourceIdentifiers=sourceIdentifiers, values=values
         )
     }
+
+def gsMastersToFontraFontSources(gsFont, locationByMasterID):
+    sources = {}
+    for gsMaster in gsFont.masters:
+        sources[gsMaster.id] = FontSource(
+            name=gsMaster.name,
+            italicAngle=gsMaster.italicAngle,
+            location=locationByMasterID[gsMaster.id],
+            lineMetricsHorizontalLayout=gsVerticalMetricsToFontraLineMetricsHorizontal(
+                gsFont, gsMaster
+            ),
+            guidelines=[
+                gsGuidelineToFontraGuideline(gsGuideline)
+                for gsGuideline in gsMaster.guides
+            ],
+        )
+    return sources
+
+
+def gsToFontraZone(gsVerticalMetricsValue, gsAlignmentZones):
+    for gsZone in gsAlignmentZones:
+        if gsZone.position == gsVerticalMetricsValue:
+            return gsZone.size
+    return 0
+
+
+def gsVerticalMetricsToFontraLineMetricsHorizontal(gsFont, gsMaster):
+    lineMetricsHorizontal = {
+        "ascender": LineMetric(
+            value=gsMaster.ascender,
+            zone=gsToFontraZone(gsMaster.ascender, gsMaster.alignmentZones),
+        ),
+        "capHeight": LineMetric(
+            value=gsMaster.capHeight,
+            zone=gsToFontraZone(gsMaster.capHeight, gsMaster.alignmentZones),
+        ),
+        "xHeight": LineMetric(
+            value=gsMaster.xHeight,
+            zone=gsToFontraZone(gsMaster.xHeight, gsMaster.alignmentZones),
+        ),
+        "baseline": LineMetric(
+            value=0, zone=gsToFontraZone(0, gsMaster.alignmentZones)
+        ),
+        "descender": LineMetric(
+            value=gsMaster.descender,
+            zone=gsToFontraZone(gsMaster.descender, gsMaster.alignmentZones),
+        ),
+    }
+
+    # TODO: custom metrics https://docu.glyphsapp.com/#GSFontMaster.metrics
+    # Custom vertical metrics seem not to work with GlyphsLib, currently.
+    # The following code works within GlyphsApp, but not with GlyphsLib.
+    # for gsMetric in gsFont.metrics:
+    #     if gsMetric.name:
+    #         # if it has a name, it is a custom vertical metric
+    #         gsMetricValue = gsMaster.metricValues[gsMetric.id]
+    #         print('position: ', gsMetricValue.position)
+    #         print('overshoot: ', gsMetricValue.overshoot)
+    #         lineMetricsHorizontal[gsMetric.name] = LineMetric(
+    #             value=gsMetricValue.position,
+    #             zone=gsToFontraZone(gsMetricValue.overshoot, gsMaster.alignmentZones)
+    #         )
+
+    return lineMetricsHorizontal
