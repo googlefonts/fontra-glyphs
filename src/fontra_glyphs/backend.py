@@ -510,14 +510,14 @@ def getNormalizedKerningDict(gsFont, gsMasterID, valueDicts):
 def gsKerningGroupsToFontraKerningGroups(glyphKernSides):
     groups: dict[str, list[str]] = {}
     for glyphName in glyphKernSides:
-        leftKernGroup, rightKernGroup = glyphKernSides[glyphName]
+        leftKernSide, rightKernSide = glyphKernSides[glyphName]
 
         # Note: Maybe looks wrong, but MMK_R_ belongs to left and MMK_L_ to right.
-        if leftKernGroup is not None:
-            leftKerningKey = f"public.kern1.@MMK_R_{leftKernGroup}"
+        if leftKernSide is not None:
+            leftKerningKey = f"public.kern1.@MMK_R_{leftKernSide}"
             groups.setdefault(leftKerningKey, []).append(glyphName)
-        if rightKernGroup is not None:
-            rightKerningKey = f"public.kern1.@MMK_L_{rightKernGroup}"
+        if rightKernSide is not None:
+            rightKerningKey = f"public.kern1.@MMK_L_{rightKernSide}"
             groups.setdefault(rightKerningKey, []).append(glyphName)
     return groups
 
