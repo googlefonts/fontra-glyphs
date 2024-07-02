@@ -518,7 +518,13 @@ def translateGroupName(name, oldPrefix, newPrefix):
 def gsKerningToFontraKerning(
     gsFont, groupsBySide, kerningAttr, side1, side2
 ) -> Kerning:
+    gsPrefix1 = GS_KERN_GROUP_PREFIXES[side1]
+    gsPrefix2 = GS_KERN_GROUP_PREFIXES[side2]
+    fontraPrefix1 = FONTRA_KERN_GROUP_PREFIXES[side1]
+    fontraPrefix2 = FONTRA_KERN_GROUP_PREFIXES[side2]
+
     groups = dict(groupsBySide[side1] | groupsBySide[side2])
+
     sourceIdentifiers = []
     valueDicts: dict[str, dict[str, dict]] = defaultdict(lambda: defaultdict(dict))
 
@@ -530,15 +536,13 @@ def gsKerningToFontraKerning(
         sourceIdentifiers.append(gsMaster.id)
 
         for name1, name2Dict in kernDict.items():
-            name1 = translateGroupName(
-                name1, GS_KERN_GROUP_PREFIXES[side1], FONTRA_KERN_GROUP_PREFIXES[side1]
-            )
+            name1 = translateGroupName(name1, gsPrefix1, fontraPrefix1)
 
             for name2, value in name2Dict.items():
                 name2 = translateGroupName(
                     name2,
-                    GS_KERN_GROUP_PREFIXES[side2],
-                    FONTRA_KERN_GROUP_PREFIXES[side2],
+                    gsPrefix2,
+                    fontraPrefix2,
                 )
                 valueDicts[name1][name2][gsMaster.id] = value
 
