@@ -68,6 +68,7 @@ expectedGlyphMap = {
     "h": [104],
     "m": [109],
     "n": [110],
+    "V": [86],
 }
 
 
@@ -113,3 +114,11 @@ async def test_glyphRead(testFont, referenceFont, glyphName):
 
     referenceGlyph = await referenceFont.getGlyph(glyphName)
     assert referenceGlyph == glyph
+
+
+async def test_kerningRead(testFont, referenceFont):
+    assert await testFont.getKerning() == await referenceFont.getKerning()
+
+
+async def test_sourcesRead(testFont, referenceFont):
+    assert await testFont.getSources() == await referenceFont.getSources()

@@ -1,5 +1,6 @@
 {
 glyphname = h;
+kernRight = nKernRight;
 layers = (
 {
 layerId = "C4872ECA-A3A9-40AB-960A-1DB2202F16DE";

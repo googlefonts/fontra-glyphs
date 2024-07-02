@@ -27,6 +27,23 @@ name = smcp_target;
 );
 customParameters = (
 {
+name = glyphOrder;
+value = (
+A,
+Adieresis,
+a,
+adieresis,
+h,
+m,
+n,
+a.sc,
+dieresis,
+_part.shoulder,
+_part.stem,
+V
+);
+},
+{
 name = note;
 value = "Bla bla";
 }
@@ -1145,6 +1162,7 @@ width = 560;
 }
 );
 leftMetricsKey = m;
+rightKerningGroup = nKernRight;
 rightMetricsKey = m;
 unicode = 0068;
 },
@@ -1219,6 +1237,7 @@ layerId = "3E7589AA-8194-470F-8E2F-13C1C581BE24";
 width = 760;
 }
 );
+rightKerningGroup = nKernRight;
 unicode = 006D;
 },
 {
@@ -1354,7 +1373,7 @@ width = 501;
 );
 leftKerningGroup = n;
 leftMetricsKey = m;
-rightKerningGroup = n;
+rightKerningGroup = nKernRight;
 rightMetricsKey = m;
 unicode = 006E;
 },
@@ -2259,6 +2278,72 @@ topName = High;
 topValue = 100;
 }
 );
+},
+{
+glyphname = V;
+layers = (
+{
+layerId = "C4872ECA-A3A9-40AB-960A-1DB2202F16DE";
+paths = (
+{
+closed = 1;
+nodes = (
+"527 700 LINE",
+"307 21 LINE",
+"289 21 LINE",
+"65 700 LINE",
+"45 700 LINE",
+"275 0 LINE",
+"321 0 LINE {name = \"Hello World\";}",
+"548 700 LINE"
+);
+}
+);
+width = 593;
+},
+{
+layerId = "3E7589AA-8194-470F-8E2F-13C1C581BE24";
+paths = (
+{
+closed = 1;
+nodes = (
+"521 700 LINE",
+"342 90 LINE",
+"313 90 LINE",
+"134 700 LINE",
+"40 700 LINE",
+"248 0 LINE",
+"412 0 LINE",
+"617 700 LINE"
+);
+}
+);
+width = 657;
+},
+{
+layerId = "BFFFD157-90D3-4B85-B99D-9A2F366F03CA";
+paths = (
+{
+closed = 1;
+nodes = (
+"491 700 LINE",
+"385 230 LINE",
+"356 230 LINE",
+"253 700 LINE",
+"20 700 LINE",
+"205 0 LINE",
+"555 0 LINE",
+"733 700 LINE"
+);
+}
+);
+width = 753;
+}
+);
+leftKerningGroup = V;
+rightKerningGroup = V;
+rightMetricsKey = "=|V";
+unicode = 0056;
 }
 );
 instances = (

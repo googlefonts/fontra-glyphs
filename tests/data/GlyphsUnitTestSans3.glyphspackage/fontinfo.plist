@@ -29,6 +29,25 @@ code = a.sc;
 name = smcp_target;
 }
 );
+customParameters = (
+{
+name = glyphOrder;
+value = (
+A,
+Adieresis,
+a,
+adieresis,
+h,
+m,
+n,
+a.sc,
+dieresis,
+_part.shoulder,
+_part.stem,
+V
+);
+}
+);
 date = "2015-06-08 08:53:00 +0000";
 familyName = "Glyphs Unit Test Sans";
 featurePrefixes = (
