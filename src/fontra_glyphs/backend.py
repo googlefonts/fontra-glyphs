@@ -357,7 +357,7 @@ def _readGlyphMapAndKerningGroups(
     rawGlyphsData: list, formatVersion: int
 ) -> tuple[dict[str, list[int]], dict[str, tuple[str, str]]]:
     glyphMap = {}
-    kerningGroups = defaultdict(list)
+    kerningGroups = defaultdict(lambda: defaultdict(list))
 
     sideAttrs = FORMAT2_KERN_SIDES if formatVersion == 2 else FORMAT3_KERN_SIDES
 
@@ -385,9 +385,9 @@ def _readGlyphMapAndKerningGroups(
         for side, sideAttr in sideAttrs:
             groupName = glyphData.get(sideAttr)
             if groupName is not None:
-                kerningGroups[FONTRA_KERN_GROUP_PREFIXES[side] + groupName].append(
-                    glyphName
-                )
+                kerningGroups[side][
+                    FONTRA_KERN_GROUP_PREFIXES[side] + groupName
+                ].append(glyphName)
 
     return glyphMap, kerningGroups
 
@@ -515,7 +515,8 @@ def translateGroupName(name, oldPrefix, newPrefix):
     return newPrefix + name[len(oldPrefix) :] if name.startswith(oldPrefix) else name
 
 
-def gsKerningToFontraKerning(gsFont, groups, kerningAttr, side1, side2):
+def gsKerningToFontraKerning(gsFont, groupsBySide, kerningAttr, side1, side2):
+    groups = dict(groupsBySide[side1] | groupsBySide[side2])
     sourceIdentifiers = []
     valueDicts: dict[str, dict[str, dict]] = defaultdict(lambda: defaultdict(dict))
 
