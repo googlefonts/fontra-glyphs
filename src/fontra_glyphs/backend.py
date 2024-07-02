@@ -94,7 +94,9 @@ class GlyphsBackend:
                     location[axisDef.name] = axisDef.get_design_loc(master)
             self.locationByMasterID[master.id] = location
 
-        self.glyphMap = self._readGlyphMap(rawGlyphsData)
+        self.glyphMap, self.glyphKernSides = self._readGlyphMapAndKernSides(
+            rawGlyphsData
+        )
 
         axes: list[FontAxis | DiscreteFontAxis] = []
         for dsAxis in dsAxes:
@@ -234,12 +236,15 @@ class GlyphsBackend:
         )
         return glyph
 
-    def _readGlyphMap(self, rawGlyphsData: list) -> dict[str, list[int]]:
+    def _readGlyphMapAndKernSides(self, rawGlyphsData: list) -> dict[str, list[int]]:
         formatVersion = self.gsFont.format_version
         glyphMap = {}
+        kernSides = {}
 
         for glyphData in rawGlyphsData:
             glyphName = glyphData["glyphname"]
+
+            # extract code points
             codePoints = glyphData.get("unicode")
             if codePoints is None:
                 codePoints = []
@@ -258,7 +263,17 @@ class GlyphsBackend:
                 assert all(isinstance(codePoint, int) for codePoint in codePoints)
             glyphMap[glyphName] = codePoints
 
-        return glyphMap
+            # extract kern sides
+            if formatVersion == 2:
+                leftKernSide = glyphData.get("leftKerningGroup")
+                rightKernSide = glyphData.get("rightKerningGroup")
+            else:
+                leftKernSide = glyphData.get("kernLeft")
+                rightKernSide = glyphData.get("kernRight")
+            if leftKernSide is not None or rightKernSide is not None:
+                kernSides[glyphName] = (leftKernSide, rightKernSide)
+
+        return glyphMap, kernSides
 
     def _ensureGlyphIsParsed(self, glyphName: str) -> None:
         if glyphName in self.parsedGlyphNames:
