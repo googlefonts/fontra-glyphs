@@ -236,7 +236,9 @@ class GlyphsBackend:
         )
         return glyph
 
-    def _readGlyphMapAndKernSides(self, rawGlyphsData: list) -> dict[str, list[int]]:
+    def _readGlyphMapAndKernSides(
+        self, rawGlyphsData: list
+    ) -> tuple[dict[str, list[int]], dict[str, tuple[str, str]]]:
         formatVersion = self.gsFont.format_version
         glyphMap = {}
         kernSides = {}
