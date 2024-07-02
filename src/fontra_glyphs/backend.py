@@ -50,6 +50,11 @@ infoNamesMapping = [
     ("vendorID", "vendorID"),
 ]
 
+GS_KERN_PREFIX_LEFT = "@MMK_L_"
+GS_KERN_PREFIX_RIGHT = "@MMK_R_"
+FONTRA_KERN_PREFIX_LEFT = "public.kern1."
+FONTRA_KERN_PREFIX_RIGHT = "public.kern2."
+
 
 class GlyphsBackend:
     @classmethod
@@ -489,49 +494,37 @@ def fixSourceLocations(sources, smartAxisNames):
                 del source.location[axis]
 
 
-def getKerningNameFromID(gsFont, kernID):
-    # if starts with @, it's group kerning
-    if kernID[0] == "@":
-        # lets assume that the group name follows always this structure @MMK_X_XXXX:
-        return kernID, f"public.kern1.{kernID[7:]}"
-    # else it's a simple glyph name
-    try:
-        name = gsFont.glyphForId_(kernID).name
-        return name, name
-    except Exception:
-        return None, None
+def translateGroupName(name, oldPrefix, newPrefix):
+    oldPrefixLength = len(oldPrefix)
+    return newPrefix + name[oldPrefixLength:] if name.startswith(oldPrefix) else name
 
 
 def getNormalizedKerningDict(gsFont, gsMasterID, valueDicts):
     kernDict = gsFont.kerning[gsMasterID]
-    for leftKernID in kernDict.keys():
-        leftKey, fontraLeftKey = getKerningNameFromID(gsFont, leftKernID)
-        if not leftKey:
-            continue
+    for left, values in kernDict.items():
+        left = translateGroupName(left, GS_KERN_PREFIX_LEFT, FONTRA_KERN_PREFIX_LEFT)
 
-        for rightKernID in kernDict[leftKernID].keys():
-            rightKey, fontraRightKey = getKerningNameFromID(gsFont, rightKernID)
-            if not rightKey:
-                continue
+        for right, value in values.items():
+            right = translateGroupName(
+                right, GS_KERN_PREFIX_RIGHT, FONTRA_KERN_PREFIX_RIGHT
+            )
 
-            value = gsFont.kerningForPair(gsMasterID, leftKey, rightKey)
-            valueDicts[fontraLeftKey][fontraRightKey][gsMasterID] = value
+            valueDicts[left][right][gsMasterID] = value
 
     return valueDicts
 
 
 def gsKerningSidesToFontraKerningGroups(glyphKernSides):
     groups = defaultdict(list)
-
     for glyphName in glyphKernSides:
         leftKernSide, rightKernSide = glyphKernSides[glyphName]
 
         if leftKernSide is not None:
-            leftGroupName = f"public.kern1.{leftKernSide}"
+            leftGroupName = f"{FONTRA_KERN_PREFIX_LEFT}{leftKernSide}"
             groups[leftGroupName].append(glyphName)
 
         if rightKernSide is not None:
-            rightGroupName = f"public.kern2.{rightKernSide}"
+            rightGroupName = f"{FONTRA_KERN_PREFIX_RIGHT}{rightKernSide}"
             groups[rightGroupName].append(glyphName)
     return dict(groups)
 
