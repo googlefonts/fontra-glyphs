@@ -153,7 +153,7 @@ class GlyphsBackend:
     async def getKerning(self) -> dict[str, Kerning]:
         # TODO: RTL kerning: https://docu.glyphsapp.com/#GSFont.kerningRTL
         # TODO: vertical kerning: https://docu.glyphsapp.com/#GSFont.kerningVertical
-        return gsKerningLTRToFontraKerningLTR(self.gsFont)
+        return gsKerningLTRToFontraKerningLTR(self.gsFont, self.glyphKernSides)
 
     async def getFeatures(self) -> OpenTypeFeatures:
         # TODO: extract features
@@ -505,28 +505,23 @@ def getNormalizedKerningDict(gsFont, gsMasterID, valueDicts):
     return valueDicts
 
 
-def gsKerningGroupsToFontraKerningGroups(gsFont):
+def gsKerningGroupsToFontraKerningGroups(glyphKernSides):
     groups: dict[str, list[str]] = {}
-    for gsGlyph in gsFont.glyphs:
-        # again, this works within Glyphsapp, but not with GlyphsLib
-        # kerningKeys somehow do not work with GlyphsLib.
-        # if gsGlyph.leftKerningKey:
-        #     groups.setdefault(gsGlyph.leftKerningKey, []).append(gsGlyph.name)
-        # if gsGlyph.rightKerningKey:
-        #     groups.setdefault(gsGlyph.rightKerningKey, []).append(gsGlyph.name)
+    for glyphName in glyphKernSides:
+        leftKernGroup, rightKernGroup = glyphKernSides[glyphName]
 
-        # This is a workaround for the above issue
-        if gsGlyph.leftKerningGroup:
-            leftKerningKey = f"public.kern1.@MMK_R_{gsGlyph.leftKerningGroup}"
-            groups.setdefault(leftKerningKey, []).append(gsGlyph.name)
-        if gsGlyph.rightKerningGroup:
-            rightKerningKey = f"public.kern1.@MMK_L_{gsGlyph.rightKerningGroup}"
-            groups.setdefault(rightKerningKey, []).append(gsGlyph.name)
+        # Note: Maybe looks wrong, but MMK_R_ belongs to left and MMK_L_ to right.
+        if leftKernGroup is not None:
+            leftKerningKey = f"public.kern1.@MMK_R_{leftKernGroup}"
+            groups.setdefault(leftKerningKey, []).append(glyphName)
+        if rightKernGroup is not None:
+            rightKerningKey = f"public.kern1.@MMK_L_{rightKernGroup}"
+            groups.setdefault(rightKerningKey, []).append(glyphName)
     return groups
 
 
-def gsKerningLTRToFontraKerningLTR(gsFont):
-    groups = gsKerningGroupsToFontraKerningGroups(gsFont)
+def gsKerningLTRToFontraKerningLTR(gsFont, glyphKernSides):
+    groups = gsKerningGroupsToFontraKerningGroups(glyphKernSides)
     sourceIdentifiers = [gsMaster.id for gsMaster in gsFont.masters]
     valueDicts: dict[str, dict[str, dict]] = defaultdict(lambda: defaultdict(dict))
 
