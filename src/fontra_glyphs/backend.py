@@ -495,8 +495,7 @@ def fixSourceLocations(sources, smartAxisNames):
 
 
 def translateGroupName(name, oldPrefix, newPrefix):
-    oldPrefixLength = len(oldPrefix)
-    return newPrefix + name[oldPrefixLength:] if name.startswith(oldPrefix) else name
+    return newPrefix + name[len(oldPrefix) :] if name.startswith(oldPrefix) else name
 
 
 def getNormalizedKerningDict(gsFont, gsMasterID, valueDicts):
