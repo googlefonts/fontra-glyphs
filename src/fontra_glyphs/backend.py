@@ -55,11 +55,23 @@ GS_KERN_GROUP_PREFIXES = {side: f"@MMK_{side[0].upper()}_" for side in _kernSide
 FONTRA_KERN_GROUP_PREFIXES = {
     "left": "public.kern1.",
     "right": "public.kern2.",
-    "top": "kern_top_",
-    "bottom": "kern_bottom_",
+    "top": "public.kern1.",
+    "bottom": "public.kern2.",
 }
-FORMAT2_KERN_SIDES = [(side, f"{side}KerningGroup") for side in _kernSides]
-FORMAT3_KERN_SIDES = [(side, f"kern{side.capitalize()}") for side in _kernSides]
+FORMAT2_KERN_SIDES = [
+    # pair side, glyph side
+    ("left", "rightKerningGroup"),
+    ("right", "leftKerningGroup"),
+    ("top", "bottomKerningGroup"),
+    ("bottom", "topKerningGroup"),
+]
+FORMAT3_KERN_SIDES = [
+    # pair side, glyph side
+    ("left", "kernRight"),
+    ("right", "kernLeft"),
+    ("top", "kernBottom"),
+    ("bottom", "kernTop"),
+]
 
 
 class GlyphsBackend:
@@ -381,11 +393,11 @@ def _readGlyphMapAndKerningGroups(
         glyphMap[glyphName] = codePoints
 
         # extract kern groups
-        for side, sideAttr in sideAttrs:
-            groupName = glyphData.get(sideAttr)
+        for pairSide, glyphSideAttr in sideAttrs:
+            groupName = glyphData.get(glyphSideAttr)
             if groupName is not None:
-                kerningGroups[side][
-                    FONTRA_KERN_GROUP_PREFIXES[side] + groupName
+                kerningGroups[pairSide][
+                    FONTRA_KERN_GROUP_PREFIXES[pairSide] + groupName
                 ].append(glyphName)
 
     return glyphMap, kerningGroups
