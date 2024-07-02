@@ -166,7 +166,6 @@ class GlyphsBackend:
 
     async def getKerning(self) -> dict[str, Kerning]:
         # TODO: RTL kerning: https://docu.glyphsapp.com/#GSFont.kerningRTL
-        # TODO: vertical kerning: https://docu.glyphsapp.com/#GSFont.kerningVertical
         kerningLTR = gsKerningToFontraKerning(
             self.gsFont, self.kerningGroups, "kerning", "left", "right"
         )
