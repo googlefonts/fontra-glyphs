@@ -107,7 +107,7 @@ class GlyphsBackend:
                     location[axisDef.name] = axisDef.get_design_loc(master)
             self.locationByMasterID[master.id] = location
 
-        self.glyphMap, self.kerningGroups = self._readGlyphMapAndKernGroups(
+        self.glyphMap, self.kerningGroups = self._readGlyphMapAndKerningGroups(
             rawGlyphsData
         )
 
@@ -256,12 +256,12 @@ class GlyphsBackend:
         )
         return glyph
 
-    def _readGlyphMapAndKernGroups(
+    def _readGlyphMapAndKerningGroups(
         self, rawGlyphsData: list
     ) -> tuple[dict[str, list[int]], dict[str, tuple[str, str]]]:
         formatVersion = self.gsFont.format_version
         glyphMap = {}
-        kernGroups = defaultdict(list)
+        kerningGroups = defaultdict(list)
 
         sideAttrs = FORMAT2_KERN_SIDES if formatVersion == 2 else FORMAT3_KERN_SIDES
 
@@ -291,11 +291,11 @@ class GlyphsBackend:
             for side, sideAttr in sideAttrs:
                 groupName = glyphData.get(sideAttr)
                 if groupName is not None:
-                    kernGroups[FONTRA_KERN_GROUP_PREFIXES[side] + groupName].append(
+                    kerningGroups[FONTRA_KERN_GROUP_PREFIXES[side] + groupName].append(
                         glyphName
                     )
 
-        return glyphMap, kernGroups
+        return glyphMap, kerningGroups
 
     def _ensureGlyphIsParsed(self, glyphName: str) -> None:
         if glyphName in self.parsedGlyphNames:
