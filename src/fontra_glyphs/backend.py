@@ -50,10 +50,16 @@ infoNamesMapping = [
     ("vendorID", "vendorID"),
 ]
 
-GS_KERN_PREFIX_LEFT = "@MMK_L_"
-GS_KERN_PREFIX_RIGHT = "@MMK_R_"
-FONTRA_KERN_PREFIX_LEFT = "public.kern1."
-FONTRA_KERN_PREFIX_RIGHT = "public.kern2."
+_kernSides = ["left", "right", "top", "bottom"]
+GS_KERN_GROUP_PREFIXES = {side: f"@MMK_{side[0].upper()}_" for side in _kernSides}
+FONTRA_KERN_GROUP_PREFIXES = {
+    "left": "public.kern1.",
+    "right": "public.kern2.",
+    "top": "kern_top_",
+    "bottom": "kern_bottom_",
+}
+FORMAT2_KERN_SIDES = [(side, f"{side}KerningGroup") for side in _kernSides]
+FORMAT3_KERN_SIDES = [(side, f"kern{side.capitalize()}") for side in _kernSides]
 
 
 class GlyphsBackend:
@@ -101,7 +107,7 @@ class GlyphsBackend:
                     location[axisDef.name] = axisDef.get_design_loc(master)
             self.locationByMasterID[master.id] = location
 
-        self.glyphMap, self.glyphKernSides = self._readGlyphMapAndKernSides(
+        self.glyphMap, self.kerningGroups = self._readGlyphMapAndKernGroups(
             rawGlyphsData
         )
 
@@ -160,7 +166,9 @@ class GlyphsBackend:
     async def getKerning(self) -> dict[str, Kerning]:
         # TODO: RTL kerning: https://docu.glyphsapp.com/#GSFont.kerningRTL
         # TODO: vertical kerning: https://docu.glyphsapp.com/#GSFont.kerningVertical
-        return gsKerningLTRToFontraKerningLTR(self.gsFont, self.glyphKernSides)
+        return gsKerningLTRToFontraKerningLTR(
+            self.gsFont, self.kerningGroups, "left", "right"
+        )
 
     async def getFeatures(self) -> OpenTypeFeatures:
         # TODO: extract features
@@ -243,12 +251,14 @@ class GlyphsBackend:
         )
         return glyph
 
-    def _readGlyphMapAndKernSides(
+    def _readGlyphMapAndKernGroups(
         self, rawGlyphsData: list
     ) -> tuple[dict[str, list[int]], dict[str, tuple[str, str]]]:
         formatVersion = self.gsFont.format_version
         glyphMap = {}
-        kernSides = {}
+        kernGroups = defaultdict(list)
+
+        sideAttrs = FORMAT2_KERN_SIDES if formatVersion == 2 else FORMAT3_KERN_SIDES
 
         for glyphData in rawGlyphsData:
             glyphName = glyphData["glyphname"]
@@ -273,16 +283,14 @@ class GlyphsBackend:
             glyphMap[glyphName] = codePoints
 
             # extract kern sides
-            if formatVersion == 2:
-                leftKernSide = glyphData.get("leftKerningGroup")
-                rightKernSide = glyphData.get("rightKerningGroup")
-            else:
-                leftKernSide = glyphData.get("kernLeft")
-                rightKernSide = glyphData.get("kernRight")
-            if leftKernSide is not None or rightKernSide is not None:
-                kernSides[glyphName] = (leftKernSide, rightKernSide)
+            for side, sideAttr in sideAttrs:
+                groupName = glyphData.get(sideAttr)
+                if groupName is not None:
+                    kernGroups[FONTRA_KERN_GROUP_PREFIXES[side] + groupName].append(
+                        glyphName
+                    )
 
-        return glyphMap, kernSides
+        return glyphMap, kernGroups
 
     def _ensureGlyphIsParsed(self, glyphName: str) -> None:
         if glyphName in self.parsedGlyphNames:
@@ -498,38 +506,24 @@ def translateGroupName(name, oldPrefix, newPrefix):
     return newPrefix + name[len(oldPrefix) :] if name.startswith(oldPrefix) else name
 
 
-def gsKerningSidesToFontraKerningGroups(glyphKernSides):
-    groups = defaultdict(list)
-    for glyphName in glyphKernSides:
-        leftKernSide, rightKernSide = glyphKernSides[glyphName]
-
-        if leftKernSide is not None:
-            leftGroupName = f"{FONTRA_KERN_PREFIX_LEFT}{leftKernSide}"
-            groups[leftGroupName].append(glyphName)
-
-        if rightKernSide is not None:
-            rightGroupName = f"{FONTRA_KERN_PREFIX_RIGHT}{rightKernSide}"
-            groups[rightGroupName].append(glyphName)
-    return dict(groups)
-
-
-def gsKerningLTRToFontraKerningLTR(gsFont, glyphKernSides):
-    groups = gsKerningSidesToFontraKerningGroups(glyphKernSides)
+def gsKerningLTRToFontraKerningLTR(gsFont, groups, side1, side2):
     sourceIdentifiers = [gsMaster.id for gsMaster in gsFont.masters]
     valueDicts: dict[str, dict[str, dict]] = defaultdict(lambda: defaultdict(dict))
 
     for gsMaster in gsFont.masters:
         kernDict = gsFont.kerning[gsMaster.id]
-        for left, rightDict in kernDict.items():
-            left = translateGroupName(
-                left, GS_KERN_PREFIX_LEFT, FONTRA_KERN_PREFIX_LEFT
+        for name1, name2Dict in kernDict.items():
+            name1 = translateGroupName(
+                name1, GS_KERN_GROUP_PREFIXES[side1], FONTRA_KERN_GROUP_PREFIXES[side1]
             )
 
-            for right, value in rightDict.items():
-                right = translateGroupName(
-                    right, GS_KERN_PREFIX_RIGHT, FONTRA_KERN_PREFIX_RIGHT
+            for name2, value in name2Dict.items():
+                name2 = translateGroupName(
+                    name2,
+                    GS_KERN_GROUP_PREFIXES[side2],
+                    FONTRA_KERN_GROUP_PREFIXES[side2],
                 )
-                valueDicts[left][right][gsMaster.id] = value
+                valueDicts[name1][name2][gsMaster.id] = value
 
     values = {
         left: {
