@@ -119,6 +119,6 @@ async def test_glyphRead(testFont, referenceFont, glyphName):
 async def test_kerningRead(testFont, referenceFont):
     assert await testFont.getKerning() == await referenceFont.getKerning()
 
-    
+
 async def test_sourcesRead(testFont, referenceFont):
     assert await testFont.getSources() == await referenceFont.getSources()
