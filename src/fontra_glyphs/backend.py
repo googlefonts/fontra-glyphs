@@ -551,11 +551,7 @@ def gsKerningToFontraKerning(
             name1 = translateGroupName(name1, gsPrefix1, fontraPrefix1)
 
             for name2, value in name2Dict.items():
-                name2 = translateGroupName(
-                    name2,
-                    gsPrefix2,
-                    fontraPrefix2,
-                )
+                name2 = translateGroupName(name2, gsPrefix2, fontraPrefix2)
                 valueDicts[name1][name2][gsMaster.id] = value
 
     values = {
