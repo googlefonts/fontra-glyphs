@@ -478,49 +478,44 @@ def fixSourceLocations(sources, smartAxisNames):
 
 
 def getKerningNameFromID(gsFont, kernID):
-    # if starts with @, it's group kerning
     if kernID[0] == "@":
-        if kernID[5] == "L":
-            return kernID, f"public.kern1.{kernID[6:]}"
-        else:
-            return kernID, f"public.kern2.{kernID[6:]}"
-    # else it's a simple glyph name
-    try:
-        name = gsFont.glyphForId_(kernID).name
-        return name, name
-    except Exception:
-        return None, None
+        # if starts with @, it's group kerning
+        return kernID
+    else:
+        # it's a simple glyph name
+        return gsFont.glyphForId_(kernID).name
 
 
 def getNormalizedKerningDict(gsFont, gsMasterID, valueDicts):
     kernDict = gsFont.kerning[gsMasterID]
     for leftKernID in kernDict.keys():
-        leftKey, fontraLeftKey = getKerningNameFromID(gsFont, leftKernID)
+        leftKey = getKerningNameFromID(gsFont, leftKernID)
         if not leftKey:
             continue
 
         for rightKernID in kernDict[leftKernID].keys():
-            rightKey, fontraRightKey = getKerningNameFromID(gsFont, rightKernID)
+            rightKey = getKerningNameFromID(gsFont, rightKernID)
             if not rightKey:
                 continue
 
             value = gsFont.kerningForPair(gsMasterID, leftKey, rightKey)
-            valueDicts[fontraLeftKey][fontraRightKey][gsMasterID] = value
+            valueDicts[leftKey][rightKey][gsMasterID] = value
 
     return valueDicts
 
 
 def gsKerningSidesToFontraKerningGroups(glyphKernSides):
     groups = defaultdict(list)
+
     for glyphName in glyphKernSides:
         leftKernSide, rightKernSide = glyphKernSides[glyphName]
 
         if leftKernSide is not None:
-            leftGroupName = f"public.kern1.{leftKernSide}"
+            leftGroupName = f"@MMK_R_{leftKernSide}"
             groups[leftGroupName].append(glyphName)
 
         if rightKernSide is not None:
-            rightGroupName = f"public.kern2.{rightKernSide}"
+            rightGroupName = f"@MMK_L_{rightKernSide}"
             groups[rightGroupName].append(glyphName)
     return dict(groups)
 
