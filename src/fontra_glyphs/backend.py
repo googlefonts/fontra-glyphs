@@ -480,7 +480,10 @@ def fixSourceLocations(sources, smartAxisNames):
 def getKerningNameFromID(gsFont, kernID):
     # if starts with @, it's group kerning
     if kernID[0] == "@":
-        return kernID, f"public.kern1.{kernID}"
+        if kernID[5] == "L":
+            return kernID, f"public.kern1.{kernID[6:]}"
+        else:
+            return kernID, f"public.kern2.{kernID[6:]}"
     # else it's a simple glyph name
     try:
         name = gsFont.glyphForId_(kernID).name
@@ -507,23 +510,23 @@ def getNormalizedKerningDict(gsFont, gsMasterID, valueDicts):
     return valueDicts
 
 
-def gsKerningGroupsToFontraKerningGroups(glyphKernSides):
-    groups: dict[str, list[str]] = {}
+def gsKerningSidesToFontraKerningGroups(glyphKernSides):
+    groups = defaultdict(list)
     for glyphName in glyphKernSides:
         leftKernSide, rightKernSide = glyphKernSides[glyphName]
 
-        # Note: Maybe looks wrong, but MMK_R_ belongs to left and MMK_L_ to right.
         if leftKernSide is not None:
-            leftKerningKey = f"public.kern1.@MMK_R_{leftKernSide}"
-            groups.setdefault(leftKerningKey, []).append(glyphName)
+            leftGroupName = f"public.kern1.{leftKernSide}"
+            groups[leftGroupName].append(glyphName)
+
         if rightKernSide is not None:
-            rightKerningKey = f"public.kern1.@MMK_L_{rightKernSide}"
-            groups.setdefault(rightKerningKey, []).append(glyphName)
-    return groups
+            rightGroupName = f"public.kern2.{rightKernSide}"
+            groups[rightGroupName].append(glyphName)
+    return dict(groups)
 
 
 def gsKerningLTRToFontraKerningLTR(gsFont, glyphKernSides):
-    groups = gsKerningGroupsToFontraKerningGroups(glyphKernSides)
+    groups = gsKerningSidesToFontraKerningGroups(glyphKernSides)
     sourceIdentifiers = [gsMaster.id for gsMaster in gsFont.masters]
     valueDicts: dict[str, dict[str, dict]] = defaultdict(lambda: defaultdict(dict))
 
