@@ -178,7 +178,7 @@ class GlyphsBackend:
         if kerningLTR.values:
             kerning["kern"] = kerningLTR
         if kerningVertical.values:
-            kerning["vkrn"] = kerningLTR
+            kerning["vkrn"] = kerningVertical
         return kerning
 
     async def getFeatures(self) -> OpenTypeFeatures:
