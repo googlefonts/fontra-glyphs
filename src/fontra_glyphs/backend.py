@@ -287,7 +287,7 @@ class GlyphsBackend:
                 assert all(isinstance(codePoint, int) for codePoint in codePoints)
             glyphMap[glyphName] = codePoints
 
-            # extract kern sides
+            # extract kern groups
             for side, sideAttr in sideAttrs:
                 groupName = glyphData.get(sideAttr)
                 if groupName is not None:
