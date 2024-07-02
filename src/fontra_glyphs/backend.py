@@ -498,21 +498,6 @@ def translateGroupName(name, oldPrefix, newPrefix):
     return newPrefix + name[len(oldPrefix) :] if name.startswith(oldPrefix) else name
 
 
-def getNormalizedKerningDict(gsFont, gsMasterID, valueDicts):
-    kernDict = gsFont.kerning[gsMasterID]
-    for left, values in kernDict.items():
-        left = translateGroupName(left, GS_KERN_PREFIX_LEFT, FONTRA_KERN_PREFIX_LEFT)
-
-        for right, value in values.items():
-            right = translateGroupName(
-                right, GS_KERN_PREFIX_RIGHT, FONTRA_KERN_PREFIX_RIGHT
-            )
-
-            valueDicts[left][right][gsMasterID] = value
-
-    return valueDicts
-
-
 def gsKerningSidesToFontraKerningGroups(glyphKernSides):
     groups = defaultdict(list)
     for glyphName in glyphKernSides:
@@ -534,7 +519,17 @@ def gsKerningLTRToFontraKerningLTR(gsFont, glyphKernSides):
     valueDicts: dict[str, dict[str, dict]] = defaultdict(lambda: defaultdict(dict))
 
     for gsMaster in gsFont.masters:
-        valueDicts = getNormalizedKerningDict(gsFont, gsMaster.id, valueDicts)
+        kernDict = gsFont.kerning[gsMaster.id]
+        for left, rightDict in kernDict.items():
+            left = translateGroupName(
+                left, GS_KERN_PREFIX_LEFT, FONTRA_KERN_PREFIX_LEFT
+            )
+
+            for right, value in rightDict.items():
+                right = translateGroupName(
+                    right, GS_KERN_PREFIX_RIGHT, FONTRA_KERN_PREFIX_RIGHT
+                )
+                valueDicts[left][right][gsMaster.id] = value
 
     values = {
         left: {
