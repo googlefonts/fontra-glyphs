@@ -1162,6 +1162,7 @@ width = 560;
 }
 );
 leftMetricsKey = m;
+rightKerningGroup = nKernRight;
 rightMetricsKey = m;
 unicode = 0068;
 },
@@ -1236,6 +1237,7 @@ layerId = "3E7589AA-8194-470F-8E2F-13C1C581BE24";
 width = 760;
 }
 );
+rightKerningGroup = nKernRight;
 unicode = 006D;
 },
 {
@@ -1371,7 +1373,7 @@ width = 501;
 );
 leftKerningGroup = n;
 leftMetricsKey = m;
-rightKerningGroup = n;
+rightKerningGroup = nKernRight;
 rightMetricsKey = m;
 unicode = 006E;
 },

@@ -1164,6 +1164,7 @@ unicode = 228;
 },
 {
 glyphname = h;
+kernRight = nKernRight;
 layers = (
 {
 layerId = "C4872ECA-A3A9-40AB-960A-1DB2202F16DE";
@@ -1232,6 +1233,7 @@ unicode = 104;
 },
 {
 glyphname = m;
+kernRight = nKernRight;
 layers = (
 {
 layerId = "C4872ECA-A3A9-40AB-960A-1DB2202F16DE";
@@ -1314,7 +1316,7 @@ unicode = 109;
 {
 glyphname = n;
 kernLeft = n;
-kernRight = n;
+kernRight = nKernRight;
 layers = (
 {
 background = {
