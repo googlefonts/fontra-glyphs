@@ -56,8 +56,8 @@ GS_KERN_GROUP_PREFIXES = {
 FONTRA_KERN_GROUP_PREFIXES = {
     "left": "public.kern1.",
     "right": "public.kern2.",
-    "top": "public.kern1.",
-    "bottom": "public.kern2.",
+    "top": "kern.top.",
+    "bottom": "kern.bottom.",
 }
 GS_FORMAT_2_KERN_SIDES = [
     # pair side, glyph side
