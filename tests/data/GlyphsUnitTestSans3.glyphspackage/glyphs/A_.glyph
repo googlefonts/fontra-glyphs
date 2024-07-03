@@ -2,8 +2,10 @@
 category = "";
 color = (120,220,20,4);
 glyphname = A;
+kernBottom = ABottom;
 kernLeft = A;
 kernRight = A;
+kernTop = ATop;
 layers = (
 {
 anchors = (

@@ -149,6 +149,10 @@ over = -10;
 {
 over = -10;
 pos = -200;
+},
+{
+over = 10;
+pos = 1000;
 }
 );
 name = Light;
@@ -241,6 +245,10 @@ over = -12;
 {
 over = -12;
 pos = -200;
+},
+{
+over = 12;
+pos = 1000;
 }
 );
 name = Regular;
@@ -324,6 +332,10 @@ over = -15;
 {
 over = -15;
 pos = -200;
+},
+{
+over = 15;
+pos = 1000;
 }
 );
 name = Bold;
@@ -1477,6 +1489,32 @@ kerningLTR = {
 };
 };
 };
+kerningVertical = {
+"C4872ECA-A3A9-40AB-960A-1DB2202F16DE" = {
+"@MMK_T_ABottom" = {
+"@MMK_B_VTop" = -301;
+};
+Adieresis = {
+"@MMK_B_VTop" = -301;
+};
+};
+"3E7589AA-8194-470F-8E2F-13C1C581BE24" = {
+"@MMK_T_ABottom" = {
+"@MMK_B_VTop" = -302;
+};
+Adieresis = {
+"@MMK_B_VTop" = -302;
+};
+};
+"BFFFD157-90D3-4B85-B99D-9A2F366F03CA" = {
+"@MMK_T_ABottom" = {
+"@MMK_B_VTop" = -303;
+};
+Adieresis = {
+"@MMK_B_VTop" = -303;
+};
+};
+};
 metrics = (
 {
 type = ascender;
@@ -1493,6 +1531,9 @@ type = baseline;
 },
 {
 type = descender;
+},
+{
+name = "Custom Vertical Metric";
 }
 );
 note = "Bla bla";
