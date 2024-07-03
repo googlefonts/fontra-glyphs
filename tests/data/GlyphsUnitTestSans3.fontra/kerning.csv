@@ -308,3 +308,17 @@ public.kern1.zero;public.kern2.comma;-60;-30;-20
 public.kern1.zero;public.kern2.quote;-20;-20;-20
 public.kern1.zero;public.kern2.two;;;-10
 public.kern1.l;public.kern2.quoteright;;-40;20
+
+TYPE
+vkrn
+
+GROUPS
+kern.bottom.ATop;A
+kern.bottom.VTop;V
+kern.top.ABottom;A
+kern.top.VBottom;V
+
+VALUES
+side1;side2;C4872ECA-A3A9-40AB-960A-1DB2202F16DE;3E7589AA-8194-470F-8E2F-13C1C581BE24;BFFFD157-90D3-4B85-B99D-9A2F366F03CA
+kern.top.ABottom;kern.bottom.VTop;-301;-302;-303
+Adieresis;kern.bottom.VTop;-301;-302;-303

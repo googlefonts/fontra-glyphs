@@ -63,8 +63,8 @@ GS_FORMAT_2_KERN_SIDES = [
     # pair side, glyph side
     ("left", "rightKerningGroup"),
     ("right", "leftKerningGroup"),
-    ("top", "bottomKerningGroup"),  # FIXME: unsure if this exists in Glyphs-2 format
-    ("bottom", "topKerningGroup"),  # FIXME: same
+    ("top", "bottomKerningGroup"),
+    ("bottom", "topKerningGroup"),
 ]
 GS_FORMAT_3_KERN_SIDES = [
     # pair side, glyph side
@@ -182,8 +182,11 @@ class GlyphsBackend:
         kerningLTR = gsKerningToFontraKerning(
             self.gsFont, self.kerningGroups, "kerning", "left", "right"
         )
+        kerningAttr = (
+            "vertKerning" if self.gsFont.format_version == 2 else "kerningVertical"
+        )
         kerningVertical = gsKerningToFontraKerning(
-            self.gsFont, self.kerningGroups, "kerningVertical", "top", "bottom"
+            self.gsFont, self.kerningGroups, kerningAttr, "top", "bottom"
         )
 
         kerning = {}
