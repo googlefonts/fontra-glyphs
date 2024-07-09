@@ -27,7 +27,11 @@ from fontra.core.path import PackedPathPointPen
 from fontra.core.protocols import ReadableFontBackend
 from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.misc.transform import DecomposedTransform
-from glyphsLib.builder.axes import get_axis_definitions, to_designspace_axes
+from glyphsLib.builder.axes import (
+    get_axis_definitions,
+    get_regular_master,
+    to_designspace_axes,
+)
 from glyphsLib.builder.smart_components import Pole
 
 rootInfoNames = [
@@ -543,9 +547,14 @@ def gsKerningToFontraKerning(
     sourceIdentifiers = []
     valueDicts: dict[str, dict[str, dict]] = defaultdict(lambda: defaultdict(dict))
 
+    defaultMasterID = get_regular_master(gsFont).id
+
     for gsMaster in gsFont.masters:
-        kernDict = getattr(gsFont, kerningAttr).get(gsMaster.id)
-        if kernDict is None:
+        kernDict = getattr(gsFont, kerningAttr).get(gsMaster.id, {})
+        if not kernDict and gsMaster.id != defaultMasterID:
+            # Even if the default master does not contain kerning, it makes life
+            # easier down the road if we include this empty kerning, lest we run
+            # into "missing base master"-type interpolation errors.
             continue
 
         sourceIdentifiers.append(gsMaster.id)
