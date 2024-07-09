@@ -51,7 +51,7 @@ expectedAxes = structure(
 
 
 @pytest.mark.asyncio
-async def test_axes(testFont):
+async def test_getAxes(testFont):
     axes = await testFont.getAxes()
     assert expectedAxes == axes
 
@@ -68,11 +68,12 @@ expectedGlyphMap = {
     "h": [104],
     "m": [109],
     "n": [110],
+    "V": [86],
 }
 
 
 @pytest.mark.asyncio
-async def test_glyphMap(testFont):
+async def test_getGlyphMap(testFont):
     glyphMap = await testFont.getGlyphMap()
     assert expectedGlyphMap == glyphMap
 
@@ -97,14 +98,14 @@ expectedFontInfo = FontInfo(
 
 
 @pytest.mark.asyncio
-async def test_fontInfo(testFont):
+async def test_getFontInfo(testFont):
     fontInfo = await testFont.getFontInfo()
     assert expectedFontInfo == fontInfo
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("glyphName", list(expectedGlyphMap))
-async def test_glyphRead(testFont, referenceFont, glyphName):
+async def test_getGlyph(testFont, referenceFont, glyphName):
     glyph = await testFont.getGlyph(glyphName)
     if glyphName == "A" and "com.glyphsapp.glyph-color" not in glyph.customData:
         # glyphsLib doesn't read the color attr from Glyphs-2 files,
@@ -113,3 +114,11 @@ async def test_glyphRead(testFont, referenceFont, glyphName):
 
     referenceGlyph = await referenceFont.getGlyph(glyphName)
     assert referenceGlyph == glyph
+
+
+async def test_getKerning(testFont, referenceFont):
+    assert await testFont.getKerning() == await referenceFont.getKerning()
+
+
+async def test_getSources(testFont, referenceFont):
+    assert await testFont.getSources() == await referenceFont.getSources()

@@ -15,8 +15,10 @@ from fontra.core.classes import (
     FontSource,
     GlyphAxis,
     GlyphSource,
+    Guideline,
     Kerning,
     Layer,
+    LineMetric,
     OpenTypeFeatures,
     StaticGlyph,
     VariableGlyph,
@@ -25,7 +27,11 @@ from fontra.core.path import PackedPathPointPen
 from fontra.core.protocols import ReadableFontBackend
 from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.misc.transform import DecomposedTransform
-from glyphsLib.builder.axes import get_axis_definitions, to_designspace_axes
+from glyphsLib.builder.axes import (
+    get_axis_definitions,
+    get_regular_master,
+    to_designspace_axes,
+)
 from glyphsLib.builder.smart_components import Pole
 
 rootInfoNames = [
@@ -46,6 +52,30 @@ infoNamesMapping = [
     ("manufacturerURL", "manufacturerURL"),
     ("trademark", "trademarks"),
     ("vendorID", "vendorID"),
+]
+
+GS_KERN_GROUP_PREFIXES = {
+    side: f"@MMK_{side[0].upper()}_" for side in ["left", "right", "top", "bottom"]
+}
+FONTRA_KERN_GROUP_PREFIXES = {
+    "left": "public.kern1.",
+    "right": "public.kern2.",
+    "top": "kern.top.",
+    "bottom": "kern.bottom.",
+}
+GS_FORMAT_2_KERN_SIDES = [
+    # pair side, glyph side
+    ("left", "rightKerningGroup"),
+    ("right", "leftKerningGroup"),
+    ("top", "bottomKerningGroup"),
+    ("bottom", "topKerningGroup"),
+]
+GS_FORMAT_3_KERN_SIDES = [
+    # pair side, glyph side
+    ("left", "kernRight"),
+    ("right", "kernLeft"),
+    ("top", "kernBottom"),
+    ("bottom", "kernTop"),
 ]
 
 
@@ -94,7 +124,10 @@ class GlyphsBackend:
                     location[axisDef.name] = axisDef.get_design_loc(master)
             self.locationByMasterID[master.id] = location
 
-        self.glyphMap = self._readGlyphMap(rawGlyphsData)
+        self.glyphMap, self.kerningGroups = _readGlyphMapAndKerningGroups(
+            rawGlyphsData,
+            self.gsFont.format_version,
+        )
 
         axes: list[FontAxis | DiscreteFontAxis] = []
         for dsAxis in dsAxes:
@@ -140,7 +173,7 @@ class GlyphsBackend:
         return FontInfo(**infoDict)
 
     async def getSources(self) -> dict[str, FontSource]:
-        return {}
+        return gsMastersToFontraFontSources(self.gsFont, self.locationByMasterID)
 
     async def getAxes(self) -> Axes:
         return Axes(axes=self.axes)
@@ -149,8 +182,23 @@ class GlyphsBackend:
         return self.gsFont.upm
 
     async def getKerning(self) -> dict[str, Kerning]:
-        # TODO: extract kerning
-        return {}
+        # TODO: RTL kerning: https://docu.glyphsapp.com/#GSFont.kerningRTL
+        kerningLTR = gsKerningToFontraKerning(
+            self.gsFont, self.kerningGroups, "kerning", "left", "right"
+        )
+        kerningAttr = (
+            "vertKerning" if self.gsFont.format_version == 2 else "kerningVertical"
+        )
+        kerningVertical = gsKerningToFontraKerning(
+            self.gsFont, self.kerningGroups, kerningAttr, "top", "bottom"
+        )
+
+        kerning = {}
+        if kerningLTR.values:
+            kerning["kern"] = kerningLTR
+        if kerningVertical.values:
+            kerning["vkrn"] = kerningVertical
+        return kerning
 
     async def getFeatures(self) -> OpenTypeFeatures:
         # TODO: extract features
@@ -232,32 +280,6 @@ class GlyphsBackend:
             customData=customData,
         )
         return glyph
-
-    def _readGlyphMap(self, rawGlyphsData: list) -> dict[str, list[int]]:
-        formatVersion = self.gsFont.format_version
-        glyphMap = {}
-
-        for glyphData in rawGlyphsData:
-            glyphName = glyphData["glyphname"]
-            codePoints = glyphData.get("unicode")
-            if codePoints is None:
-                codePoints = []
-            elif formatVersion == 2:
-                if isinstance(codePoints, str):
-                    codePoints = [
-                        int(codePoint, 16) for codePoint in codePoints.split(",")
-                    ]
-                else:
-                    assert isinstance(codePoints, int)
-                    # The plist parser turned it into an int, but it was a hex string
-                    codePoints = [int(str(codePoints), 16)]
-            elif isinstance(codePoints, int):
-                codePoints = [codePoints]
-            else:
-                assert all(isinstance(codePoint, int) for codePoint in codePoints)
-            glyphMap[glyphName] = codePoints
-
-        return glyphMap
 
     def _ensureGlyphIsParsed(self, glyphName: str) -> None:
         if glyphName in self.parsedGlyphNames:
@@ -350,6 +372,45 @@ class GlyphsPackageBackend(GlyphsBackend):
         return rawFontData, rawGlyphsData
 
 
+def _readGlyphMapAndKerningGroups(
+    rawGlyphsData: list, formatVersion: int
+) -> tuple[dict[str, list[int]], dict[str, tuple[str, str]]]:
+    glyphMap = {}
+    kerningGroups: dict = defaultdict(lambda: defaultdict(list))
+
+    sideAttrs = GS_FORMAT_2_KERN_SIDES if formatVersion == 2 else GS_FORMAT_3_KERN_SIDES
+
+    for glyphData in rawGlyphsData:
+        glyphName = glyphData["glyphname"]
+
+        # extract code points
+        codePoints = glyphData.get("unicode")
+        if codePoints is None:
+            codePoints = []
+        elif formatVersion == 2:
+            if isinstance(codePoints, str):
+                codePoints = [int(codePoint, 16) for codePoint in codePoints.split(",")]
+            else:
+                assert isinstance(codePoints, int)
+                # The plist parser turned it into an int, but it was a hex string
+                codePoints = [int(str(codePoints), 16)]
+        elif isinstance(codePoints, int):
+            codePoints = [codePoints]
+        else:
+            assert all(isinstance(codePoint, int) for codePoint in codePoints)
+        glyphMap[glyphName] = codePoints
+
+        # extract kern groups
+        for pairSide, glyphSideAttr in sideAttrs:
+            groupName = glyphData.get(glyphSideAttr)
+            if groupName is not None:
+                kerningGroups[pairSide][
+                    FONTRA_KERN_GROUP_PREFIXES[pairSide] + groupName
+                ].append(glyphName)
+
+    return glyphMap, kerningGroups
+
+
 def gsLayerToFontraLayer(gsLayer, globalAxisNames):
     pen = PackedPathPointPen()
     gsLayer.drawPoints(pen)
@@ -398,6 +459,16 @@ def gsAnchorToFontraAnchor(gsAnchor):
         customData=gsAnchor.userData if gsAnchor.userData else dict(),
     )
     return anchor
+
+
+def gsGuidelineToFontraGuideline(gsGuideline):
+    return Guideline(
+        x=gsGuideline.position.x,
+        y=gsGuideline.position.y,
+        angle=gsGuideline.angle,
+        name=gsGuideline.name,
+        locked=gsGuideline.locked,
+    )
 
 
 class MinimalUFOBuilder:
@@ -457,3 +528,115 @@ def fixSourceLocations(sources, smartAxisNames):
         for source in sources:
             if source.location.get(axis) == value:
                 del source.location[axis]
+
+
+def translateGroupName(name, oldPrefix, newPrefix):
+    return newPrefix + name[len(oldPrefix) :] if name.startswith(oldPrefix) else name
+
+
+def gsKerningToFontraKerning(
+    gsFont, groupsBySide, kerningAttr, side1, side2
+) -> Kerning:
+    gsPrefix1 = GS_KERN_GROUP_PREFIXES[side1]
+    gsPrefix2 = GS_KERN_GROUP_PREFIXES[side2]
+    fontraPrefix1 = FONTRA_KERN_GROUP_PREFIXES[side1]
+    fontraPrefix2 = FONTRA_KERN_GROUP_PREFIXES[side2]
+
+    groups = dict(groupsBySide[side1] | groupsBySide[side2])
+
+    sourceIdentifiers = []
+    valueDicts: dict[str, dict[str, dict]] = defaultdict(lambda: defaultdict(dict))
+
+    defaultMasterID = get_regular_master(gsFont).id
+
+    for gsMaster in gsFont.masters:
+        kernDict = getattr(gsFont, kerningAttr).get(gsMaster.id, {})
+        if not kernDict and gsMaster.id != defaultMasterID:
+            # Even if the default master does not contain kerning, it makes life
+            # easier down the road if we include this empty kerning, lest we run
+            # into "missing base master"-type interpolation errors.
+            continue
+
+        sourceIdentifiers.append(gsMaster.id)
+
+        for name1, name2Dict in kernDict.items():
+            name1 = translateGroupName(name1, gsPrefix1, fontraPrefix1)
+
+            for name2, value in name2Dict.items():
+                name2 = translateGroupName(name2, gsPrefix2, fontraPrefix2)
+                valueDicts[name1][name2][gsMaster.id] = value
+
+    values = {
+        left: {
+            right: [valueDict.get(key) for key in sourceIdentifiers]
+            for right, valueDict in rightDict.items()
+        }
+        for left, rightDict in valueDicts.items()
+    }
+
+    return Kerning(groups=groups, sourceIdentifiers=sourceIdentifiers, values=values)
+
+
+def gsMastersToFontraFontSources(gsFont, locationByMasterID):
+    sources = {}
+    for gsMaster in gsFont.masters:
+        sources[gsMaster.id] = FontSource(
+            name=gsMaster.name,
+            italicAngle=gsMaster.italicAngle,
+            location=locationByMasterID[gsMaster.id],
+            lineMetricsHorizontalLayout=gsVerticalMetricsToFontraLineMetricsHorizontal(
+                gsFont, gsMaster
+            ),
+            guidelines=[
+                gsGuidelineToFontraGuideline(gsGuideline)
+                for gsGuideline in gsMaster.guides
+            ],
+        )
+    return sources
+
+
+def gsToFontraZone(gsVerticalMetricsValue, gsAlignmentZones):
+    for gsZone in gsAlignmentZones:
+        if gsZone.position == gsVerticalMetricsValue:
+            return gsZone.size
+    return 0
+
+
+def gsVerticalMetricsToFontraLineMetricsHorizontal(gsFont, gsMaster):
+    lineMetricsHorizontal = {
+        "ascender": LineMetric(
+            value=gsMaster.ascender,
+            zone=gsToFontraZone(gsMaster.ascender, gsMaster.alignmentZones),
+        ),
+        "capHeight": LineMetric(
+            value=gsMaster.capHeight,
+            zone=gsToFontraZone(gsMaster.capHeight, gsMaster.alignmentZones),
+        ),
+        "xHeight": LineMetric(
+            value=gsMaster.xHeight,
+            zone=gsToFontraZone(gsMaster.xHeight, gsMaster.alignmentZones),
+        ),
+        "baseline": LineMetric(
+            value=0, zone=gsToFontraZone(0, gsMaster.alignmentZones)
+        ),
+        "descender": LineMetric(
+            value=gsMaster.descender,
+            zone=gsToFontraZone(gsMaster.descender, gsMaster.alignmentZones),
+        ),
+    }
+
+    # TODO: custom metrics https://docu.glyphsapp.com/#GSFontMaster.metrics
+    # Custom vertical metrics seem not to work with GlyphsLib, currently.
+    # The following code works within GlyphsApp, but not with GlyphsLib.
+    # for gsMetric in gsFont.metrics:
+    #     if gsMetric.name:
+    #         # if it has a name, it is a custom vertical metric
+    #         gsMetricValue = gsMaster.metricValues[gsMetric.id]
+    #         print('position: ', gsMetricValue.position)
+    #         print('overshoot: ', gsMetricValue.overshoot)
+    #         lineMetricsHorizontal[gsMetric.name] = LineMetric(
+    #             value=gsMetricValue.position,
+    #             zone=gsToFontraZone(gsMetricValue.overshoot, gsMaster.alignmentZones)
+    #         )
+
+    return lineMetricsHorizontal
