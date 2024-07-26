@@ -51,56 +51,6 @@
 ]
 },
 "sources": {
-"C4872ECA-A3A9-40AB-960A-1DB2202F16DE": {
-"name": "Light",
-"location": {
-"Weight": 17
-},
-"lineMetricsHorizontalLayout": {
-"ascender": {
-"value": 800,
-"zone": 10
-},
-"capHeight": {
-"value": 700,
-"zone": 10
-},
-"xHeight": {
-"value": 470,
-"zone": 10
-},
-"baseline": {
-"value": 0,
-"zone": -10
-},
-"descender": {
-"value": -200,
-"zone": -10
-}
-},
-"guidelines": [
-{
-"name": "",
-"x": -113,
-"y": 574
-},
-{
-"name": "",
-"x": 524,
-"y": 141
-},
-{
-"name": "",
-"x": -113,
-"y": 765
-},
-{
-"name": "",
-"x": 524,
-"y": -122
-}
-]
-},
 "3E7589AA-8194-470F-8E2F-13C1C581BE24": {
 "name": "Regular",
 "location": {
@@ -214,6 +164,56 @@
 "name": "",
 "x": 998,
 "y": -212
+}
+]
+},
+"C4872ECA-A3A9-40AB-960A-1DB2202F16DE": {
+"name": "Light",
+"location": {
+"Weight": 17
+},
+"lineMetricsHorizontalLayout": {
+"ascender": {
+"value": 800,
+"zone": 10
+},
+"capHeight": {
+"value": 700,
+"zone": 10
+},
+"xHeight": {
+"value": 470,
+"zone": 10
+},
+"baseline": {
+"value": 0,
+"zone": -10
+},
+"descender": {
+"value": -200,
+"zone": -10
+}
+},
+"guidelines": [
+{
+"name": "",
+"x": -113,
+"y": 574
+},
+{
+"name": "",
+"x": 524,
+"y": 141
+},
+{
+"name": "",
+"x": -113,
+"y": 765
+},
+{
+"name": "",
+"x": 524,
+"y": -122
 }
 ]
 }

@@ -96,8 +96,7 @@
 {
 "name": "connect",
 "x": 250,
-"y": 0,
-"customData": {}
+"y": 0
 }
 ]
 }
@@ -142,8 +141,7 @@
 {
 "name": "connect",
 "x": 250,
-"y": 0,
-"customData": {}
+"y": 0
 }
 ]
 }
@@ -188,8 +186,7 @@
 {
 "name": "connect",
 "x": 117,
-"y": 0,
-"customData": {}
+"y": 0
 }
 ]
 }
@@ -234,8 +231,7 @@
 {
 "name": "connect",
 "x": 117,
-"y": 0,
-"customData": {}
+"y": 0
 }
 ]
 }
@@ -280,8 +276,7 @@
 {
 "name": "connect",
 "x": 167,
-"y": 0,
-"customData": {}
+"y": 0
 }
 ]
 }
@@ -326,8 +321,7 @@
 {
 "name": "connect",
 "x": 167,
-"y": 0,
-"customData": {}
+"y": 0
 }
 ]
 }

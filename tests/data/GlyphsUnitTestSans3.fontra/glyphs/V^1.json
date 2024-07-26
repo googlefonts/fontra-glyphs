@@ -106,7 +106,10 @@
 },
 {
 "x": 321,
-"y": 0
+"y": 0,
+"attrs": {
+"name": "Hello World"
+}
 }
 ],
 "isClosed": true
