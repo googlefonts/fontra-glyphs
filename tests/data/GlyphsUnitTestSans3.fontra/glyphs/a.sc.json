@@ -93,20 +93,17 @@
 {
 "name": "bottom",
 "x": 307,
-"y": 0,
-"customData": {}
+"y": 0
 },
 {
 "name": "ogonek",
 "x": 608,
-"y": 0,
-"customData": {}
+"y": 0
 },
 {
 "name": "top",
 "x": 307,
-"y": 552,
-"customData": {}
+"y": 552
 }
 ]
 }
@@ -180,20 +177,17 @@
 {
 "name": "bottom",
 "x": 240,
-"y": 0,
-"customData": {}
+"y": 0
 },
 {
 "name": "ogonek",
 "x": 445,
-"y": 0,
-"customData": {}
+"y": 0
 },
 {
 "name": "top",
 "x": 240,
-"y": 528,
-"customData": {}
+"y": 528
 }
 ]
 }
@@ -267,20 +261,17 @@
 {
 "name": "bottom",
 "x": 268,
-"y": 0,
-"customData": {}
+"y": 0
 },
 {
 "name": "ogonek",
 "x": 511,
-"y": 0,
-"customData": {}
+"y": 0
 },
 {
 "name": "top",
 "x": 268,
-"y": 540,
-"customData": {}
+"y": 540
 }
 ]
 }
