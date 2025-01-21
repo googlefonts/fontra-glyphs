@@ -1,7 +1,6 @@
 import io
 import pathlib
-import re
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from copy import deepcopy
 from os import PathLike
 from typing import Any
@@ -37,6 +36,14 @@ from glyphsLib.builder.axes import (
     to_designspace_axes,
 )
 from glyphsLib.builder.smart_components import Pole
+from glyphsLib.types import Transform
+
+from .utils import (
+    getAssociatedMasterId,
+    getLocation,
+    saveFileWithGSFormatting,
+    toOrderedDict,
+)
 
 rootInfoNames = [
     "familyName",
@@ -285,7 +292,7 @@ class GlyphsBackend:
         gsLayers = sorted(
             gsLayers, key=lambda i_gsLayer: masterOrder[i_gsLayer[1].associatedMasterId]
         )
-        layerIdsMapping = {}
+        seenLayerIDs = {}
         seenLocations = []
         for i, gsLayer in gsLayers:
             braceLocation = self._getBraceLayerLocation(gsLayer)
@@ -319,7 +326,7 @@ class GlyphsBackend:
             )
             layers[layerName] = gsLayerToFontraLayer(gsLayer, self.axisNames)
 
-        customData["com.glyphsapp.layerIdsMapping"] = layerIdsMapping
+        customData["com.glyphsapp.seenLayerIDs"] = seenLayerIDs
         fixSourceLocations(sources, set(smartLocation))
 
         glyph = VariableGlyph(
@@ -422,7 +429,7 @@ class GlyphsBackend:
             )
 
         # 6. fix formatting
-        saveFileWithGsFormatting(self.gsFilePath)
+        saveFileWithGSFormatting(self.gsFilePath)
 
     async def aclose(self) -> None:
         pass
@@ -759,102 +766,47 @@ def gsVerticalMetricsToFontraLineMetricsHorizontal(gsFont, gsMaster):
     return lineMetricsHorizontal
 
 
-def saveFileWithGsFormatting(gsFilePath):
-    # openstep_plist.dump changes the whole formatting, therefore
-    # it's very diffucute to see what has changed.
-    # This function is a very bad try to get close to how the formatting
-    # looks like for a .glyphs file.
-    # There must be a better solution, but this is better than nothing.
-    with open(gsFilePath, "r", encoding="utf-8") as file:
-        content = file.read()
-
-    content = re.sub(r"pos = \(\s*(-?\d+),\s*(-?\d+)\s*\);", r"pos = (\1,\2);", content)
-
-    content = re.sub(
-        r"pos = \(\s*([\d.]+),\s*([\d.]+)\s*\);", r"pos = (\1,\2);", content
-    )
-
-    content = re.sub(
-        r"\(\s*([\d.]+),\s*(-?\d+),\s*([a-zA-Z])\s*\)", r"(\1,\2,\3)", content
-    )
-
-    content = re.sub(
-        r"origin = \(\s*(-?\d+),\s*(-?\d+)\s*\);", r"origin = (\1,\2);", content
-    )
-
-    content = re.sub(
-        r"target = \(\s*(-?\d+),\s*(-?\d+)\s*\);", r"target = (\1,\2);", content
-    )
-
-    content = re.sub(
-        r"color = \(\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+)\s*\);",
-        r"color = (\1,\2,\3,\4);",
-        content,
-    )
-
-    content = re.sub(
-        r"\(\s*(-?\d+),\s*(-?\d+),\s*([a-zA-Z]+)\s*\)", r"(\1,\2,\3)", content
-    )
-
-    content = re.sub(
-        r"\(\s*(-?\d+),\s*(-?\d+),\s*([a-zA-Z]),\s*\{", r"(\1,\2,\3,{", content
-    )
-
-    content = re.sub(
-        r"\(\s*(-?\d+),\s*(-?\d+),\s*([a-zA-Z]+),\s*\{", r"(\1,\2,\3,{", content
-    )
-
-    content = re.sub(r"\}\s*\),", r"}),", content)
-
-    content += "\n"  # add blank break at the end of the file.
-
-    with open(gsFilePath, "w", encoding="utf-8") as file:
-        file.write(content)
-
-
-def fontraLayerToGSLayer(layer, gsLayer):
-    # Draw new paths with pen
-    gsLayer.paths = []  # first: remove all paths
-    pen = gsLayer.getPointPen()
-    layer.glyph.path.drawPoints(pen)
-
-    gsLayer.drawPoints(pen)
-    gsLayer.width = layer.glyph.xAdvance
-    # gsLayer.components = components  # https://docu.glyphsapp.com/#GSLayer.components
-    # gsLayer.anchors = anchors  # https://docu.glyphsapp.com/#GSLayer.anchors
-
-
 def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
-    # TODO: convert fontra variableGlyph to GlyphsApp glyph
-    layerIdsMapping = variableGlyph.customData["com.glyphsapp.layerIdsMapping"]
-    for layerName, gsLayerId in layerIdsMapping.items():
+    # Convert fontra variableGlyph to GlyphsApp glyph
+    masterIds = [m.id for m in gsGlyph.parent.masters]
+    seenLayerIDs = variableGlyph.customData["com.glyphsapp.seenLayerIDs"]
+    for layerName, gsLayerId in seenLayerIDs.items():
         if layerName not in variableGlyph.layers:
-            # Someone removed a layer, for example a special layer.
-            # Therefore need to be removed from gsGlyph as well.
+            gsLayerId = seenLayerIDs.get(layerName)
+            if gsLayerId in masterIds:
+                # Someone deleted a master, this breaks the compatibility in a .glyphs file.
+                # There skip deleting master layer.
+                continue
+            # Removing non-master-layer:
             del gsGlyph.layers[gsLayerId]
 
     for i, (layerName, layer) in enumerate(iter(variableGlyph.layers.items())):
-        gsLayerId = layerIdsMapping.get(layerName)
+        gsLayerId = seenLayerIDs.get(layerName)
         if gsLayerId is not None:
-            # gsLayer exists, modify existing gsLayer
+            # gsLayer exists: modify existing gsLayer
             fontraLayerToGSLayer(layer, gsGlyph.layers[gsLayerId])
         else:
-            # gsLayer does not exists, therefore must be 'isSpecialLayer'
-            # and need to be added as a new layer:
+            # gsLayer does not exist: therefore must be 'isSpecialLayer'
+            # and need to be created as a new layer:
             newLayer = glyphsLib.classes.GSLayer()
             newLayer.name = layerName
             newLayer.isSpecialLayer = True
 
-            source = variableGlyph.sources[i]
-            newLayer.attributes["coordinates"] = [
-                source.location[axis.name.lower()]
-                for axis in gsGlyph.parent.axes
-                if source.location.get(axis.name.lower())
-            ]
+            location = getLocation(variableGlyph, layerName, gsGlyph.parent.axes)
+            if location is None:
+                return
 
-            # TODO: the name need probably further modifications
-            # + best guess for associatedMasterId
-            # newLayer.associatedMasterId = gsGlyph.layers[0].associatedMasterId
+            gsLocation = [
+                location[axis.name.lower()]
+                for axis in gsGlyph.parent.axes
+                if location.get(axis.name.lower())
+            ]
+            newLayer.attributes["coordinates"] = gsLocation
+
+            associatedMasterId = getAssociatedMasterId(gsGlyph, gsLocation)
+            if associatedMasterId:
+                newLayer.associatedMasterId = associatedMasterId
+
             fontraLayerToGSLayer(layer, newLayer)
             gsGlyph.layers.append(newLayer)
 
@@ -864,12 +816,39 @@ def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
     return gsGlyph
 
 
-# The following is obsolete once this is merged:
-# https://github.com/fonttools/openstep-plist/pull/35
-def toOrderedDict(obj):
-    if isinstance(obj, dict):
-        return OrderedDict({k: toOrderedDict(v) for k, v in obj.items()})
-    elif isinstance(obj, list):
-        return [toOrderedDict(item) for item in obj]
-    else:
-        return obj
+def fontraLayerToGSLayer(layer, gsLayer):
+    gsLayer.paths = []
+
+    # Draw new paths with pen
+    pen = gsLayer.getPointPen()
+    layer.glyph.path.drawPoints(pen)
+
+    gsLayer.width = layer.glyph.xAdvance
+    gsLayer.components = [
+        fontraComponentToGSComponent(component) for component in layer.glyph.components
+    ]
+    gsLayer.anchors = [
+        fontraAnchorsToGSAnchor(anchor) for anchor in layer.glyph.anchors
+    ]
+
+
+def fontraComponentToGSComponent(component):
+    gsComponent = glyphsLib.classes.GSComponent(component.name)
+    transformation = component.transformation.toTransform()
+    if not isinstance(transformation, Transform):
+        gsComponent.transform = Transform(*transformation)
+    # gsComponent.smartComponentValues = # TODO: see location={ disambiguateLocalAxisName
+    return gsComponent
+
+
+def fontraAnchorsToGSAnchor(anchor):
+    gsAnchor = glyphsLib.classes.GSAnchor()
+    gsAnchor.name = anchor.name
+    gsAnchor.position.x = anchor.x
+    gsAnchor.position.y = anchor.y
+    if anchor.customData:
+        gsAnchor.userData = anchor.customData
+    # TODO: gsAnchor.orientation – If the position of the anchor
+    # is relative to the LSB (0), center (2) or RSB (1).
+    # Details: https://docu.glyphsapp.com/#GSAnchor.orientation
+    return gsAnchor

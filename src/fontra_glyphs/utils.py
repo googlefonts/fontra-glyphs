@@ -1,0 +1,115 @@
+import re
+from collections import OrderedDict
+
+
+# The following is obsolete once this is merged:
+# https://github.com/fonttools/openstep-plist/pull/35
+def toOrderedDict(obj):
+    if isinstance(obj, dict):
+        return OrderedDict({k: toOrderedDict(v) for k, v in obj.items()})
+    elif isinstance(obj, list):
+        return [toOrderedDict(item) for item in obj]
+    else:
+        return obj
+
+
+def getLocationFromLayerName(layerName, gsAxes):
+    # try to get it from name, eg. Light / {166, 100} (layer #4)
+    match = re.search(r"\{([^}]+)\}", layerName)
+    if not match:
+        return None
+    listLocation = match.group(1).replace(" ", "").split(",")
+    listLocationValues = [float(v) for v in listLocation]
+    return {
+        gsAxes[i].name.lower(): value
+        for i, value in enumerate(listLocationValues)
+        if i < len(gsAxes)
+    }
+
+
+def getLocationFromSources(sources, layerName):
+    s = None
+    for source in sources:
+        if source.layerName == layerName:
+            s = source
+            break
+    if s is not None:
+        return {k.lower(): v for k, v in s.location.items()}
+
+
+def getLocation(glyph, layerName, gsAxes):
+    location = getLocationFromSources(glyph.sources, layerName)
+    if location:
+        return location
+    # This layer is not used by any source:
+    return getLocationFromLayerName(layerName, gsAxes)
+
+
+def getAssociatedMasterId(gsGlyph, gsLocation):
+    # Make a best guess of a associatedMasterId
+    closestMaster = None
+    closestDistance = float("inf")
+    for gsLayer in gsGlyph.layers:
+        gsMaster = gsLayer.master
+        distance = sum(
+            abs(gsMaster.axes[i] - gsLocation[i])
+            for i in range(len(gsMaster.axes))
+            if i < len(gsLocation)
+        )
+        if distance < closestDistance:
+            closestDistance = distance
+            closestMaster = gsMaster
+    return closestMaster.id if closestMaster else None
+
+
+def saveFileWithGSFormatting(gsFilePath):
+    # openstep_plist.dump changes the whole formatting, therefore
+    # it's very diffucute to see what has changed.
+    # This function is a very bad try to get close to how the formatting
+    # looks like for a .glyphs file.
+    # There must be a better solution, but this is better than nothing.
+    with open(gsFilePath, "r", encoding="utf-8") as file:
+        content = file.read()
+
+    content = re.sub(r"pos = \(\s*(-?\d+),\s*(-?\d+)\s*\);", r"pos = (\1,\2);", content)
+
+    content = re.sub(
+        r"pos = \(\s*([\d.]+),\s*([\d.]+)\s*\);", r"pos = (\1,\2);", content
+    )
+
+    content = re.sub(
+        r"\(\s*([\d.]+),\s*(-?\d+),\s*([a-zA-Z])\s*\)", r"(\1,\2,\3)", content
+    )
+
+    content = re.sub(
+        r"origin = \(\s*(-?\d+),\s*(-?\d+)\s*\);", r"origin = (\1,\2);", content
+    )
+
+    content = re.sub(
+        r"target = \(\s*(-?\d+),\s*(-?\d+)\s*\);", r"target = (\1,\2);", content
+    )
+
+    content = re.sub(
+        r"color = \(\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+)\s*\);",
+        r"color = (\1,\2,\3,\4);",
+        content,
+    )
+
+    content = re.sub(
+        r"\(\s*(-?\d+),\s*(-?\d+),\s*([a-zA-Z]+)\s*\)", r"(\1,\2,\3)", content
+    )
+
+    content = re.sub(
+        r"\(\s*(-?\d+),\s*(-?\d+),\s*([a-zA-Z]),\s*\{", r"(\1,\2,\3,{", content
+    )
+
+    content = re.sub(
+        r"\(\s*(-?\d+),\s*(-?\d+),\s*([a-zA-Z]+),\s*\{", r"(\1,\2,\3,{", content
+    )
+
+    content = re.sub(r"\}\s*\),", r"}),", content)
+
+    content += "\n"  # add blank break at the end of the file.
+
+    with open(gsFilePath, "w", encoding="utf-8") as file:
+        file.write(content)

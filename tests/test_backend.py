@@ -3,9 +3,24 @@ import pathlib
 import shutil
 from copy import deepcopy
 
+import glyphsLib
 import pytest
 from fontra.backends import getFileSystemBackend
-from fontra.core.classes import Axes, FontInfo, GlyphSource, Layer, structure
+from fontra.core.classes import (
+    Anchor,
+    Axes,
+    FontInfo,
+    GlyphSource,
+    Layer,
+    StaticGlyph,
+    structure,
+)
+
+from fontra_glyphs.utils import (
+    getAssociatedMasterId,
+    getLocationFromLayerName,
+    getLocationFromSources,
+)
 
 dataDir = pathlib.Path(__file__).resolve().parent / "data"
 
@@ -18,6 +33,11 @@ referenceFontPath = dataDir / "GlyphsUnitTestSans3.fontra"
 @pytest.fixture(scope="module", params=[glyphs2Path, glyphs3Path, glyphsPackagePath])
 def testFont(request):
     return getFileSystemBackend(request.param)
+
+
+@pytest.fixture(scope="module", params=[glyphs2Path, glyphs3Path, glyphsPackagePath])
+def testGSFont(request):
+    return glyphsLib.GSFont(request.param)
 
 
 @pytest.fixture(scope="module")
@@ -129,7 +149,7 @@ async def test_getGlyph(testFont, referenceFont, glyphName):
 
     referenceGlyph = await referenceFont.getGlyph(glyphName)
     # TODO: This unit test fails currently, because the fontra referenceFont
-    # does not contain the customData "com.glyphsapp.layerIdsMapping".
+    # does not contain the customData "com.glyphsapp.seenLayerIDs".
     # Before I update the fontra file, I would like to discuss with Just,
     # if this is the right approach. test_putGlyph works now.
     assert referenceGlyph == glyph
@@ -161,7 +181,9 @@ async def test_putGlyph(writableTestFont, testFont, glyphName):
                 == coordinate + 10
             )
 
-    assert savedGlyph != glyph
+        assert len(layer.glyph.path.coordinates) == len(
+            savedGlyph.layers[layerName].glyph.path.coordinates
+        )
 
 
 async def test_deleteLayer(writableTestFont):
@@ -176,7 +198,7 @@ async def test_deleteLayer(writableTestFont):
 
     savedGlyph = await writableTestFont.getGlyph(glyphName)
 
-    assert layerName not in savedGlyph.layers
+    assert layerName in savedGlyph.layers
 
 
 async def test_addLayer(writableTestFont):
@@ -197,9 +219,62 @@ async def test_addLayer(writableTestFont):
 
     savedGlyph = await writableTestFont.getGlyph(glyphName)
     assert len(savedGlyph.layers) > numGlyphLayers
-    # TODO: We don't have a associated master concept with fontra,
-    # therefore the name contains 'Light' (The first master)
-    assert "Light / {166, 100} (layer #4)" in savedGlyph.layers.keys()
+    assert "Bold / {166, 100} (layer #4)" in savedGlyph.layers.keys()
+
+
+async def test_addLayerWithComponent(writableTestFont):
+    glyphName = "n"  # n is made from components
+    glyphMap = await writableTestFont.getGlyphMap()
+    glyph = await writableTestFont.getGlyph(glyphName)
+    numGlyphLayers = len(glyph.layers)
+
+    glyph.sources.append(
+        GlyphSource(name="{166, 100}", location={"weight": 166}, layerName="{166, 100}")
+    )
+    # Copy StaticGlyph of Bold:
+    glyph.layers["{166, 100}"] = Layer(
+        glyph=deepcopy(glyph.layers["Bold (layer #2)"].glyph)
+    )
+
+    await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
+
+    savedGlyph = await writableTestFont.getGlyph(glyphName)
+    assert len(savedGlyph.layers) > numGlyphLayers
+    assert "Bold / {166, 100} (layer #3)" in savedGlyph.layers.keys()
+
+
+async def test_removeMasterLayer(writableTestFont):
+    glyphName = "a"
+    glyphMap = await writableTestFont.getGlyphMap()
+    glyph = await writableTestFont.getGlyph(glyphName)
+    numGlyphLayers = len(glyph.layers)
+
+    # Removing a "master" layer breaks compatibility within a .glyphs file.
+    del glyph.layers["Bold (layer #2)"]
+
+    await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
+
+    savedGlyph = await writableTestFont.getGlyph(glyphName)
+    assert len(savedGlyph.layers) == numGlyphLayers
+
+
+async def test_addAnchor(writableTestFont):
+    glyphName = "a"
+    glyphMap = await writableTestFont.getGlyphMap()
+    glyph = await writableTestFont.getGlyph(glyphName)
+
+    layerName = "{ 166, 100 }"
+    glyph.layers[layerName] = Layer(glyph=StaticGlyph(xAdvance=0))
+    glyph.layers[layerName].glyph.anchors.append(Anchor(name="top", x=207, y=746))
+
+    await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
+
+    savedGlyph = await writableTestFont.getGlyph(glyphName)
+
+    assert (
+        glyph.layers[layerName].glyph.anchors
+        == savedGlyph.layers["Bold / { 166, 100 } (layer #4)"].glyph.anchors
+    )
 
 
 async def test_getKerning(testFont, referenceFont):
@@ -208,3 +283,32 @@ async def test_getKerning(testFont, referenceFont):
 
 async def test_getSources(testFont, referenceFont):
     assert await testFont.getSources() == await referenceFont.getSources()
+
+
+layerNamesToLocation = [
+    ["Light / {166, 100} (layer #4)", {"weight": 166}],
+    ["{ 166 } (layer #3)", {"weight": 166}],
+    ["Light / (layer #4)", None],
+]
+
+
+@pytest.mark.parametrize("layerName,expected", layerNamesToLocation)
+def test_getLocationFromLayerName(layerName, expected):
+    gsFont = glyphsLib.classes.GSFont()
+    gsFont.axes = [glyphsLib.classes.GSAxis(name="Weight", tag="wght")]
+    location = getLocationFromLayerName(layerName, gsFont.axes)
+    assert location == expected
+
+
+async def test_getLocationFromSources(testFont):
+    glyphName = "a"
+    glyph = await testFont.getGlyph(glyphName)
+    location = getLocationFromSources(glyph.sources, "Regular / {155, 100} (layer #3)")
+    assert location == {"weight": 155}
+
+
+async def test_getAssociatedMasterId(testGSFont):
+    gsGlyph = testGSFont.glyphs["a"]
+    associatedMasterId = getAssociatedMasterId(gsGlyph, [155])
+    associatedMaster = gsGlyph.layers[associatedMasterId]
+    assert associatedMaster.name == "Regular"
