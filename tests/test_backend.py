@@ -137,10 +137,6 @@ async def test_getGlyph(testFont, referenceFont, glyphName):
         glyph.customData["com.glyphsapp.glyph-color"] = [120, 220, 20, 4]
 
     referenceGlyph = await referenceFont.getGlyph(glyphName)
-    # TODO: This unit test fails currently, because the fontra referenceFont
-    # does not contain the customData "com.glyphsapp.seenLayerIDs".
-    # Before I update the fontra file, I would like to discuss with Just,
-    # if this is the right approach. test_putGlyph works now.
     assert referenceGlyph == glyph
 
 
