@@ -413,8 +413,6 @@ class GlyphsBackend:
     def _writeRawGlyph(self, glyphName, f):
         # 5. write whole file with openstep_plist
         with open(self.gsFilePath, "r+", encoding="utf-8") as fp:
-            content = gsFormatting(fp.read())  # 6. fix formatting
-            fp.write(content)
             openstep_plist.dump(
                 self.rawFontData,
                 fp,
@@ -423,6 +421,20 @@ class GlyphsBackend:
                 single_line_tuples=True,
                 escape_newlines=False,
             )
+
+        # 6. fix formatting
+        with open(self.gsFilePath, "r", encoding="utf-8") as fp:
+            content = gsFormatting(fp.read())
+            if self.gsFont.format_version >= 3:
+                # add blank break at the end of the file.
+                content += "\n"
+        with open(self.gsFilePath, "w", encoding="utf-8") as fp:
+            fp.write(content)
+
+        # This following does not wrok, correctly, there the code above.
+        # with open(self.gsFilePath, "r+", encoding="utf-8") as fp:
+        #     content = gsFormatting(fp.read())
+        #     fp.write(content)
 
     async def aclose(self) -> None:
         pass

@@ -70,44 +70,32 @@ def gsFormatting(content):
     # looks like for a .glyphs file.
     # There must be a better solution, but this is better than nothing.
 
-    content = re.sub(r"pos = \(\s*(-?\d+),\s*(-?\d+)\s*\);", r"pos = (\1,\2);", content)
+    patterns = [
+        (
+            r"customBinaryData = <\s*([0-9a-fA-F\s]+)\s*>;",
+            lambda m: f"customBinaryData = <{m.group(1).replace(' ', '')}>;",
+        ),
+        (r"\(\s*(-?[\d.]+),\s*(-?[\d.]+)\s*\);", r"(\1,\2);"),
+        (r"\(\s*(-?[\d.]+),\s*(-?[\d.]+),\s*([a-zA-Z]+)\s*\)", r"(\1,\2,\3)"),
+        (r"origin = \(\s*(-?[\d.]+),\s*(-?[\d.]+)\s*\);", r"origin = (\1,\2);"),
+        (r"target = \(\s*(-?[\d.]+),\s*(-?[\d.]+)\s*\);", r"target = (\1,\2);"),
+        (
+            r"color = \(\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+)\s*\);",
+            r"color = (\1,\2,\3,\4);",
+        ),
+        (r"\(\s*(-?[\d.]+),\s*(-?[\d.]+),\s*([a-zA-Z]+)\s*\)", r"(\1,\2,\3)"),
+        (r"\(\s*(-?[\d.]+),\s*(-?[\d.]+),\s*([a-zA-Z]+),\s*\{", r"(\1,\2,\3,{"),
+        (r"\}\s*\),", r"}),"),
+        (r"anchors = \(\);", r"anchors = (\n);"),
+        (r"unicode = \(\);", r"unicode = (\n);"),
+        (r"lib = \{\};", r"lib = {\n};"),
+        (
+            r"verticalStems = \(\s*(-?[\d.]+),(-?[\d.]+)\);",
+            r"verticalStems = (\n\1,\n\2\n);",
+        ),
+    ]
 
-    content = re.sub(
-        r"pos = \(\s*([\d.]+),\s*([\d.]+)\s*\);", r"pos = (\1,\2);", content
-    )
-
-    content = re.sub(
-        r"\(\s*([\d.]+),\s*(-?\d+),\s*([a-zA-Z])\s*\)", r"(\1,\2,\3)", content
-    )
-
-    content = re.sub(
-        r"origin = \(\s*(-?\d+),\s*(-?\d+)\s*\);", r"origin = (\1,\2);", content
-    )
-
-    content = re.sub(
-        r"target = \(\s*(-?\d+),\s*(-?\d+)\s*\);", r"target = (\1,\2);", content
-    )
-
-    content = re.sub(
-        r"color = \(\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+)\s*\);",
-        r"color = (\1,\2,\3,\4);",
-        content,
-    )
-
-    content = re.sub(
-        r"\(\s*(-?\d+),\s*(-?\d+),\s*([a-zA-Z]+)\s*\)", r"(\1,\2,\3)", content
-    )
-
-    content = re.sub(
-        r"\(\s*(-?\d+),\s*(-?\d+),\s*([a-zA-Z]),\s*\{", r"(\1,\2,\3,{", content
-    )
-
-    content = re.sub(
-        r"\(\s*(-?\d+),\s*(-?\d+),\s*([a-zA-Z]+),\s*\{", r"(\1,\2,\3,{", content
-    )
-
-    content = re.sub(r"\}\s*\),", r"}),", content)
-
-    content += "\n"  # add blank break at the end of the file.
+    for pattern, replacement in patterns:
+        content = re.sub(pattern, replacement, content)
 
     return content

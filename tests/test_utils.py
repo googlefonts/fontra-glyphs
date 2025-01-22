@@ -131,8 +131,8 @@ l
     ],
     [
         """(
-341,
-720,
+321,
+700,
 l,
 {""",
         "(321,700,l,{",
@@ -176,9 +176,46 @@ c
 );""",
         "pos = (334.937,407.08);",
     ],
+    [
+        """pos = (
+-113,
+574
+);""",
+        "pos = (-113,574);",
+    ],
+    ["pos = (524,-122);", "pos = (524,-122);"],
+    [
+        "anchors = ();",
+        """anchors = (
+);""",
+    ],
+    [
+        "unicode = ();",
+        """unicode = (
+);""",
+    ],
+    [
+        "lib = {};",
+        """lib = {
+};""",
+    ],
+    [
+        "verticalStems = (17,19);",
+        """verticalStems = (
+17,
+19
+);""",
+    ],
+    # TODO: The following does not fail in the unittest: diff \n vs \012
+    [
+        """code = "feature c2sc;
+feature smcp;
+";""",
+        """code = "feature c2sc;\012feature smcp;\012";""",
+    ],
 ]
 
 
 @pytest.mark.parametrize("content,expected", contentSnippets)
 def test_gsFormatting(content, expected):
-    assert gsFormatting(content) != expected
+    assert gsFormatting(content) == expected
