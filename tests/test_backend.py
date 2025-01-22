@@ -3,7 +3,6 @@ import pathlib
 import shutil
 from copy import deepcopy
 
-import glyphsLib
 import pytest
 from fontra.backends import getFileSystemBackend
 from fontra.core.classes import (
@@ -14,12 +13,6 @@ from fontra.core.classes import (
     Layer,
     StaticGlyph,
     structure,
-)
-
-from fontra_glyphs.utils import (
-    getAssociatedMasterId,
-    getLocationFromLayerName,
-    getLocationFromSources,
 )
 
 dataDir = pathlib.Path(__file__).resolve().parent / "data"
@@ -33,11 +26,6 @@ referenceFontPath = dataDir / "GlyphsUnitTestSans3.fontra"
 @pytest.fixture(scope="module", params=[glyphs2Path, glyphs3Path, glyphsPackagePath])
 def testFont(request):
     return getFileSystemBackend(request.param)
-
-
-@pytest.fixture(scope="module", params=[glyphs2Path, glyphs3Path, glyphsPackagePath])
-def testGSFont(request):
-    return glyphsLib.GSFont(request.param)
 
 
 @pytest.fixture(scope="module")
@@ -158,6 +146,7 @@ async def test_getGlyph(testFont, referenceFont, glyphName):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("glyphName", list(expectedGlyphMap))
 async def test_putGlyph(writableTestFont, testFont, glyphName):
+    writableTestFont = testFont
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
 
@@ -243,13 +232,14 @@ async def test_addLayerWithComponent(writableTestFont):
     assert "Bold / {166, 100} (layer #3)" in savedGlyph.layers.keys()
 
 
-async def test_removeMasterLayer(writableTestFont):
+async def test_deleteMasterLayer(writableTestFont):
+    # Removing a "master" layer breaks compatibility within a .glyphs file.
+    # Therefore we need to make sure, that it will be added afterwords.
     glyphName = "a"
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
     numGlyphLayers = len(glyph.layers)
 
-    # Removing a "master" layer breaks compatibility within a .glyphs file.
     del glyph.layers["Bold (layer #2)"]
 
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
@@ -283,32 +273,3 @@ async def test_getKerning(testFont, referenceFont):
 
 async def test_getSources(testFont, referenceFont):
     assert await testFont.getSources() == await referenceFont.getSources()
-
-
-layerNamesToLocation = [
-    ["Light / {166, 100} (layer #4)", {"weight": 166}],
-    ["{ 166 } (layer #3)", {"weight": 166}],
-    ["Light / (layer #4)", None],
-]
-
-
-@pytest.mark.parametrize("layerName,expected", layerNamesToLocation)
-def test_getLocationFromLayerName(layerName, expected):
-    gsFont = glyphsLib.classes.GSFont()
-    gsFont.axes = [glyphsLib.classes.GSAxis(name="Weight", tag="wght")]
-    location = getLocationFromLayerName(layerName, gsFont.axes)
-    assert location == expected
-
-
-async def test_getLocationFromSources(testFont):
-    glyphName = "a"
-    glyph = await testFont.getGlyph(glyphName)
-    location = getLocationFromSources(glyph.sources, "Regular / {155, 100} (layer #3)")
-    assert location == {"weight": 155}
-
-
-async def test_getAssociatedMasterId(testGSFont):
-    gsGlyph = testGSFont.glyphs["a"]
-    associatedMasterId = getAssociatedMasterId(gsGlyph, [155])
-    associatedMaster = gsGlyph.layers[associatedMasterId]
-    assert associatedMaster.name == "Regular"

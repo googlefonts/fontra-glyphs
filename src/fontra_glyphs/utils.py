@@ -14,7 +14,8 @@ def toOrderedDict(obj):
 
 
 def getLocationFromLayerName(layerName, gsAxes):
-    # try to get it from name, eg. Light / {166, 100} (layer #4)
+    # Get the location based on name,
+    # for example: Light / {166, 100} (layer #4)
     match = re.search(r"\{([^}]+)\}", layerName)
     if not match:
         return None
@@ -41,12 +42,12 @@ def getLocation(glyph, layerName, gsAxes):
     location = getLocationFromSources(glyph.sources, layerName)
     if location:
         return location
-    # This layer is not used by any source:
+    # This layerName is not used by any source:
     return getLocationFromLayerName(layerName, gsAxes)
 
 
 def getAssociatedMasterId(gsGlyph, gsLocation):
-    # Make a best guess of a associatedMasterId
+    # Best guess for associatedMasterId
     closestMaster = None
     closestDistance = float("inf")
     for gsLayer in gsGlyph.layers:
@@ -62,14 +63,12 @@ def getAssociatedMasterId(gsGlyph, gsLocation):
     return closestMaster.id if closestMaster else None
 
 
-def saveFileWithGSFormatting(gsFilePath):
+def gsFormatting(content):
     # openstep_plist.dump changes the whole formatting, therefore
     # it's very diffucute to see what has changed.
     # This function is a very bad try to get close to how the formatting
     # looks like for a .glyphs file.
     # There must be a better solution, but this is better than nothing.
-    with open(gsFilePath, "r", encoding="utf-8") as file:
-        content = file.read()
 
     content = re.sub(r"pos = \(\s*(-?\d+),\s*(-?\d+)\s*\);", r"pos = (\1,\2);", content)
 
@@ -111,5 +110,4 @@ def saveFileWithGSFormatting(gsFilePath):
 
     content += "\n"  # add blank break at the end of the file.
 
-    with open(gsFilePath, "w", encoding="utf-8") as file:
-        file.write(content)
+    return content

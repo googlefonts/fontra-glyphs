@@ -38,12 +38,7 @@ from glyphsLib.builder.axes import (
 from glyphsLib.builder.smart_components import Pole
 from glyphsLib.types import Transform
 
-from .utils import (
-    getAssociatedMasterId,
-    getLocation,
-    saveFileWithGSFormatting,
-    toOrderedDict,
-)
+from .utils import getAssociatedMasterId, getLocation, gsFormatting, toOrderedDict
 
 rootInfoNames = [
     "familyName",
@@ -326,6 +321,7 @@ class GlyphsBackend:
             )
             layers[layerName] = gsLayerToFontraLayer(gsLayer, self.axisNames)
 
+        # NOTE: Remember layerIds like in the following line or add 'identifier' to fontra Layer?
         customData["com.glyphsapp.seenLayerIDs"] = seenLayerIDs
         fixSourceLocations(sources, set(smartLocation))
 
@@ -344,7 +340,6 @@ class GlyphsBackend:
 
         glyphIndex = self.glyphNameToIndex[glyphName]
         rawGlyphData = self.rawGlyphsData[glyphIndex]
-        # self.rawGlyphsData[glyphIndex] = None
         self.parsedGlyphNames.add(glyphName)
 
         gsGlyph = glyphsLib.classes.GSGlyph()
@@ -390,7 +385,7 @@ class GlyphsBackend:
     async def putGlyph(
         self, glyphName: str, glyph: VariableGlyph, codePoints: list[int]
     ) -> None:
-        # 1. convert VariableGlyph to GSGlyph (but start with a copy of the original)
+        # 1. convert VariableGlyph to GSGlyph
         gsGlyphNew = variableGlyphToGSGlyph(
             glyph, deepcopy(self.gsFont.glyphs[glyphName])
         )
@@ -406,8 +401,7 @@ class GlyphsBackend:
         rawGlyphData = openstep_plist.load(f, use_numbers=True)
 
         # 4. replace original "raw" object with new "raw" object
-        glyphIndex = self.glyphNameToIndex[glyphName]
-        self.rawGlyphsData[glyphIndex] = rawGlyphData
+        self.rawGlyphsData[self.glyphNameToIndex[glyphName]] = rawGlyphData
         self.rawFontData["glyphs"] = self.rawGlyphsData
 
         self._writeRawGlyph(glyphName, f)
@@ -418,7 +412,9 @@ class GlyphsBackend:
 
     def _writeRawGlyph(self, glyphName, f):
         # 5. write whole file with openstep_plist
-        with open(self.gsFilePath, "w", encoding="utf-8") as fp:
+        with open(self.gsFilePath, "r+", encoding="utf-8") as fp:
+            content = gsFormatting(fp.read())  # 6. fix formatting
+            fp.write(content)
             openstep_plist.dump(
                 self.rawFontData,
                 fp,
@@ -427,9 +423,6 @@ class GlyphsBackend:
                 single_line_tuples=True,
                 escape_newlines=False,
             )
-
-        # 6. fix formatting
-        saveFileWithGSFormatting(self.gsFilePath)
 
     async def aclose(self) -> None:
         pass
@@ -767,7 +760,7 @@ def gsVerticalMetricsToFontraLineMetricsHorizontal(gsFont, gsMaster):
 
 
 def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
-    # Convert fontra variableGlyph to GlyphsApp glyph
+    # Convert Fontra variableGlyph to GlyphsApp glyph
     masterIds = [m.id for m in gsGlyph.parent.masters]
     seenLayerIDs = variableGlyph.customData["com.glyphsapp.seenLayerIDs"]
     for layerName, gsLayerId in seenLayerIDs.items():
@@ -775,7 +768,7 @@ def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
             gsLayerId = seenLayerIDs.get(layerName)
             if gsLayerId in masterIds:
                 # Someone deleted a master, this breaks the compatibility in a .glyphs file.
-                # There skip deleting master layer.
+                # Skip deleting master layer.
                 continue
             # Removing non-master-layer:
             del gsGlyph.layers[gsLayerId]
@@ -788,9 +781,9 @@ def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
         else:
             # gsLayer does not exist: therefore must be 'isSpecialLayer'
             # and need to be created as a new layer:
-            newLayer = glyphsLib.classes.GSLayer()
-            newLayer.name = layerName
-            newLayer.isSpecialLayer = True
+            gsLayer = glyphsLib.classes.GSLayer()
+            gsLayer.name = layerName
+            gsLayer.isSpecialLayer = True
 
             location = getLocation(variableGlyph, layerName, gsGlyph.parent.axes)
             if location is None:
@@ -801,14 +794,14 @@ def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
                 for axis in gsGlyph.parent.axes
                 if location.get(axis.name.lower())
             ]
-            newLayer.attributes["coordinates"] = gsLocation
+            gsLayer.attributes["coordinates"] = gsLocation
 
             associatedMasterId = getAssociatedMasterId(gsGlyph, gsLocation)
             if associatedMasterId:
-                newLayer.associatedMasterId = associatedMasterId
+                gsLayer.associatedMasterId = associatedMasterId
 
-            fontraLayerToGSLayer(layer, newLayer)
-            gsGlyph.layers.append(newLayer)
+            fontraLayerToGSLayer(layer, gsLayer)
+            gsGlyph.layers.append(gsLayer)
 
     # It might be that someone deletes a not needed master-layer, which works for fontra,
     # but is required for Glyphs. We would need to get the intermediate contours.
