@@ -1,6 +1,7 @@
 import os
 import pathlib
 import shutil
+import uuid
 from copy import deepcopy
 
 import pytest
@@ -179,7 +180,7 @@ async def test_deleteLayer(writableTestFont):
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
 
-    layerName = "Regular (layer #1)"
+    layerName = "3E7589AA-8194-470F-8E2F-13C1C581BE24"
     del glyph.layers[layerName]
 
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
@@ -195,19 +196,20 @@ async def test_addLayer(writableTestFont):
     glyph = await writableTestFont.getGlyph(glyphName)
     numGlyphLayers = len(glyph.layers)
 
+    layerName = str(uuid.uuid4()).upper()
     glyph.sources.append(
-        GlyphSource(name="{166, 100}", location={"weight": 166}, layerName="{166, 100}")
+        GlyphSource(name="SemiBold", location={"weight": 166}, layerName=layerName)
     )
     # Copy StaticGlyph of Bold:
-    glyph.layers["{166, 100}"] = Layer(
-        glyph=deepcopy(glyph.layers["Bold (layer #2)"].glyph)
+    glyph.layers[layerName] = Layer(
+        glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
     )
 
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
 
     savedGlyph = await writableTestFont.getGlyph(glyphName)
     assert len(savedGlyph.layers) > numGlyphLayers
-    assert "Bold / {166, 100} (layer #4)" in savedGlyph.layers.keys()
+    assert layerName in savedGlyph.layers.keys()
 
 
 async def test_addLayerWithComponent(writableTestFont):
@@ -216,19 +218,20 @@ async def test_addLayerWithComponent(writableTestFont):
     glyph = await writableTestFont.getGlyph(glyphName)
     numGlyphLayers = len(glyph.layers)
 
+    layerName = str(uuid.uuid4()).upper()
     glyph.sources.append(
-        GlyphSource(name="{166, 100}", location={"weight": 166}, layerName="{166, 100}")
+        GlyphSource(name="SemiBold", location={"weight": 166}, layerName=layerName)
     )
     # Copy StaticGlyph of Bold:
-    glyph.layers["{166, 100}"] = Layer(
-        glyph=deepcopy(glyph.layers["Bold (layer #2)"].glyph)
+    glyph.layers[layerName] = Layer(
+        glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
     )
 
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
 
     savedGlyph = await writableTestFont.getGlyph(glyphName)
     assert len(savedGlyph.layers) > numGlyphLayers
-    assert "Bold / {166, 100} (layer #3)" in savedGlyph.layers.keys()
+    assert layerName in savedGlyph.layers.keys()
 
 
 async def test_deleteMasterLayer(writableTestFont):
@@ -239,7 +242,7 @@ async def test_deleteMasterLayer(writableTestFont):
     glyph = await writableTestFont.getGlyph(glyphName)
     numGlyphLayers = len(glyph.layers)
 
-    del glyph.layers["Bold (layer #2)"]
+    del glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"]
 
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
 
@@ -252,7 +255,7 @@ async def test_addAnchor(writableTestFont):
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
 
-    layerName = "{ 166, 100 }"
+    layerName = str(uuid.uuid4()).upper()
     glyph.layers[layerName] = Layer(glyph=StaticGlyph(xAdvance=0))
     glyph.layers[layerName].glyph.anchors.append(Anchor(name="top", x=207, y=746))
 
@@ -262,7 +265,7 @@ async def test_addAnchor(writableTestFont):
 
     assert (
         glyph.layers[layerName].glyph.anchors
-        == savedGlyph.layers["Bold / { 166, 100 } (layer #4)"].glyph.anchors
+        == savedGlyph.layers[layerName].glyph.anchors
     )
 
 

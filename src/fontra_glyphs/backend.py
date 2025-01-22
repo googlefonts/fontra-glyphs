@@ -39,7 +39,12 @@ from glyphsLib.builder.axes import (
 from glyphsLib.builder.smart_components import Pole
 from glyphsLib.types import Transform
 
-from .utils import getAssociatedMasterId, getLocation, gsFormatting, toOrderedDict
+from .utils import (
+    getAssociatedMasterId,
+    getLocationFromSources,
+    gsFormatting,
+    toOrderedDict,
+)
 
 rootInfoNames = [
     "familyName",
@@ -769,7 +774,7 @@ def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
         del gsGlyph.layers[gsLayerId]
 
     for layerName, layer in iter(variableGlyph.layers.items()):
-        gsLayer = gsGlyph.layers.get(layerName)
+        gsLayer = gsGlyph.layers[layerName]
         # layerName is equal to gsLayer.layerId if it comes from Glyphsapp,
         # otherwise the layer has been newly created within Fontrta.
 
@@ -781,12 +786,10 @@ def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
             # and need to be created as a new layer:
             gsLayer = glyphsLib.classes.GSLayer()
             gsLayer.name = layerName
+            gsLayer.layerId = layerName
             gsLayer.isSpecialLayer = True
 
-            location = getLocation(variableGlyph, layerName, gsGlyph.parent.axes)
-            if location is None:
-                return
-
+            location = getLocationFromSources(variableGlyph.sources, layerName)
             gsLocation = [
                 location[axis.name.lower()]
                 for axis in gsGlyph.parent.axes

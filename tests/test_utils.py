@@ -6,7 +6,6 @@ from fontra.backends import getFileSystemBackend
 
 from fontra_glyphs.utils import (
     getAssociatedMasterId,
-    getLocationFromLayerName,
     getLocationFromSources,
     gsFormatting,
 )
@@ -28,25 +27,11 @@ def testGSFont(request):
     return glyphsLib.GSFont(request.param)
 
 
-layerNamesToLocation = [
-    ["Light / {166, 100} (layer #4)", {"weight": 166}],
-    ["{ 166 } (layer #3)", {"weight": 166}],
-    ["Light / (layer #4)", None],
-]
-
-
-@pytest.mark.parametrize("layerName,expected", layerNamesToLocation)
-def test_getLocationFromLayerName(layerName, expected):
-    gsFont = glyphsLib.classes.GSFont()
-    gsFont.axes = [glyphsLib.classes.GSAxis(name="Weight", tag="wght")]
-    location = getLocationFromLayerName(layerName, gsFont.axes)
-    assert location == expected
-
-
 async def test_getLocationFromSources(testFont):
-    glyphName = "a"
-    glyph = await testFont.getGlyph(glyphName)
-    location = getLocationFromSources(glyph.sources, "Regular / {155, 100} (layer #3)")
+    glyph = await testFont.getGlyph("a")
+    location = getLocationFromSources(
+        glyph.sources, "1FA54028-AD2E-4209-AA7B-72DF2DF16264"
+    )
     assert location == {"weight": 155}
 
 

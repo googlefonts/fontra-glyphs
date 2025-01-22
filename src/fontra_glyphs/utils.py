@@ -13,37 +13,13 @@ def toOrderedDict(obj):
         return obj
 
 
-def getLocationFromLayerName(layerName, gsAxes):
-    # Get the location based on name,
-    # for example: Light / {166, 100} (layer #4)
-    match = re.search(r"\{([^}]+)\}", layerName)
-    if not match:
-        return None
-    listLocation = match.group(1).replace(" ", "").split(",")
-    listLocationValues = [float(v) for v in listLocation]
-    return {
-        gsAxes[i].name.lower(): value
-        for i, value in enumerate(listLocationValues)
-        if i < len(gsAxes)
-    }
-
-
 def getLocationFromSources(sources, layerName):
-    s = None
+    s = sources[0]
     for source in sources:
         if source.layerName == layerName:
             s = source
             break
-    if s is not None:
-        return {k.lower(): v for k, v in s.location.items()}
-
-
-def getLocation(glyph, layerName, gsAxes):
-    location = getLocationFromSources(glyph.sources, layerName)
-    if location:
-        return location
-    # This layerName is not used by any source:
-    return getLocationFromLayerName(layerName, gsAxes)
+    return {k.lower(): v for k, v in s.location.items()}
 
 
 def getAssociatedMasterId(gsGlyph, gsLocation):
