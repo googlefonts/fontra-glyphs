@@ -489,8 +489,6 @@ class GlyphsPackageBackend(GlyphsBackend):
 
     def getGlyphFilePath(self, glyphName):
         glyphsPath = pathlib.Path(self.gsFilePath) / "glyphs"
-        # TODO: Get the right glyph file name might be challenging,
-        # because for example the glyph A-cy is stored in the package as A_-cy.glyph
         realGlyphName = getGlyphspackageGlyphFileName(glyphName)
         return glyphsPath / (realGlyphName + ".glyph")
 
