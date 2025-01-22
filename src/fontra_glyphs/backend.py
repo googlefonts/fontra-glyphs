@@ -30,6 +30,7 @@ from fontra.core.path import PackedPathPointPen
 from fontra.core.protocols import WritableFontBackend
 from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.misc.transform import DecomposedTransform
+from fontTools.ufoLib.filenames import userNameToFileName
 from glyphsLib.builder.axes import (
     get_axis_definitions,
     get_regular_master,
@@ -38,13 +39,7 @@ from glyphsLib.builder.axes import (
 from glyphsLib.builder.smart_components import Pole
 from glyphsLib.types import Transform
 
-from .utils import (
-    getAssociatedMasterId,
-    getGlyphspackageGlyphFileName,
-    getLocation,
-    gsFormatting,
-    toOrderedDict,
-)
+from .utils import getAssociatedMasterId, getLocation, gsFormatting, toOrderedDict
 
 rootInfoNames = [
     "familyName",
@@ -486,8 +481,8 @@ class GlyphsPackageBackend(GlyphsBackend):
 
     def getGlyphFilePath(self, glyphName):
         glyphsPath = pathlib.Path(self.gsFilePath) / "glyphs"
-        realGlyphName = getGlyphspackageGlyphFileName(glyphName)
-        return glyphsPath / (realGlyphName + ".glyph")
+        refFileName = userNameToFileName(glyphName, suffix=".glyph")
+        return glyphsPath / refFileName
 
 
 def _readGlyphMapAndKerningGroups(
