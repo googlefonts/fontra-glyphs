@@ -246,7 +246,7 @@ class GlyphsBackend:
                 sourceName = f"{masterName} / {gsLayer.name}"
             else:
                 sourceName = gsLayer.name or masterName
-            layerName = f"{sourceName} (layer #{i})"
+            layerName = gsLayer.layerId
 
             location = {
                 **self.locationByMasterID[gsLayer.associatedMasterId],

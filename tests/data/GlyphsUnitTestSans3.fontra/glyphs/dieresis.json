@@ -3,28 +3,91 @@
 "sources": [
 {
 "name": "Light",
-"layerName": "Light (layer #0)",
+"layerName": "C4872ECA-A3A9-40AB-960A-1DB2202F16DE",
 "location": {
 "Weight": 17
 }
 },
 {
 "name": "Regular",
-"layerName": "Regular (layer #1)",
+"layerName": "3E7589AA-8194-470F-8E2F-13C1C581BE24",
 "location": {
 "Weight": 90
 }
 },
 {
 "name": "Bold",
-"layerName": "Bold (layer #2)",
+"layerName": "BFFFD157-90D3-4B85-B99D-9A2F366F03CA",
 "location": {
 "Weight": 220
 }
 }
 ],
 "layers": {
-"Bold (layer #2)": {
+"3E7589AA-8194-470F-8E2F-13C1C581BE24": {
+"glyph": {
+"path": {
+"contours": [
+{
+"points": [
+{
+"x": 349,
+"y": 700
+},
+{
+"x": 252,
+"y": 700
+},
+{
+"x": 252,
+"y": 601
+},
+{
+"x": 349,
+"y": 601
+}
+],
+"isClosed": true
+},
+{
+"points": [
+{
+"x": 149,
+"y": 700
+},
+{
+"x": 52,
+"y": 700
+},
+{
+"x": 52,
+"y": 601
+},
+{
+"x": 149,
+"y": 601
+}
+],
+"isClosed": true
+}
+]
+},
+"xAdvance": 600,
+"anchors": [
+{
+"name": "_top",
+"x": 201,
+"y": 480
+},
+{
+"name": "top",
+"x": 201,
+"y": 700
+}
+]
+}
+},
+"BFFFD157-90D3-4B85-B99D-9A2F366F03CA": {
 "glyph": {
 "path": {
 "contours": [
@@ -87,7 +150,7 @@
 ]
 }
 },
-"Light (layer #0)": {
+"C4872ECA-A3A9-40AB-960A-1DB2202F16DE": {
 "glyph": {
 "path": {
 "contours": [
@@ -146,69 +209,6 @@
 "name": "top",
 "x": 188,
 "y": 650
-}
-]
-}
-},
-"Regular (layer #1)": {
-"glyph": {
-"path": {
-"contours": [
-{
-"points": [
-{
-"x": 349,
-"y": 700
-},
-{
-"x": 252,
-"y": 700
-},
-{
-"x": 252,
-"y": 601
-},
-{
-"x": 349,
-"y": 601
-}
-],
-"isClosed": true
-},
-{
-"points": [
-{
-"x": 149,
-"y": 700
-},
-{
-"x": 52,
-"y": 700
-},
-{
-"x": 52,
-"y": 601
-},
-{
-"x": 149,
-"y": 601
-}
-],
-"isClosed": true
-}
-]
-},
-"xAdvance": 600,
-"anchors": [
-{
-"name": "_top",
-"x": 201,
-"y": 480
-},
-{
-"name": "top",
-"x": 201,
-"y": 700
 }
 ]
 }

@@ -3,28 +3,45 @@
 "sources": [
 {
 "name": "Light",
-"layerName": "Light (layer #0)",
+"layerName": "C4872ECA-A3A9-40AB-960A-1DB2202F16DE",
 "location": {
 "Weight": 17
 }
 },
 {
 "name": "Regular",
-"layerName": "Regular (layer #1)",
+"layerName": "3E7589AA-8194-470F-8E2F-13C1C581BE24",
 "location": {
 "Weight": 90
 }
 },
 {
 "name": "Bold",
-"layerName": "Bold (layer #2)",
+"layerName": "BFFFD157-90D3-4B85-B99D-9A2F366F03CA",
 "location": {
 "Weight": 220
 }
 }
 ],
 "layers": {
-"Bold (layer #2)": {
+"3E7589AA-8194-470F-8E2F-13C1C581BE24": {
+"glyph": {
+"components": [
+{
+"name": "A"
+},
+{
+"name": "dieresis",
+"transformation": {
+"translateX": 128,
+"translateY": 220
+}
+}
+],
+"xAdvance": 657
+}
+},
+"BFFFD157-90D3-4B85-B99D-9A2F366F03CA": {
 "glyph": {
 "components": [
 {
@@ -41,7 +58,7 @@
 "xAdvance": 753
 }
 },
-"Light (layer #0)": {
+"C4872ECA-A3A9-40AB-960A-1DB2202F16DE": {
 "glyph": {
 "components": [
 {
@@ -56,23 +73,6 @@
 }
 ],
 "xAdvance": 593
-}
-},
-"Regular (layer #1)": {
-"glyph": {
-"components": [
-{
-"name": "A"
-},
-{
-"name": "dieresis",
-"transformation": {
-"translateX": 128,
-"translateY": 220
-}
-}
-],
-"xAdvance": 657
 }
 }
 }
