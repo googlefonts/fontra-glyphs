@@ -6,6 +6,7 @@ from fontra.backends import getFileSystemBackend
 
 from fontra_glyphs.utils import (
     getAssociatedMasterId,
+    getGlyphspackageGlyphFileName,
     getLocationFromLayerName,
     getLocationFromSources,
     gsFormatting,
@@ -55,6 +56,17 @@ def test_getAssociatedMasterId(testGSFont):
     associatedMasterId = getAssociatedMasterId(gsGlyph, [155])
     associatedMaster = gsGlyph.layers[associatedMasterId]
     assert associatedMaster.name == "Regular"
+
+
+glyphNameToGlyphspackageGlyphFileName = [
+    ["A-cy", "A_-cy"],
+    # This list may extend...
+]
+
+
+@pytest.mark.parametrize("glyphName,expected", glyphNameToGlyphspackageGlyphFileName)
+def test_getGlyphspackageGlyphFileName(glyphName, expected):
+    assert getGlyphspackageGlyphFileName(glyphName) == expected
 
 
 contentSnippets = [

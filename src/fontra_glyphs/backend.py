@@ -38,7 +38,13 @@ from glyphsLib.builder.axes import (
 from glyphsLib.builder.smart_components import Pole
 from glyphsLib.types import Transform
 
-from .utils import getAssociatedMasterId, getLocation, gsFormatting, toOrderedDict
+from .utils import (
+    getAssociatedMasterId,
+    getGlyphspackageGlyphFileName,
+    getLocation,
+    gsFormatting,
+    toOrderedDict,
+)
 
 rootInfoNames = [
     "familyName",
@@ -487,18 +493,6 @@ class GlyphsPackageBackend(GlyphsBackend):
         # because for example the glyph A-cy is stored in the package as A_-cy.glyph
         realGlyphName = getGlyphspackageGlyphFileName(glyphName)
         return glyphsPath / (realGlyphName + ".glyph")
-
-
-def getGlyphspackageGlyphFileName(glyphName):
-    nameParts = glyphName.split("-")
-    firstPart = (
-        f"{nameParts[0]}_"
-        if len(nameParts[0]) == 1 and nameParts[0].isupper()
-        else nameParts[0]
-    )
-    nameParts[0] = firstPart
-
-    return "-".join(nameParts)
 
 
 def _readGlyphMapAndKerningGroups(

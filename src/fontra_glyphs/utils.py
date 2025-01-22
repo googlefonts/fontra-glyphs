@@ -2,6 +2,18 @@ import re
 from collections import OrderedDict
 
 
+def getGlyphspackageGlyphFileName(glyphName):
+    nameParts = glyphName.split("-")
+    firstPart = (
+        f"{nameParts[0]}_"
+        if len(nameParts[0]) == 1 and nameParts[0].isupper()
+        else nameParts[0]
+    )
+    nameParts[0] = firstPart
+
+    return "-".join(nameParts)
+
+
 # The following is obsolete once this is merged:
 # https://github.com/fonttools/openstep-plist/pull/35
 def toOrderedDict(obj):
