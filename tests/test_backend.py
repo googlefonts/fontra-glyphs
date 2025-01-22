@@ -146,7 +146,6 @@ async def test_getGlyph(testFont, referenceFont, glyphName):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("glyphName", list(expectedGlyphMap))
 async def test_putGlyph(writableTestFont, testFont, glyphName):
-    writableTestFont = testFont
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
 
