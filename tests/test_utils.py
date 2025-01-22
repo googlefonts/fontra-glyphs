@@ -36,6 +36,8 @@ async def test_getLocationFromSources(testFont):
 
 
 def test_getAssociatedMasterId(testGSFont):
+    # TODO: need more complex test with at least two axes,
+    # then improvement getAssociatedMasterId
     gsGlyph = testGSFont.glyphs["a"]
     associatedMasterId = getAssociatedMasterId(gsGlyph, [155])
     associatedMaster = gsGlyph.layers[associatedMasterId]

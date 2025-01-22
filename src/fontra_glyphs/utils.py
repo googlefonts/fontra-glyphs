@@ -40,11 +40,10 @@ def getAssociatedMasterId(gsGlyph, gsLocation):
 
 
 def gsFormatting(content):
-    # openstep_plist.dump changes the whole formatting, therefore
-    # it's very diffucute to see what has changed.
-    # This function is a very bad try to get close to how the formatting
-    # looks like for a .glyphs file.
-    # There must be a better solution, but this is better than nothing.
+    # TODO: This need a different solution.
+    # Should be solved in the raw data not via regular expressions.
+    # The raw data is made out of list. We need to convert some part into tuples.
+    # For more please see: https://github.com/fonttools/openstep-plist/issues/33
 
     patterns = [
         (

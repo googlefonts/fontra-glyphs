@@ -293,6 +293,7 @@ class GlyphsBackend:
         gsLayers = sorted(
             gsLayers, key=lambda i_gsLayer: masterOrder[i_gsLayer[1].associatedMasterId]
         )
+
         seenLocations = []
         for i, gsLayer in gsLayers:
             braceLocation = self._getBraceLayerLocation(gsLayer)
@@ -810,9 +811,7 @@ def fontraLayerToGSLayer(layer, gsLayer):
     gsLayer.components = [
         fontraComponentToGSComponent(component) for component in layer.glyph.components
     ]
-    gsLayer.anchors = [
-        fontraAnchorsToGSAnchor(anchor) for anchor in layer.glyph.anchors
-    ]
+    gsLayer.anchors = [fontraAnchorToGSAnchor(anchor) for anchor in layer.glyph.anchors]
 
 
 def fontraComponentToGSComponent(component):
@@ -824,7 +823,7 @@ def fontraComponentToGSComponent(component):
     return gsComponent
 
 
-def fontraAnchorsToGSAnchor(anchor):
+def fontraAnchorToGSAnchor(anchor):
     gsAnchor = glyphsLib.classes.GSAnchor()
     gsAnchor.name = anchor.name
     gsAnchor.position.x = anchor.x
