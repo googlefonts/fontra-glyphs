@@ -293,7 +293,6 @@ class GlyphsBackend:
         gsLayers = sorted(
             gsLayers, key=lambda i_gsLayer: masterOrder[i_gsLayer[1].associatedMasterId]
         )
-        seenLayerIDs = {}
         seenLocations = []
         for i, gsLayer in gsLayers:
             braceLocation = self._getBraceLayerLocation(gsLayer)
@@ -327,8 +326,6 @@ class GlyphsBackend:
             )
             layers[layerName] = gsLayerToFontraLayer(gsLayer, self.axisNames)
 
-        # NOTE: Remember layerIds like in the following line or add 'identifier' to fontra Layer?
-        customData["com.glyphsapp.seenLayerIDs"] = seenLayerIDs
         fixSourceLocations(sources, set(smartLocation))
 
         glyph = VariableGlyph(
@@ -766,22 +763,24 @@ def gsVerticalMetricsToFontraLineMetricsHorizontal(gsFont, gsMaster):
 def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
     # Convert Fontra variableGlyph to GlyphsApp glyph
     masterIds = [m.id for m in gsGlyph.parent.masters]
-    seenLayerIDs = variableGlyph.customData["com.glyphsapp.seenLayerIDs"]
-    for layerName, gsLayerId in seenLayerIDs.items():
-        if layerName not in variableGlyph.layers:
-            gsLayerId = seenLayerIDs.get(layerName)
-            if gsLayerId in masterIds:
-                # Someone deleted a master, this breaks the compatibility in a .glyphs file.
-                # Skip deleting master layer.
-                continue
-            # Removing non-master-layer:
-            del gsGlyph.layers[gsLayerId]
+    for gsLayerId in [gsLayer.layerId for gsLayer in gsGlyph.layers]:
+        if gsLayerId in variableGlyph.layers:
+            # This layer will be modified later.
+            continue
+        if gsLayerId in masterIds:
+            # We don't delete master layers.
+            continue
+        # Removing non-master-layer:
+        del gsGlyph.layers[gsLayerId]
 
-    for i, (layerName, layer) in enumerate(iter(variableGlyph.layers.items())):
-        gsLayerId = seenLayerIDs.get(layerName)
-        if gsLayerId is not None:
+    for layerName, layer in iter(variableGlyph.layers.items()):
+        gsLayer = gsGlyph.layers.get(layerName)
+        # layerName is equal to gsLayer.layerId if it comes from Glyphsapp,
+        # otherwise the layer has been newly created within Fontrta.
+
+        if gsLayer is not None:
             # gsLayer exists: modify existing gsLayer
-            fontraLayerToGSLayer(layer, gsGlyph.layers[gsLayerId])
+            fontraLayerToGSLayer(layer, gsLayer)
         else:
             # gsLayer does not exist: therefore must be 'isSpecialLayer'
             # and need to be created as a new layer:
@@ -806,9 +805,6 @@ def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
 
             fontraLayerToGSLayer(layer, gsLayer)
             gsGlyph.layers.append(gsLayer)
-
-    # It might be that someone deletes a not needed master-layer, which works for fontra,
-    # but is required for Glyphs. We would need to get the intermediate contours.
 
     return gsGlyph
 
