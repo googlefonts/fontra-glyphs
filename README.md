@@ -6,3 +6,12 @@ It supports the following features:
 
 - Brace layers
 - Smart components (for now restricted to interpolation: axis values need to be within the minimum and maximum values)
+
+
+## Write
+
+### Glyph Layer
+- Contour (Paths, Nodes) ✅
+- Components ✅
+- Anchors ✅
+- Guidelines
