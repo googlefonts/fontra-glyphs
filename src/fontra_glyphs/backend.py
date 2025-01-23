@@ -384,33 +384,33 @@ class GlyphsBackend:
         assert all(isinstance(cp, int) for cp in codePoints)
         self.glyphMap[glyphName] = codePoints
 
-        # 1. convert VariableGlyph to GSGlyph
+        # Convert VariableGlyph to GSGlyph
         gsGlyphNew = variableGlyphToGSGlyph(
             glyph, deepcopy(self.gsFont.glyphs[glyphName])
         )
 
-        # 2. serialize to text with glyphsLib.writer.Writer(), using io.StringIO or io.BytesIO
+        # Serialize to text with glyphsLib.writer.Writer(), using io.StringIO
         f = io.StringIO()
         writer = glyphsLib.writer.Writer(f)
         writer.format_version = self.gsFont.format_version
         writer.write(gsGlyphNew)
 
-        # 3. parse stream into "raw" object
+        # Parse stream into "raw" object
         f.seek(0)
         rawGlyphData = openstep_plist.load(f, use_numbers=True)
 
-        # 4. replace original "raw" object with new "raw" object
+        # Replace original "raw" object with new "raw" object
         self.rawGlyphsData[self.glyphNameToIndex[glyphName]] = rawGlyphData
         self.rawFontData["glyphs"] = self.rawGlyphsData
 
         self._writeRawGlyph(glyphName, f)
 
-        # 7. Remove glyph from parsed glyph names, because we changed it.
+        # Remove glyph from parsed glyph names, because we changed it.
         # Next time it needs to be parsed again.
         self.parsedGlyphNames.discard(glyphName)
 
     def _writeRawGlyph(self, glyphName, f):
-        # 5. write whole file with openstep_plist
+        # Write whole file with openstep_plist
         result = convertMatchesToTuples(self.rawFontData, matchTreeFont)
         out = (
             openstep_plist.dumps(
@@ -762,7 +762,9 @@ def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
             continue
         if gsLayerId in masterIds:
             # We don't delete master layers.
-            continue
+            raise NotImplementedError(
+                "Deleting a master layer will cause compatibility issues in GlyphsApp."
+            )
         # Removing non-master-layer:
         del gsGlyph.layers[gsLayerId]
 

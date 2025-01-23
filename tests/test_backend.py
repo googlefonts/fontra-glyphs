@@ -180,11 +180,12 @@ async def test_deleteLayer(writableTestFont):
     layerName = "3E7589AA-8194-470F-8E2F-13C1C581BE24"
     del glyph.layers[layerName]
 
-    await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
-
-    savedGlyph = await writableTestFont.getGlyph(glyphName)
-
-    assert layerName in savedGlyph.layers
+    with pytest.raises(NotImplementedError) as excinfo:
+        await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
+    assert (
+        str(excinfo.value)
+        == "Deleting a master layer will cause compatibility issues in GlyphsApp."
+    )
 
 
 async def test_addLayer(writableTestFont):
