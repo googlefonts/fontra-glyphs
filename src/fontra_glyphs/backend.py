@@ -172,12 +172,10 @@ class GlyphsBackend:
         return self.glyphMap
 
     async def putGlyphMap(self, value: dict[str, list[int]]) -> None:
-        print("GlyphsBackend putGlyphMap: ", value)
         pass
 
     async def deleteGlyph(self, glyphName):
-        print("GlyphsBackend deleteGlyph: ", glyphName)
-        pass
+        raise NotImplementedError("deleting glyphs is not yet implemented")
 
     async def getFontInfo(self) -> FontInfo:
         infoDict = {}
@@ -195,29 +193,25 @@ class GlyphsBackend:
         return FontInfo(**infoDict)
 
     async def putFontInfo(self, fontInfo: FontInfo):
-        print("GlyphsBackend putFontInfo: ", fontInfo)
-        pass
+        raise NotImplementedError("editing FontInfo is not yet implemented")
 
     async def getSources(self) -> dict[str, FontSource]:
         return gsMastersToFontraFontSources(self.gsFont, self.locationByMasterID)
 
     async def putSources(self, sources: dict[str, FontSource]) -> None:
-        print("GlyphsBackend putSources: ", sources)
-        pass
+        raise NotImplementedError("editing FontSources is not yet implemented")
 
     async def getAxes(self) -> Axes:
         return Axes(axes=self.axes)
 
     async def putAxes(self, axes: Axes) -> None:
-        print("GlyphsBackend putAxes: ", axes)
-        pass
+        raise NotImplementedError("editing Axes is not yet implemented")
 
     async def getUnitsPerEm(self) -> int:
         return self.gsFont.upm
 
     async def putUnitsPerEm(self, value: int) -> None:
-        print("GlyphsBackend putUnitsPerEm: ", value)
-        pass
+        raise NotImplementedError("editing UnitsPerEm is not yet implemented")
 
     async def getKerning(self) -> dict[str, Kerning]:
         # TODO: RTL kerning: https://docu.glyphsapp.com/#GSFont.kerningRTL
@@ -239,30 +233,26 @@ class GlyphsBackend:
         return kerning
 
     async def putKerning(self, kerning: dict[str, Kerning]) -> None:
-        print("GlyphsBackend putKerning: ", kerning)
-        pass
+        raise NotImplementedError("editing Kerning is not yet implemented")
 
     async def getFeatures(self) -> OpenTypeFeatures:
         # TODO: extract features
         return OpenTypeFeatures()
 
     async def putFeatures(self, features: OpenTypeFeatures) -> None:
-        print("GlyphsBackend putFeatures: ", features)
-        pass
+        raise NotImplementedError("editing OpenTypeFeatures is not yet implemented")
 
     async def getBackgroundImage(self, imageIdentifier: str) -> ImageData | None:
         return None
 
     async def putBackgroundImage(self, imageIdentifier: str, data: ImageData) -> None:
-        print("GlyphsBackend putBackgroundImage: ", imageIdentifier, data)
-        pass
+        raise NotImplementedError("editing BackgroundImage is not yet implemented")
 
     async def getCustomData(self) -> dict[str, Any]:
         return {}
 
     async def putCustomData(self, lib):
-        print("GlyphsBackend putCustomData: ", lib)
-        pass
+        raise NotImplementedError("editing CustomData is not yet implemented")
 
     async def getGlyph(self, glyphName: str) -> VariableGlyph | None:
         if glyphName not in self.glyphNameToIndex:
