@@ -379,6 +379,10 @@ class GlyphsBackend:
     async def putGlyph(
         self, glyphName: str, glyph: VariableGlyph, codePoints: list[int]
     ) -> None:
+        assert isinstance(codePoints, list)
+        assert all(isinstance(cp, int) for cp in codePoints)
+        self.glyphMap[glyphName] = codePoints
+
         # 1. convert VariableGlyph to GSGlyph
         gsGlyphNew = variableGlyphToGSGlyph(
             glyph, deepcopy(self.gsFont.glyphs[glyphName])
