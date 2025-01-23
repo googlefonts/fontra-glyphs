@@ -1,13 +1,15 @@
 import pathlib
 
+import openstep_plist
 import pytest
 from fontra.backends import getFileSystemBackend
 from glyphsLib.classes import GSAxis, GSFont, GSFontMaster, GSGlyph, GSLayer
 
 from fontra_glyphs.utils import (
+    convertMatchesToTuples,
     getAssociatedMasterId,
     getLocationFromSources,
-    gsFormatting,
+    matchTreeFont,
 )
 
 dataDir = pathlib.Path(__file__).resolve().parent / "data"
@@ -99,165 +101,23 @@ def test_getAssociatedMasterId(testGSFontWW, gsLocation, expected):
     assert getAssociatedMasterId(testGSFontWW, gsLocation) == expected
 
 
-contentSnippets = [
-    [
-        """pos = (
-524,
-141
-);""",
-        "pos = (524,141);",
-    ],
-    [
-        """pos = (
--113,
-765
-);""",
-        "pos = (-113,765);",
-    ],
-    [
-        "customBinaryData = <74686520 62797465 73>;",
-        "customBinaryData = <746865206279746573>;",
-    ],
-    [
-        """color = (
-120,
-220,
-20,
-4
-);""",
-        "color = (120,220,20,4);",
-    ],
-    [
-        """(
-566.99,
-700,
-l
-),""",
-        "(566.99,700,l),",
-    ],
-    [
-        """(
-191,
-700,
-l
-),""",
-        "(191,700,l),",
-    ],
-    [
-        """origin = (
-1,
-1
-);""",
-        "origin = (1,1);",
-    ],
-    [
-        """target = (
-1,
-0
-);""",
-        "target = (1,0);",
-    ],
-    [
-        """pos = (
-45,
-0
-);""",
-        "pos = (45,0);",
-    ],
-    [
-        """pos = (
--45,
-0
-);""",
-        "pos = (-45,0);",
-    ],
-    [
-        """(
-321,
-700,
-l,
-{""",
-        "(321,700,l,{",
-    ],
-    [
-        """(
-268,
-153,
-ls
-),""",
-        "(268,153,ls),",
-    ],
-    [
-        """(
-268,
-153,
-o
-),""",
-        "(268,153,o),",
-    ],
-    [
-        """(
-268,
-153,
-cs
-),""",
-        "(268,153,cs),",
-    ],
-    [
-        """(
-184,
--8,
-c
-),""",
-        "(184,-8,c),",
-    ],
-    [
-        """pos = (
-334.937,
-407.08
-);""",
-        "pos = (334.937,407.08);",
-    ],
-    [
-        """pos = (
--113,
-574
-);""",
-        "pos = (-113,574);",
-    ],
-    ["pos = (524,-122);", "pos = (524,-122);"],
-    [
-        "anchors = ();",
-        """anchors = (
-);""",
-    ],
-    [
-        "unicode = ();",
-        """unicode = (
-);""",
-    ],
-    [
-        "lib = {};",
-        """lib = {
-};""",
-    ],
-    [
-        "verticalStems = (17,19);",
-        """verticalStems = (
-17,
-19
-);""",
-    ],
-    # TODO: The following does not fail in the unittest: diff \n vs \012
-    [
-        """code = "feature c2sc;
-feature smcp;
-";""",
-        """code = "feature c2sc;\012feature smcp;\012";""",
-    ],
-]
+@pytest.mark.parametrize("path", [glyphs2Path, glyphs3Path])
+def test_roundtrip_glyphs_file_dumps(path):
+    root = openstep_plist.loads(path.read_text(), use_numbers=True)
+    result = convertMatchesToTuples(root, matchTreeFont)
 
+    out = (
+        openstep_plist.dumps(
+            result,
+            unicode_escape=False,
+            indent=0,
+            single_line_tuples=True,
+            escape_newlines=False,
+            sort_keys=False,
+            single_line_empty_objects=False,
+        )
+        + "\n"
+    )
 
-@pytest.mark.parametrize("content,expected", contentSnippets)
-def test_gsFormatting(content, expected):
-    assert gsFormatting(content) == expected
+    for root_line, out_line in zip(path.read_text().splitlines(), out.splitlines()):
+        assert root_line == out_line

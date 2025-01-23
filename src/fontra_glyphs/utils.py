@@ -1,4 +1,3 @@
-import re
 from collections import OrderedDict
 
 
@@ -39,38 +38,59 @@ def getAssociatedMasterId(gsFont, gsLocation):
     return closestMasterID
 
 
-def gsFormatting(content):
-    # TODO: This need a different solution.
-    # Should be solved in the raw data not via regular expressions.
-    # The raw data is made out of list. We need to convert some part into tuples.
-    # For more please see: https://github.com/fonttools/openstep-plist/issues/33
+LEAF = object()
 
-    patterns = [
-        (
-            r"customBinaryData = <\s*([0-9a-fA-F\s]+)\s*>;",
-            lambda m: f"customBinaryData = <{m.group(1).replace(' ', '')}>;",
-        ),
-        (r"\(\s*(-?[\d.]+),\s*(-?[\d.]+)\s*\);", r"(\1,\2);"),
-        (r"\(\s*(-?[\d.]+),\s*(-?[\d.]+),\s*([a-zA-Z]+)\s*\)", r"(\1,\2,\3)"),
-        (r"origin = \(\s*(-?[\d.]+),\s*(-?[\d.]+)\s*\);", r"origin = (\1,\2);"),
-        (r"target = \(\s*(-?[\d.]+),\s*(-?[\d.]+)\s*\);", r"target = (\1,\2);"),
-        (
-            r"color = \(\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+)\s*\);",
-            r"color = (\1,\2,\3,\4);",
-        ),
-        (r"\(\s*(-?[\d.]+),\s*(-?[\d.]+),\s*([a-zA-Z]+)\s*\)", r"(\1,\2,\3)"),
-        (r"\(\s*(-?[\d.]+),\s*(-?[\d.]+),\s*([a-zA-Z]+),\s*\{", r"(\1,\2,\3,{"),
-        (r"\}\s*\),", r"}),"),
-        (r"anchors = \(\);", r"anchors = (\n);"),
-        (r"unicode = \(\);", r"unicode = (\n);"),
-        (r"lib = \{\};", r"lib = {\n};"),
-        (
-            r"verticalStems = \(\s*(-?[\d.]+),(-?[\d.]+)\);",
-            r"verticalStems = (\n\1,\n\2\n);",
-        ),
-    ]
 
-    for pattern, replacement in patterns:
-        content = re.sub(pattern, replacement, content)
+def patternsToMatchTree(patterns):
+    tree = {}
+    for pattern in patterns:
+        subtree = tree
+        for item in pattern[:-1]:
+            if item not in subtree:
+                subtree[item] = {}
+            subtree = subtree[item]
+        subtree[pattern[-1]] = LEAF
+    return tree
 
-    return content
+
+def convertMatchesToTuples(obj, matchTree, path=()):
+    if isinstance(obj, dict):
+        assert matchTree is not LEAF, path
+        return {
+            k: convertMatchesToTuples(
+                v, matchTree.get(k, matchTree.get(None, {})), path + (k,)
+            )
+            for k, v in obj.items()
+        }
+    elif isinstance(obj, list):
+        convertToTuple = False
+        if matchTree is LEAF:
+            convertToTuple = True
+            matchTree = {}
+        seq = [
+            convertMatchesToTuples(item, matchTree.get(None, {}), path + (i,))
+            for i, item in enumerate(obj)
+        ]
+        if convertToTuple:
+            seq = tuple(seq)
+        return seq
+    else:
+        return obj
+
+
+patterns = [
+    ["fontMaster", None, "guides", None, "pos"],
+    ["glyphs", None, "color"],
+    ["glyphs", None, "layers", None, "anchors", None, "pos"],
+    ["glyphs", None, "layers", None, "annotations", None, "pos"],
+    ["glyphs", None, "layers", None, "background", "shapes", None, "nodes", None],
+    ["glyphs", None, "layers", None, "guides", None, "pos"],
+    ["glyphs", None, "layers", None, "hints", None, "origin"],
+    ["glyphs", None, "layers", None, "hints", None, "target"],
+    ["glyphs", None, "layers", None, "shapes", None, "nodes", None],
+    ["glyphs", None, "layers", None, "shapes", None, "pos"],
+]
+
+
+matchTreeFont = patternsToMatchTree(patterns)
+matchTreeGlyph = matchTreeFont["glyphs"][None]

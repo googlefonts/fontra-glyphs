@@ -40,9 +40,10 @@ from glyphsLib.builder.smart_components import Pole
 from glyphsLib.types import Transform
 
 from .utils import (
+    convertMatchesToTuples,
     getAssociatedMasterId,
     getLocationFromSources,
-    gsFormatting,
+    matchTreeFont,
     toOrderedDict,
 )
 
@@ -410,21 +411,19 @@ class GlyphsBackend:
 
     def _writeRawGlyph(self, glyphName, f):
         # 5. write whole file with openstep_plist
-        with open(self.gsFilePath, "r+", encoding="utf-8") as fp:
-            content = openstep_plist.dumps(
-                self.rawFontData,
+        result = convertMatchesToTuples(self.rawFontData, matchTreeFont)
+        self.gsFilePath.write_text(
+            openstep_plist.dumps(
+                result,
                 unicode_escape=False,
                 indent=0,
                 single_line_tuples=True,
                 escape_newlines=False,
+                sort_keys=False,
+                single_line_empty_objects=False,
             )
-
-            # 6. fix formatting
-            content = gsFormatting(content)
-            if self.gsFont.format_version >= 3:
-                # add break at the end of the file.
-                content += "\n"
-            fp.write(content)
+            + "\n"
+        )
 
     async def aclose(self) -> None:
         pass
