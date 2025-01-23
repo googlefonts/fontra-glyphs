@@ -41,6 +41,7 @@ from glyphsLib.types import Transform
 
 from .utils import (
     convertMatchesToTuples,
+    fixCustomBinaryDataFormatting,
     getAssociatedMasterId,
     getLocationFromSources,
     matchTreeFont,
@@ -412,7 +413,7 @@ class GlyphsBackend:
     def _writeRawGlyph(self, glyphName, f):
         # 5. write whole file with openstep_plist
         result = convertMatchesToTuples(self.rawFontData, matchTreeFont)
-        self.gsFilePath.write_text(
+        out = (
             openstep_plist.dumps(
                 result,
                 unicode_escape=False,
@@ -424,6 +425,9 @@ class GlyphsBackend:
             )
             + "\n"
         )
+
+        out = fixCustomBinaryDataFormatting(out)
+        self.gsFilePath.write_text(out)
 
     async def aclose(self) -> None:
         pass

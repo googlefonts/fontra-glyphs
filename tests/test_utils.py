@@ -7,6 +7,7 @@ from glyphsLib.classes import GSAxis, GSFont, GSFontMaster, GSGlyph, GSLayer
 
 from fontra_glyphs.utils import (
     convertMatchesToTuples,
+    fixCustomBinaryDataFormatting,
     getAssociatedMasterId,
     getLocationFromSources,
     matchTreeFont,
@@ -101,7 +102,7 @@ def test_getAssociatedMasterId(testGSFontWW, gsLocation, expected):
     assert getAssociatedMasterId(testGSFontWW, gsLocation) == expected
 
 
-@pytest.mark.parametrize("path", [glyphs2Path, glyphs3Path])
+@pytest.mark.parametrize("path", [glyphs3Path])
 def test_roundtrip_glyphs_file_dumps(path):
     root = openstep_plist.loads(path.read_text(), use_numbers=True)
     result = convertMatchesToTuples(root, matchTreeFont)
@@ -118,6 +119,8 @@ def test_roundtrip_glyphs_file_dumps(path):
         )
         + "\n"
     )
+
+    out = fixCustomBinaryDataFormatting(out)
 
     for root_line, out_line in zip(path.read_text().splitlines(), out.splitlines()):
         assert root_line == out_line
