@@ -203,7 +203,7 @@ class GlyphsBackend:
         raise NotImplementedError("editing FontSources is not yet implemented")
 
     async def getAxes(self) -> Axes:
-        return Axes(axes=self.axes)
+        return Axes(axes=deepcopy(self.axes))
 
     async def putAxes(self, axes: Axes) -> None:
         raise NotImplementedError("editing Axes is not yet implemented")
