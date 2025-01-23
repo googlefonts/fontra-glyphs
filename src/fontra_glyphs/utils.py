@@ -22,12 +22,11 @@ def getLocationFromSources(sources, layerName):
     return {k.lower(): v for k, v in s.location.items()}
 
 
-def getAssociatedMasterId(gsGlyph, gsLocation):
+def getAssociatedMasterId(gsFont, gsLocation):
     # Best guess for associatedMasterId
-    closestMaster = None
+    closestMasterID = gsFont.masters[0].id  # default first master.
     closestDistance = float("inf")
-    for gsLayer in gsGlyph.layers:
-        gsMaster = gsLayer.master
+    for gsMaster in gsFont.masters:
         distance = sum(
             abs(gsMaster.axes[i] - gsLocation[i])
             for i in range(len(gsMaster.axes))
@@ -35,8 +34,9 @@ def getAssociatedMasterId(gsGlyph, gsLocation):
         )
         if distance < closestDistance:
             closestDistance = distance
-            closestMaster = gsMaster
-    return closestMaster.id if closestMaster else None
+            closestMasterID = gsMaster.id
+
+    return closestMasterID
 
 
 def gsFormatting(content):

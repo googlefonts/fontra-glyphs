@@ -790,7 +790,7 @@ def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
             ]
             gsLayer.attributes["coordinates"] = gsLocation
 
-            associatedMasterId = getAssociatedMasterId(gsGlyph, gsLocation)
+            associatedMasterId = getAssociatedMasterId(gsGlyph.parent, gsLocation)
             if associatedMasterId:
                 gsLayer.associatedMasterId = associatedMasterId
 
