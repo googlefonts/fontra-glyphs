@@ -45,7 +45,6 @@ from .utils import (
     getAssociatedMasterId,
     getLocationFromSources,
     matchTreeFont,
-    toOrderedDict,
 )
 
 rootInfoNames = [
@@ -115,8 +114,8 @@ class GlyphsBackend:
         self.gsFont.glyphs = [
             glyphsLib.classes.GSGlyph() for i in range(len(rawGlyphsData))
         ]
-        self.rawFontData = toOrderedDict(rawFontData)
-        self.rawGlyphsData = toOrderedDict(rawGlyphsData)
+        self.rawFontData = rawFontData
+        self.rawGlyphsData = rawGlyphsData
 
         self.glyphNameToIndex = {
             glyphData["glyphname"]: i for i, glyphData in enumerate(rawGlyphsData)

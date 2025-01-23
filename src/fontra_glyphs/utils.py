@@ -1,16 +1,4 @@
 import re
-from collections import OrderedDict
-
-
-# The following is obsolete once this is merged:
-# https://github.com/fonttools/openstep-plist/pull/35
-def toOrderedDict(obj):
-    if isinstance(obj, dict):
-        return OrderedDict({k: toOrderedDict(v) for k, v in obj.items()})
-    elif isinstance(obj, list):
-        return [toOrderedDict(item) for item in obj]
-    else:
-        return obj
 
 
 def getLocationFromSources(sources, layerName):
