@@ -170,7 +170,7 @@ class GlyphsBackend:
         return rawFontData, rawGlyphsData
 
     async def getGlyphMap(self) -> dict[str, list[int]]:
-        return self.glyphMap
+        return deepcopy(self.glyphMap)
 
     async def putGlyphMap(self, value: dict[str, list[int]]) -> None:
         pass
