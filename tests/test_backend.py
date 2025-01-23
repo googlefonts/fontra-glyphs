@@ -11,6 +11,7 @@ from fontra.core.classes import (
     Axes,
     FontInfo,
     GlyphSource,
+    Guideline,
     Layer,
     StaticGlyph,
     structure,
@@ -262,6 +263,25 @@ async def test_addAnchor(writableTestFont):
     assert (
         glyph.layers[layerName].glyph.anchors
         == savedGlyph.layers[layerName].glyph.anchors
+    )
+
+
+async def test_addGuideline(writableTestFont):
+    glyphName = "a"
+    glyphMap = await writableTestFont.getGlyphMap()
+    glyph = await writableTestFont.getGlyph(glyphName)
+
+    layerName = str(uuid.uuid4()).upper()
+    glyph.layers[layerName] = Layer(glyph=StaticGlyph(xAdvance=0))
+    glyph.layers[layerName].glyph.guidelines.append(Guideline(name="top", x=207, y=746))
+
+    await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
+
+    savedGlyph = await writableTestFont.getGlyph(glyphName)
+
+    assert (
+        glyph.layers[layerName].glyph.guidelines
+        == savedGlyph.layers[layerName].glyph.guidelines
     )
 
 

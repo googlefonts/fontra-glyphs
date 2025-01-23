@@ -14,4 +14,4 @@ It supports the following features:
 - Contour (Paths, Nodes) ✅
 - Components ✅
 - Anchors ✅
-- Guidelines
+- Guidelines ✅

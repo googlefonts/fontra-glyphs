@@ -529,6 +529,9 @@ def gsLayerToFontraLayer(gsLayer, globalAxisNames):
     ]
 
     anchors = [gsAnchorToFontraAnchor(gsAnchor) for gsAnchor in gsLayer.anchors]
+    guidelines = [
+        gsGuidelineToFontraGuideline(gsGuideline) for gsGuideline in gsLayer.guides
+    ]
 
     return Layer(
         glyph=StaticGlyph(
@@ -536,6 +539,7 @@ def gsLayerToFontraLayer(gsLayer, globalAxisNames):
             path=pen.getPath(),
             components=components,
             anchors=anchors,
+            guidelines=guidelines,
         )
     )
 
@@ -809,6 +813,9 @@ def fontraLayerToGSLayer(layer, gsLayer):
         fontraComponentToGSComponent(component) for component in layer.glyph.components
     ]
     gsLayer.anchors = [fontraAnchorToGSAnchor(anchor) for anchor in layer.glyph.anchors]
+    gsLayer.guides = [
+        fontraGuidelineToGSGuide(guideline) for guideline in layer.glyph.guidelines
+    ]
 
 
 def fontraComponentToGSComponent(component):
@@ -831,3 +838,13 @@ def fontraAnchorToGSAnchor(anchor):
     # is relative to the LSB (0), center (2) or RSB (1).
     # Details: https://docu.glyphsapp.com/#GSAnchor.orientation
     return gsAnchor
+
+
+def fontraGuidelineToGSGuide(guideline):
+    gsGuide = glyphsLib.classes.GSGuide()
+    gsGuide.name = guideline.name
+    gsGuide.position.x = guideline.x
+    gsGuide.position.y = guideline.y
+    gsGuide.angle = guideline.angle
+    gsGuide.locked = guideline.locked
+    return gsGuide
