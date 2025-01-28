@@ -41,7 +41,6 @@ from glyphsLib.types import Transform
 
 from .utils import (
     convertMatchesToTuples,
-    fixCustomBinaryDataFormatting,
     getAssociatedMasterId,
     getLocationFromSources,
     matchTreeFont,
@@ -421,11 +420,11 @@ class GlyphsBackend:
                 escape_newlines=False,
                 sort_keys=False,
                 single_line_empty_objects=False,
+                binary_spaces=False,
             )
             + "\n"
         )
 
-        out = fixCustomBinaryDataFormatting(out)
         self.gsFilePath.write_text(out)
 
     async def aclose(self) -> None:

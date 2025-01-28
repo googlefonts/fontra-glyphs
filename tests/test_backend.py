@@ -173,19 +173,18 @@ async def test_putGlyph(writableTestFont, testFont, glyphName):
 
 
 async def test_deleteLayer(writableTestFont):
-    glyphName = "A"
+    glyphName = "a"
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
+    numGlyphLayers = len(glyph.layers)
 
-    layerName = "3E7589AA-8194-470F-8E2F-13C1C581BE24"
-    del glyph.layers[layerName]
+    # delete intermediate layer
+    del glyph.layers["1FA54028-AD2E-4209-AA7B-72DF2DF16264"]
 
-    with pytest.raises(NotImplementedError) as excinfo:
-        await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
-    assert (
-        str(excinfo.value)
-        == "Deleting a master layer will cause compatibility issues in GlyphsApp."
-    )
+    await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
+
+    savedGlyph = await writableTestFont.getGlyph(glyphName)
+    assert len(savedGlyph.layers) < numGlyphLayers
 
 
 async def test_addLayer(writableTestFont):
@@ -238,14 +237,15 @@ async def test_deleteMasterLayer(writableTestFont):
     glyphName = "a"
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
-    numGlyphLayers = len(glyph.layers)
 
     del glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"]
 
-    await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
-
-    savedGlyph = await writableTestFont.getGlyph(glyphName)
-    assert len(savedGlyph.layers) == numGlyphLayers
+    with pytest.raises(NotImplementedError) as excinfo:
+        await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
+    assert (
+        str(excinfo.value)
+        == "Deleting a master layer will cause compatibility issues in GlyphsApp."
+    )
 
 
 async def test_addAnchor(writableTestFont):

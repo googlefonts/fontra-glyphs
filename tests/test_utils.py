@@ -7,7 +7,6 @@ from glyphsLib.classes import GSAxis, GSFont, GSFontMaster, GSGlyph, GSLayer
 
 from fontra_glyphs.utils import (
     convertMatchesToTuples,
-    fixCustomBinaryDataFormatting,
     getAssociatedMasterId,
     getLocationFromSources,
     matchTreeFont,
@@ -116,11 +115,10 @@ def test_roundtrip_glyphs_file_dumps(path):
             escape_newlines=False,
             sort_keys=False,
             single_line_empty_objects=False,
+            binary_spaces=False,
         )
         + "\n"
     )
-
-    out = fixCustomBinaryDataFormatting(out)
 
     for root_line, out_line in zip(path.read_text().splitlines(), out.splitlines()):
         assert root_line == out_line
