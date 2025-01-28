@@ -1,6 +1,3 @@
-import re
-
-
 def getLocationFromSources(sources, layerName):
     s = sources[0]
     for source in sources:
@@ -83,11 +80,3 @@ patterns = [
 
 matchTreeFont = patternsToMatchTree(patterns)
 matchTreeGlyph = matchTreeFont["glyphs"][None]
-
-
-def fixCustomBinaryDataFormatting(content):
-    return re.sub(
-        r"customBinaryData = <\s*([0-9a-fA-F\s]+)\s*>;",
-        lambda m: f"customBinaryData = <{m.group(1).replace(' ', '')}>;",
-        content,
-    )
