@@ -754,17 +754,11 @@ def gsVerticalMetricsToFontraLineMetricsHorizontal(gsFont, gsMaster):
 
 def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
     # Convert Fontra variableGlyph to GlyphsApp glyph
-    masterIds = [m.id for m in gsGlyph.parent.masters]
     for gsLayerId in [gsLayer.layerId for gsLayer in gsGlyph.layers]:
         if gsLayerId in variableGlyph.layers:
             # This layer will be modified later.
             continue
-        if gsLayerId in masterIds:
-            # We don't delete master layers.
-            raise NotImplementedError(
-                "Deleting a master layer will cause compatibility issues in GlyphsApp."
-            )
-        # Removing non-master-layer:
+        # Removing layer:
         del gsGlyph.layers[gsLayerId]
 
     for layerName, layer in iter(variableGlyph.layers.items()):

@@ -231,23 +231,6 @@ async def test_addLayerWithComponent(writableTestFont):
     assert layerName in savedGlyph.layers.keys()
 
 
-async def test_deleteMasterLayer(writableTestFont):
-    # Removing a "master" layer breaks compatibility within a .glyphs file.
-    # Therefore we need to make sure, that it will be added afterwords.
-    glyphName = "a"
-    glyphMap = await writableTestFont.getGlyphMap()
-    glyph = await writableTestFont.getGlyph(glyphName)
-
-    del glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"]
-
-    with pytest.raises(NotImplementedError) as excinfo:
-        await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
-    assert (
-        str(excinfo.value)
-        == "Deleting a master layer will cause compatibility issues in GlyphsApp."
-    )
-
-
 async def test_addAnchor(writableTestFont):
     glyphName = "a"
     glyphMap = await writableTestFont.getGlyphMap()
