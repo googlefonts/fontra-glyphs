@@ -30,7 +30,6 @@ jobs:
           python -m pip install . --no-deps
           python -m pip install -r requirements.txt
           python -m pip install -r requirements-dev.txt
-          pip install --no-deps git+https://github.com/justvanrossum/openstep-plist.git@glyphsapp-compat
 
       - name: Run pre-commit
         uses: pre-commit/action@v3.0.1
