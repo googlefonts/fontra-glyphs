@@ -7,6 +7,12 @@ def getLocationFromSources(sources, layerName):
     return {k.lower(): v for k, v in s.location.items()}
 
 
+def getSourceNameWithLayerName(sources, layerName):
+    for source in sources:
+        if source.layerName == layerName:
+            return source.name
+
+
 def getAssociatedMasterId(gsFont, gsLocation):
     # Best guess for associatedMasterId
     closestMasterID = gsFont.masters[0].id  # default first master.

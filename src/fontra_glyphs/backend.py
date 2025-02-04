@@ -43,6 +43,7 @@ from .utils import (
     convertMatchesToTuples,
     getAssociatedMasterId,
     getLocationFromSources,
+    getSourceNameWithLayerName,
     matchTreeFont,
 )
 
@@ -289,7 +290,9 @@ class GlyphsBackend:
             braceLocation = self._getBraceLayerLocation(gsLayer)
             smartLocation = self._getSmartLocation(gsLayer, localAxesByName)
             masterName = self.gsFont.masters[gsLayer.associatedMasterId].name
-            if braceLocation or smartLocation:
+            if gsLayer.userData["xyz.fontra.source-name"]:
+                sourceName = gsLayer.userData["xyz.fontra.source-name"]
+            elif braceLocation or smartLocation:
                 sourceName = f"{masterName} / {gsLayer.name}"
             else:
                 sourceName = gsLayer.name or masterName
@@ -776,6 +779,9 @@ def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
             gsLayer.name = layerName
             gsLayer.layerId = layerName
             gsLayer.isSpecialLayer = True
+
+            sourceName = getSourceNameWithLayerName(variableGlyph.sources, layerName)
+            gsLayer.userData["xyz.fontra.source-name"] = sourceName
 
             location = getLocationFromSources(variableGlyph.sources, layerName)
             gsLocation = [
