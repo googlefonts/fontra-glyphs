@@ -823,7 +823,8 @@ def fontraComponentToGSComponent(component):
     transformation = component.transformation.toTransform()
     if not isinstance(transformation, Transform):
         gsComponent.transform = Transform(*transformation)
-    # gsComponent.smartComponentValues = # TODO: see location={ disambiguateLocalAxisName
+    for axisName in component.location:
+        gsComponent.smartComponentValues[axisName] = component.location[axisName]
     return gsComponent
 
 

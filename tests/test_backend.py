@@ -143,7 +143,7 @@ async def test_getGlyph(testFont, referenceFont, glyphName):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("glyphName", list(expectedGlyphMap))
-async def test_putGlyph(writableTestFont, testFont, glyphName):
+async def test_putGlyph(writableTestFont, glyphName):
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
 
@@ -156,20 +156,7 @@ async def test_putGlyph(writableTestFont, testFont, glyphName):
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
 
     savedGlyph = await writableTestFont.getGlyph(glyphName)
-    referenceGlyph = await testFont.getGlyph(glyphName)
-
-    for layerName, layer in iter(referenceGlyph.layers.items()):
-        assert savedGlyph.layers[layerName].glyph.xAdvance == 500
-
-        for i, coordinate in enumerate(layer.glyph.path.coordinates):
-            assert (
-                savedGlyph.layers[layerName].glyph.path.coordinates[i]
-                == coordinate + 10
-            )
-
-        assert len(layer.glyph.path.coordinates) == len(
-            savedGlyph.layers[layerName].glyph.path.coordinates
-        )
+    assert glyph == savedGlyph
 
 
 async def test_deleteLayer(writableTestFont):
