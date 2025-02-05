@@ -146,6 +146,7 @@ class GlyphsBackend:
             self.gsFont.format_version,
         )
 
+        axis: FontAxis | DiscreteFontAxis
         axes: list[FontAxis | DiscreteFontAxis] = []
         for dsAxis in dsAxes:
             axis = FontAxis(
