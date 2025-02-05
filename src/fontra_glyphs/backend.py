@@ -766,7 +766,7 @@ def gsVerticalMetricsToFontraLineMetricsHorizontal(gsFont, gsMaster):
 
 
 def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
-    gsMasterIDsMapping = {m.id: m.name for m in gsGlyph.parent.masters}
+    gsMasterIDsMapping = {m.name: m.id for m in gsGlyph.parent.masters}
     # Convert Fontra variableGlyph to GlyphsApp glyph
     for gsLayerId in [gsLayer.layerId for gsLayer in gsGlyph.layers]:
         if gsLayerId in variableGlyph.layers:
@@ -784,25 +784,24 @@ def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
             # gsLayer exists – modify existing gsLayer:
             fontraLayerToGSLayer(layer, gsLayer)
         else:
-            print("layerName: ", layerName)
             # gsLayer does not exist – create new layer:
             gsLayer = glyphsLib.classes.GSLayer()
-            gsLayer.layerId = layerName
 
             sourceName = getSourceNameWithLayerName(variableGlyph.sources, layerName)
             gsLayer.userData["xyz.fontra.source-name"] = sourceName
 
-            # Check if is master id and check sourceName
             isMaster = any(
                 [
                     True
-                    for k, v in gsMasterIDsMapping.items()
-                    if gsLayer.layerId == k or sourceName == v
+                    for name, id in gsMasterIDsMapping.items()
+                    if gsLayer.layerId == id or sourceName == name
                 ]
             )
             if isMaster:
                 gsLayer.name = sourceName
+                gsLayer.layerId = gsMasterIDsMapping[sourceName]
             else:
+                gsLayer.layerId = layerName
                 location = getLocationFromSources(variableGlyph.sources, layerName)
                 gsLocation = [
                     location[axis.name]

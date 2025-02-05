@@ -14,6 +14,7 @@ from fontra.core.classes import (
     Guideline,
     Layer,
     StaticGlyph,
+    VariableGlyph,
     structure,
 )
 
@@ -163,6 +164,27 @@ async def test_duplicateGlyph(writableTestFont):
     glyphName = "a.ss01"
     glyph = deepcopy(await writableTestFont.getGlyph("a"))
     glyph.name = glyphName
+    await writableTestFont.putGlyph(glyphName, glyph, [])
+
+    savedGlyph = await writableTestFont.getGlyph(glyphName)
+    assert glyph == savedGlyph
+
+
+async def test_createNewGlyph(writableTestFont):
+    glyphName = "a.ss02"
+    glyph = VariableGlyph(name=glyphName)
+
+    # NOTE: The layer name is equal to the layerID,
+    # and in case of a master layer, it is the masterID
+    fontSources = await writableTestFont.getSources()
+    nameToMasterIDMap = {fontSources[ID].name: ID for ID in fontSources}
+    layerName = nameToMasterIDMap["Regular"]
+
+    glyph.sources.append(
+        GlyphSource(name="Regular", location={"Weight": 90}, layerName=layerName)
+    )
+    glyph.layers[layerName] = Layer(glyph=StaticGlyph(xAdvance=333))
+
     await writableTestFont.putGlyph(glyphName, glyph, [])
 
     savedGlyph = await writableTestFont.getGlyph(glyphName)
