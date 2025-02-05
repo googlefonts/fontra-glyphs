@@ -33,6 +33,7 @@ from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.misc.transform import DecomposedTransform
 from fontTools.ufoLib.filenames import userNameToFileName
 from glyphsLib.builder.axes import (
+    AxisDefinitionFactory,
     get_axis_definitions,
     get_regular_master,
     to_designspace_axes,
@@ -801,11 +802,17 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
 
             sourceLocation = getLocationFromSources(variableGlyph.sources, layerName)
             location = makeDenseLocation(sourceLocation, defaultLocation)
-            gsLocation = [
-                location[axis.name]
-                for axis in gsGlyph.parent.axes
-                if location.get(axis.name)
-            ]
+            gsLocation = []
+            for axis in gsGlyph.parent.axes:
+                if location.get(axis.name):
+                    gsLocation.append(location[axis.name])
+                else:
+                    # This 'else' is necessary for GlyphsApp 2 files, only.
+                    # 'Weight' and 'Width' are always there,
+                    # even if there is no axis specified for it.
+                    factory = AxisDefinitionFactory()
+                    axis_def = factory.get(axis.axisTag, axis.name)
+                    gsLocation.append(axis_def.default_user_loc)
 
             sourceName = getSourceNameWithLayerName(variableGlyph.sources, layerName)
             masterId = gsMasterAxesToIdMapping.get(tuple(gsLocation))
