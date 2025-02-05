@@ -191,13 +191,12 @@ async def test_addLayer(writableTestFont):
     glyphName = "a"
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
-    numGlyphLayers = len(glyph.layers)
 
     layerName = str(uuid.uuid4()).upper()
     glyph.sources.append(
-        GlyphSource(name="SemiBold", location={"weight": 166}, layerName=layerName)
+        GlyphSource(name="SemiBold", location={"Weight": 166}, layerName=layerName)
     )
-    # Copy StaticGlyph of Bold:
+    # Copy StaticGlyph from Bold:
     glyph.layers[layerName] = Layer(
         glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
     )
@@ -205,8 +204,7 @@ async def test_addLayer(writableTestFont):
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
 
     savedGlyph = await writableTestFont.getGlyph(glyphName)
-    assert len(savedGlyph.layers) > numGlyphLayers
-    assert layerName in savedGlyph.layers.keys()
+    assert glyph == savedGlyph
 
 
 async def test_addLayerWithComponent(writableTestFont):
@@ -217,7 +215,7 @@ async def test_addLayerWithComponent(writableTestFont):
 
     layerName = str(uuid.uuid4()).upper()
     glyph.sources.append(
-        GlyphSource(name="SemiBold", location={"weight": 166}, layerName=layerName)
+        GlyphSource(name="SemiBold", location={"Weight": 166}, layerName=layerName)
     )
     # Copy StaticGlyph of Bold:
     glyph.layers[layerName] = Layer(

@@ -776,7 +776,6 @@ def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
             # gsLayer does not exist: therefore must be 'isSpecialLayer'
             # and need to be created as a new layer:
             gsLayer = glyphsLib.classes.GSLayer()
-            gsLayer.name = layerName
             gsLayer.layerId = layerName
             gsLayer.isSpecialLayer = True
 
@@ -785,11 +784,12 @@ def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
 
             location = getLocationFromSources(variableGlyph.sources, layerName)
             gsLocation = [
-                location[axis.name.lower()]
+                location[axis.name]
                 for axis in gsGlyph.parent.axes
-                if location.get(axis.name.lower())
+                if location.get(axis.name)
             ]
             gsLayer.attributes["coordinates"] = gsLocation
+            gsLayer.name = "{" + ",".join(str(x) for x in gsLocation) + "}"
 
             associatedMasterId = getAssociatedMasterId(gsGlyph.parent, gsLocation)
             if associatedMasterId:

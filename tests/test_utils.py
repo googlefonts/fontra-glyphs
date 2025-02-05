@@ -79,7 +79,7 @@ async def test_getLocationFromSources(testFont):
     location = getLocationFromSources(
         glyph.sources, "1FA54028-AD2E-4209-AA7B-72DF2DF16264"
     )
-    assert location == {"weight": 155}
+    assert location == {"Weight": 155}
 
 
 expectedAssociatedMasterId = [

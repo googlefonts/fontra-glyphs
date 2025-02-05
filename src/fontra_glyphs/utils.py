@@ -4,7 +4,7 @@ def getLocationFromSources(sources, layerName):
         if source.layerName == layerName:
             s = source
             break
-    return {k.lower(): v for k, v in s.location.items()}
+    return {k: v for k, v in s.location.items()}
 
 
 def getSourceNameWithLayerName(sources, layerName):
