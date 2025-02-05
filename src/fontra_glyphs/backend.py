@@ -28,6 +28,7 @@ from fontra.core.classes import (
 )
 from fontra.core.path import PackedPathPointPen
 from fontra.core.protocols import WritableFontBackend
+from fontra.core.varutils import makeDenseLocation, makeSparseLocation
 from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.misc.transform import DecomposedTransform
 from fontTools.ufoLib.filenames import userNameToFileName
@@ -159,6 +160,13 @@ class GlyphsBackend:
                 axis.mapping = [[a, b] for a, b in dsAxis.map]
             axes.append(axis)
         self.axes = axes
+
+        self.defaultLocation = {}
+        for axis in self.axes:
+            self.defaultLocation[axis.name] = next(
+                (v for k, v in axis.mapping if k == axis.defaultValue),
+                axis.defaultValue,
+            )
 
     @staticmethod
     def _loadFiles(path: PathLike) -> tuple[dict[str, Any], list[Any]]:
@@ -296,10 +304,13 @@ class GlyphsBackend:
                 sourceName = f"{masterName} / {gsLayer.name}"
             else:
                 sourceName = gsLayer.name or masterName
-            layerName = gsLayer.layerId
+            layerName = gsLayer.userData["xyz.fontra.layer-name"] or gsLayer.layerId
 
             location = {
-                **self.locationByMasterID[gsLayer.associatedMasterId],
+                **makeSparseLocation(
+                    self.locationByMasterID[gsLayer.associatedMasterId],
+                    self.defaultLocation,
+                ),
                 **braceLocation,
                 **smartLocation,
             }
@@ -395,7 +406,7 @@ class GlyphsBackend:
 
         # Convert VariableGlyph to GSGlyph
         gsGlyphNew = variableGlyphToGSGlyph(
-            glyph, deepcopy(self.gsFont.glyphs[glyphName])
+            self.defaultLocation, glyph, deepcopy(self.gsFont.glyphs[glyphName])
         )
 
         # Serialize to text with glyphsLib.writer.Writer(), using io.StringIO
@@ -765,8 +776,9 @@ def gsVerticalMetricsToFontraLineMetricsHorizontal(gsFont, gsMaster):
     return lineMetricsHorizontal
 
 
-def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
-    gsMasterIDsMapping = {m.name: m.id for m in gsGlyph.parent.masters}
+def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
+    gsMasterAxesToIdMapping = {tuple(m.axes): m.id for m in gsGlyph.parent.masters}
+    gsMasterIdToNameMapping = {m.id: m.name for m in gsGlyph.parent.masters}
     # Convert Fontra variableGlyph to GlyphsApp glyph
     for gsLayerId in [gsLayer.layerId for gsLayer in gsGlyph.layers]:
         if gsLayerId in variableGlyph.layers:
@@ -787,27 +799,27 @@ def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
             # gsLayer does not exist – create new layer:
             gsLayer = glyphsLib.classes.GSLayer()
 
-            sourceName = getSourceNameWithLayerName(variableGlyph.sources, layerName)
-            gsLayer.userData["xyz.fontra.source-name"] = sourceName
+            sourceLocation = getLocationFromSources(variableGlyph.sources, layerName)
+            location = makeDenseLocation(sourceLocation, defaultLocation)
+            gsLocation = [
+                location[axis.name]
+                for axis in gsGlyph.parent.axes
+                if location.get(axis.name)
+            ]
 
-            isMaster = any(
-                [
-                    True
-                    for name, id in gsMasterIDsMapping.items()
-                    if gsLayer.layerId == id or sourceName == name
-                ]
-            )
-            if isMaster:
-                gsLayer.name = sourceName
-                gsLayer.layerId = gsMasterIDsMapping[sourceName]
+            sourceName = getSourceNameWithLayerName(variableGlyph.sources, layerName)
+            masterId = gsMasterAxesToIdMapping.get(tuple(gsLocation))
+            if masterId:
+                gsLayer.name = gsMasterIdToNameMapping.get(masterId)
+                gsLayer.layerId = masterId
+                if gsLayer.name != sourceName:
+                    # for example 'default' instead of 'Regular'.
+                    gsLayer.userData["xyz.fontra.source-name"] = sourceName
+                if gsLayer.name != layerName:
+                    gsLayer.userData["xyz.fontra.layer-name"] = layerName
             else:
                 gsLayer.layerId = layerName
-                location = getLocationFromSources(variableGlyph.sources, layerName)
-                gsLocation = [
-                    location[axis.name]
-                    for axis in gsGlyph.parent.axes
-                    if location.get(axis.name)
-                ]
+                gsLayer.userData["xyz.fontra.source-name"] = sourceName
                 gsLayer.attributes["coordinates"] = gsLocation
 
                 gsLayer.name = "{" + ",".join(str(x) for x in gsLocation) + "}"

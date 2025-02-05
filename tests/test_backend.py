@@ -174,15 +174,8 @@ async def test_createNewGlyph(writableTestFont):
     glyphName = "a.ss02"
     glyph = VariableGlyph(name=glyphName)
 
-    # NOTE: The layer name is equal to the layerID,
-    # and in case of a master layer, it is the masterID
-    fontSources = await writableTestFont.getSources()
-    nameToMasterIDMap = {fontSources[ID].name: ID for ID in fontSources}
-    layerName = nameToMasterIDMap["Regular"]
-
-    glyph.sources.append(
-        GlyphSource(name="Regular", location={"Weight": 90}, layerName=layerName)
-    )
+    layerName = str(uuid.uuid4()).upper()
+    glyph.sources.append(GlyphSource(name="Default", location={}, layerName=layerName))
     glyph.layers[layerName] = Layer(glyph=StaticGlyph(xAdvance=333))
 
     await writableTestFont.putGlyph(glyphName, glyph, [])
