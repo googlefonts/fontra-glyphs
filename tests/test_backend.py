@@ -159,6 +159,16 @@ async def test_putGlyph(writableTestFont, glyphName):
     assert glyph == savedGlyph
 
 
+async def test_duplicateGlyph(writableTestFont):
+    glyphName = "a.ss01"
+    glyph = deepcopy(await writableTestFont.getGlyph("a"))
+    glyph.name = glyphName
+    await writableTestFont.putGlyph(glyphName, glyph, [])
+
+    savedGlyph = await writableTestFont.getGlyph(glyphName)
+    assert glyph == savedGlyph
+
+
 async def test_deleteLayer(writableTestFont):
     glyphName = "a"
     glyphMap = await writableTestFont.getGlyphMap()
@@ -198,7 +208,6 @@ async def test_addLayerWithComponent(writableTestFont):
     glyphName = "n"  # n is made from components
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
-    numGlyphLayers = len(glyph.layers)
 
     layerName = str(uuid.uuid4()).upper()
     glyph.sources.append(
@@ -212,8 +221,7 @@ async def test_addLayerWithComponent(writableTestFont):
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
 
     savedGlyph = await writableTestFont.getGlyph(glyphName)
-    assert len(savedGlyph.layers) > numGlyphLayers
-    assert layerName in savedGlyph.layers.keys()
+    assert glyph == savedGlyph
 
 
 async def test_addAnchor(writableTestFont):

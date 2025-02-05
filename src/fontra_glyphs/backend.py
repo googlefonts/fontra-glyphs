@@ -386,6 +386,13 @@ class GlyphsBackend:
         assert all(isinstance(cp, int) for cp in codePoints)
         self.glyphMap[glyphName] = codePoints
 
+        # Glyph does not exist: create new one.
+        if not self.gsFont.glyphs[glyphName]:
+            gsGlyph = glyphsLib.classes.GSGlyph(glyphName)
+            gsGlyph.unicodes = codePoints
+            self.gsFont.glyphs.append(gsGlyph)
+            self.glyphNameToIndex[glyphName] = len(self.gsFont.glyphs) - 1
+
         # Convert VariableGlyph to GSGlyph
         gsGlyphNew = variableGlyphToGSGlyph(
             glyph, deepcopy(self.gsFont.glyphs[glyphName])
@@ -402,7 +409,10 @@ class GlyphsBackend:
         rawGlyphData = openstep_plist.load(f, use_numbers=True)
 
         # Replace original "raw" object with new "raw" object
-        self.rawGlyphsData[self.glyphNameToIndex[glyphName]] = rawGlyphData
+        if len(self.rawGlyphsData) - 1 < self.glyphNameToIndex[glyphName]:
+            self.rawGlyphsData.append(rawGlyphData)
+        else:
+            self.rawGlyphsData[self.glyphNameToIndex[glyphName]] = rawGlyphData
         self.rawFontData["glyphs"] = self.rawGlyphsData
 
         self._writeRawGlyph(glyphName, f)
@@ -756,6 +766,7 @@ def gsVerticalMetricsToFontraLineMetricsHorizontal(gsFont, gsMaster):
 
 
 def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
+    gsMasterIDsMapping = {m.id: m.name for m in gsGlyph.parent.masters}
     # Convert Fontra variableGlyph to GlyphsApp glyph
     for gsLayerId in [gsLayer.layerId for gsLayer in gsGlyph.layers]:
         if gsLayerId in variableGlyph.layers:
@@ -770,30 +781,42 @@ def variableGlyphToGSGlyph(variableGlyph, gsGlyph):
         # otherwise the layer has been newly created within Fontrta.
 
         if gsLayer is not None:
-            # gsLayer exists: modify existing gsLayer
+            # gsLayer exists – modify existing gsLayer:
             fontraLayerToGSLayer(layer, gsLayer)
         else:
-            # gsLayer does not exist: therefore must be 'isSpecialLayer'
-            # and need to be created as a new layer:
+            print("layerName: ", layerName)
+            # gsLayer does not exist – create new layer:
             gsLayer = glyphsLib.classes.GSLayer()
             gsLayer.layerId = layerName
-            gsLayer.isSpecialLayer = True
 
             sourceName = getSourceNameWithLayerName(variableGlyph.sources, layerName)
             gsLayer.userData["xyz.fontra.source-name"] = sourceName
 
-            location = getLocationFromSources(variableGlyph.sources, layerName)
-            gsLocation = [
-                location[axis.name]
-                for axis in gsGlyph.parent.axes
-                if location.get(axis.name)
-            ]
-            gsLayer.attributes["coordinates"] = gsLocation
-            gsLayer.name = "{" + ",".join(str(x) for x in gsLocation) + "}"
+            # Check if is master id and check sourceName
+            isMaster = any(
+                [
+                    True
+                    for k, v in gsMasterIDsMapping.items()
+                    if gsLayer.layerId == k or sourceName == v
+                ]
+            )
+            if isMaster:
+                gsLayer.name = sourceName
+            else:
+                location = getLocationFromSources(variableGlyph.sources, layerName)
+                gsLocation = [
+                    location[axis.name]
+                    for axis in gsGlyph.parent.axes
+                    if location.get(axis.name)
+                ]
+                gsLayer.attributes["coordinates"] = gsLocation
 
-            associatedMasterId = getAssociatedMasterId(gsGlyph.parent, gsLocation)
-            if associatedMasterId:
-                gsLayer.associatedMasterId = associatedMasterId
+                gsLayer.name = "{" + ",".join(str(x) for x in gsLocation) + "}"
+                gsLayer.isSpecialLayer = True
+
+                associatedMasterId = getAssociatedMasterId(gsGlyph.parent, gsLocation)
+                if associatedMasterId:
+                    gsLayer.associatedMasterId = associatedMasterId
 
             fontraLayerToGSLayer(layer, gsLayer)
             gsGlyph.layers.append(gsLayer)
