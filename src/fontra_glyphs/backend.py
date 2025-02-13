@@ -47,6 +47,7 @@ from .utils import (
     getLocationFromSources,
     getSourceNameWithLayerName,
     matchTreeFont,
+    splitLocation,
 )
 
 rootInfoNames = [
@@ -779,6 +780,7 @@ def gsVerticalMetricsToFontraLineMetricsHorizontal(gsFont, gsMaster):
 
 
 def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
+    defaultGlyphLocation = {axis.name: axis.defaultValue for axis in variableGlyph.axes}
     gsMasterAxesToIdMapping = {tuple(m.axes): m.id for m in gsGlyph.parent.masters}
     gsMasterIdToNameMapping = {m.id: m.name for m in gsGlyph.parent.masters}
     # Convert Fontra variableGlyph to GlyphsApp glyph
@@ -802,11 +804,16 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
             gsLayer = glyphsLib.classes.GSLayer()
 
             sourceLocation = getLocationFromSources(variableGlyph.sources, layerName)
-            location = makeDenseLocation(sourceLocation, defaultLocation)
+            fontLocation, glyphLocation = splitLocation(
+                sourceLocation, variableGlyph.axes
+            )
+            fontLocation = makeDenseLocation(fontLocation, defaultLocation)
+            glyphLocation = makeDenseLocation(glyphLocation, defaultGlyphLocation)
+
             gsLocation = []
             for axis in gsGlyph.parent.axes:
-                if location.get(axis.name):
-                    gsLocation.append(location[axis.name])
+                if fontLocation.get(axis.name):
+                    gsLocation.append(fontLocation[axis.name])
                 else:
                     # This 'else' is necessary for GlyphsApp 2 files, only.
                     # 'Weight' and 'Width' are always there,
@@ -836,6 +843,34 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
                 associatedMasterId = getAssociatedMasterId(gsGlyph.parent, gsLocation)
                 if associatedMasterId:
                     gsLayer.associatedMasterId = associatedMasterId
+
+            if glyphLocation:
+                # We have a smart component. Check if it is an intermediate master/layer,
+                # because we currently do not support writing this to GlyphsApp files.
+                isIntermediateLayer = False
+
+                if not masterId:
+                    # If it has glyph axes and is not on any master location,
+                    # it must be an intermediate master.
+                    isIntermediateLayer = True
+                else:
+                    # If it has glyph axes and is on a master location,
+                    # but any of the glyph axes are not at min or max position,
+                    # is must be an intermediate layer.
+                    if any(
+                        [
+                            True
+                            for axis in variableGlyph.axes
+                            if glyphLocation[axis.name]
+                            not in [axis.minValue, axis.maxValue]
+                        ]
+                    ):
+                        isIntermediateLayer = True
+
+                if isIntermediateLayer:
+                    raise NotImplementedError(
+                        "Intermediate layer within a smart glyph is not yet implemented"
+                    )
 
             fontraLayerToGSLayer(layer, gsLayer)
             gsGlyph.layers.append(gsLayer)
