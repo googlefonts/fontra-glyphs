@@ -1,5 +1,5 @@
 {
-"name": "h",
+"name": "A-cy",
 "sources": [
 {
 "name": "Light",
@@ -25,57 +25,30 @@
 "glyph": {
 "components": [
 {
-"name": "_part.stem",
-"location": {
-"height": 100
-}
-},
-{
-"name": "_part.shoulder",
-"location": {
-"crotchDepth": -80.20097
-}
+"name": "A"
 }
 ],
-"xAdvance": 532
+"xAdvance": 657
 }
 },
 "BFFFD157-90D3-4B85-B99D-9A2F366F03CA": {
 "glyph": {
 "components": [
 {
-"name": "_part.stem",
-"location": {
-"height": 100
-}
-},
-{
-"name": "_part.shoulder",
-"location": {
-"crotchDepth": -80.20097
-}
+"name": "A"
 }
 ],
-"xAdvance": 560
+"xAdvance": 753
 }
 },
 "C4872ECA-A3A9-40AB-960A-1DB2202F16DE": {
 "glyph": {
 "components": [
 {
-"name": "_part.stem",
-"location": {
-"height": 100
-}
-},
-{
-"name": "_part.shoulder",
-"location": {
-"crotchDepth": -80.20097
-}
+"name": "A"
 }
 ],
-"xAdvance": 511
+"xAdvance": 593
 }
 }
 }
