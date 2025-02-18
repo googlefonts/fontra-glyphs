@@ -578,6 +578,12 @@ def gsComponentToFontraComponent(gsComponent, gsLayer, globalAxisNames):
             for name, value in gsComponent.smartComponentValues.items()
         },
     )
+    if gsComponent.alignment:
+        # The aligment can be 0, but in that case, do not set it.
+        # See: https://github.com/googlefonts/glyphsLib/blob/c4db6b981d577f456d64ebe9993818770e170454/Lib/glyphsLib/builder/components.py#L88 # noqa: E501
+        component.customData["com.glyphsapp.component.alignment"] = (
+            gsComponent.alignment
+        )
     return component
 
 
@@ -902,6 +908,10 @@ def fontraComponentToGSComponent(component):
         gsComponent.transform = Transform(*transformation)
     for axisName in component.location:
         gsComponent.smartComponentValues[axisName] = component.location[axisName]
+    if "com.glyphsapp.component.alignment" in component.customData:
+        gsComponent.alignment = component.customData[
+            "com.glyphsapp.component.alignment"
+        ]
     return gsComponent
 
 
