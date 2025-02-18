@@ -142,7 +142,7 @@ async def test_getGlyph(testFont, referenceFont, glyphName):
         glyphName in ["h", "m", "n"]
         and "com.glyphsapp.glyph-color" not in glyph.customData
     ):
-        # glyphsLib doesn't read the color alignment from Glyphs-2 files,
+        # glyphsLib doesn't read the component alignment from Glyphs-2 files,
         # so let's monkeypatch the data
         for layerName in glyph.layers:
             for component in glyph.layers[layerName].glyph.components:
