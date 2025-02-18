@@ -25,10 +25,16 @@
 "glyph": {
 "components": [
 {
-"name": "_part.shoulder"
+"name": "_part.shoulder",
+"customData": {
+"com.glyphsapp.component.alignment": -1
+}
 },
 {
-"name": "_part.stem"
+"name": "_part.stem",
+"customData": {
+"com.glyphsapp.component.alignment": -1
+}
 }
 ],
 "xAdvance": 528
@@ -38,10 +44,16 @@
 "glyph": {
 "components": [
 {
-"name": "_part.shoulder"
+"name": "_part.shoulder",
+"customData": {
+"com.glyphsapp.component.alignment": -1
+}
 },
 {
-"name": "_part.stem"
+"name": "_part.stem",
+"customData": {
+"com.glyphsapp.component.alignment": -1
+}
 }
 ],
 "xAdvance": 560
@@ -51,10 +63,16 @@
 "glyph": {
 "components": [
 {
-"name": "_part.shoulder"
+"name": "_part.shoulder",
+"customData": {
+"com.glyphsapp.component.alignment": -1
+}
 },
 {
-"name": "_part.stem"
+"name": "_part.stem",
+"customData": {
+"com.glyphsapp.component.alignment": -1
+}
 }
 ],
 "xAdvance": 501

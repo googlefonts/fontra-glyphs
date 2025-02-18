@@ -138,6 +138,17 @@ async def test_getGlyph(testFont, referenceFont, glyphName):
         # so let's monkeypatch the data
         glyph.customData["com.glyphsapp.glyph-color"] = [120, 220, 20, 4]
 
+    if (
+        glyphName in ["h", "m", "n"]
+        and "com.glyphsapp.glyph-color" not in glyph.customData
+    ):
+        # glyphsLib doesn't read the color alignment from Glyphs-2 files,
+        # so let's monkeypatch the data
+        for layerName in glyph.layers:
+            for component in glyph.layers[layerName].glyph.components:
+                if "com.glyphsapp.component.alignment" not in component.customData:
+                    component.customData["com.glyphsapp.component.alignment"] = -1
+
     referenceGlyph = await referenceFont.getGlyph(glyphName)
     assert referenceGlyph == glyph
 
