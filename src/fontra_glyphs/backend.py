@@ -550,7 +550,7 @@ def gsKerningToFontraKerning(
     defaultMasterID = get_regular_master(gsFont).id
 
     for gsMaster in gsFont.masters:
-        kernDict = getattr(gsFont, kerningAttr).get(gsMaster.id, {})
+        kernDict = getattr(gsFont, kerningAttr, {}).get(gsMaster.id, {})
         if not kernDict and gsMaster.id != defaultMasterID:
             # Even if the default master does not contain kerning, it makes life
             # easier down the road if we include this empty kerning, lest we run
