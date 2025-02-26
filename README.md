@@ -8,9 +8,9 @@ It supports the following features:
 - Smart components (for now restricted to interpolation: axis values need to be within the minimum and maximum values)
 
 
-## Write
+### Writing is currently limited to ...
 
-### Glyph Layer
+#### Glyph Layer
 - Contour (Paths, Nodes) ✅
 - Components ✅
 - Anchors ✅
