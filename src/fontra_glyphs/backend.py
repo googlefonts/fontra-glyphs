@@ -838,10 +838,10 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
             fontLocation = makeDenseLocation(fontLocation, defaultLocation)
             glyphLocation = makeDenseLocation(glyphLocation, defaultGlyphLocation)
 
-            gsLocation = []
+            gsFontLocation = []
             for axis in gsGlyph.parent.axes:
                 if fontLocation.get(axis.name):
-                    gsLocation.append(fontLocation[axis.name])
+                    gsFontLocation.append(fontLocation[axis.name])
                 else:
                     # This 'else' is necessary for GlyphsApp 2 files, only.
                     # 'Weight' and 'Width' are always there,
