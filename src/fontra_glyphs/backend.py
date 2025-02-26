@@ -810,8 +810,9 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
         del gsGlyph.layers[gsLayerId]
 
     # prepare smart component glyph
-    if variableGlyph.axes and not gsGlyph.smartComponentAxes:
-        for axis in variableGlyph.axes:
+    smartComponentAxesNames = [axis.name for axis in gsGlyph.smartComponentAxes]
+    for axis in variableGlyph.axes:
+        if axis.name not in smartComponentAxesNames:
             gsAxis = glyphsLib.classes.GSSmartComponentAxis()
             gsAxis.name = axis.name
             gsAxis.bottomValue = axis.minValue
