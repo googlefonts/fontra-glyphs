@@ -907,10 +907,9 @@ def fontraComponentToGSComponent(component):
         gsComponent.transform = Transform(*transformation)
     for axisName in component.location:
         gsComponent.smartComponentValues[axisName] = component.location[axisName]
-    if "com.glyphsapp.component.alignment" in component.customData:
-        gsComponent.alignment = component.customData[
-            "com.glyphsapp.component.alignment"
-        ]
+    gsComponent.alignment = component.customData.get(
+        "com.glyphsapp.component.alignment", 0
+    )
     return gsComponent
 
 
