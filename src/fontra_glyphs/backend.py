@@ -799,7 +799,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
     for layerName, layer in iter(variableGlyph.layers.items()):
         gsLayer = gsGlyph.layers[layerName]
         # layerName is equal to gsLayer.layerId if it comes from Glyphsapp,
-        # otherwise the layer has been newly created within Fontrta.
+        # otherwise the layer has been newly created within Fontra.
 
         if gsLayer is not None:
             # gsLayer exists – modify existing gsLayer:
