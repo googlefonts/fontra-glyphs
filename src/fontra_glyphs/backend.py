@@ -580,7 +580,6 @@ def gsComponentToFontraComponent(gsComponent, gsLayer, globalAxisNames):
     )
     if gsComponent.alignment:
         # The aligment can be 0, but in that case, do not set it.
-        # See: https://github.com/googlefonts/glyphsLib/blob/c4db6b981d577f456d64ebe9993818770e170454/Lib/glyphsLib/builder/components.py#L88 # noqa: E501
         component.customData["com.glyphsapp.component.alignment"] = (
             gsComponent.alignment
         )
