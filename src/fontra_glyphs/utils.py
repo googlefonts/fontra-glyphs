@@ -89,13 +89,22 @@ patterns = [
     ["fontMaster", None, "guides", None, "pos"],
     ["glyphs", None, "color"],
     ["glyphs", None, "layers", None, "anchors", None, "pos"],
+    ["glyphs", None, "layers", None, "background", "anchors", None, "pos"],
     ["glyphs", None, "layers", None, "annotations", None, "pos"],
     ["glyphs", None, "layers", None, "background", "shapes", None, "nodes", None],
+    ["glyphs", None, "layers", None, "background", "shapes", None, "pos"],
+    ["glyphs", None, "layers", None, "background", "shapes", None, "scale"],
+    ["glyphs", None, "layers", None, "background", "shapes", None, "slant"],
     ["glyphs", None, "layers", None, "guides", None, "pos"],
     ["glyphs", None, "layers", None, "hints", None, "origin"],
+    ["glyphs", None, "layers", None, "hints", None, "scale"],
+    ["glyphs", None, "layers", None, "background", "hints", None, "origin"],
+    ["glyphs", None, "layers", None, "background", "hints", None, "scale"],
+    ["glyphs", None, "layers", None, "background", "hints", None, "place"],
     ["glyphs", None, "layers", None, "hints", None, "target"],
     ["glyphs", None, "layers", None, "shapes", None, "nodes", None],
     ["glyphs", None, "layers", None, "shapes", None, "pos"],
+    ["glyphs", None, "layers", None, "shapes", None, "scale"],
 ]
 
 
