@@ -840,6 +840,18 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
         if gsLayer is not None:
             # gsLayer exists – modify existing gsLayer:
             fontraLayerToGSLayer(layer, gsLayer)
+            # It might be, that we added a new glyph axis within Fontra
+            # for an existing smart comp glyph, in that case we need to add
+            # the new axis to gsLayer.smartComponentPoleMapping.
+            for axis in variableGlyph.axes:
+                if axis.name in gsLayer.smartComponentPoleMapping:
+                    continue
+                pole = (
+                    int(Pole.MIN)  # convert to int for Python <= 3.10
+                    if axis.minValue == defaultGlyphLocation[axis.name]
+                    else int(Pole.MAX)  # convert to int for Python <= 3.10
+                )
+                gsLayer.smartComponentPoleMapping[axis.name] = pole
         else:
             # gsLayer does not exist – create new layer:
             gsLayer = glyphsLib.classes.GSLayer()
