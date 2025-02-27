@@ -10,6 +10,7 @@ from fontra.core.classes import (
     Anchor,
     Axes,
     FontInfo,
+    GlyphAxis,
     GlyphSource,
     Guideline,
     Layer,
@@ -24,6 +25,13 @@ glyphs2Path = dataDir / "GlyphsUnitTestSans.glyphs"
 glyphs3Path = dataDir / "GlyphsUnitTestSans3.glyphs"
 glyphsPackagePath = dataDir / "GlyphsUnitTestSans3.glyphspackage"
 referenceFontPath = dataDir / "GlyphsUnitTestSans3.fontra"
+
+
+mappingMasterIDs = {
+    "Light": "C4872ECA-A3A9-40AB-960A-1DB2202F16DE",
+    "Regular": "3E7589AA-8194-470F-8E2F-13C1C581BE24",
+    "Bold": "BFFFD157-90D3-4B85-B99D-9A2F366F03CA",
+}
 
 
 @pytest.fixture(scope="module", params=[glyphs2Path, glyphs3Path, glyphsPackagePath])
@@ -193,6 +201,66 @@ async def test_createNewGlyph(writableTestFont):
 
     savedGlyph = await writableTestFont.getGlyph(glyphName)
     assert glyph == savedGlyph
+
+
+async def test_createNewSmartGlyph(writableTestFont):
+    glyphName = "a.smart"
+    glyphAxis = GlyphAxis(name="Height", minValue=0, maxValue=100, defaultValue=0)
+    glyph = VariableGlyph(name=glyphName, axes=[glyphAxis])
+
+    # create a glyph with glyph axis
+    for sourceName, location in {
+        "Light": {"Weight": 17},
+        "Light-Height": {"Weight": 17, "Height": 100},
+        "Regular": {},
+        "Regular-Height": {"Height": 100},
+        "Bold": {"Weight": 220},
+        "Bold-Height": {"Weight": 220, "Height": 100},
+    }.items():
+        layerName = mappingMasterIDs.get(sourceName) or str(uuid.uuid4()).upper()
+        glyph.sources.append(
+            GlyphSource(name=sourceName, location=location, layerName=layerName)
+        )
+        glyph.layers[layerName] = Layer(glyph=StaticGlyph(xAdvance=100))
+
+    await writableTestFont.putGlyph(glyphName, glyph, [])
+
+    savedGlyph = await writableTestFont.getGlyph(glyphName)
+    assert glyph == savedGlyph
+
+
+async def test_extendSmartGlyphWithIntermedaiteLayer(writableTestFont):
+    # This should fail, because not yet implemented.
+    glyphName = "_part.shoulder"
+    glyph = await writableTestFont.getGlyph(glyphName)
+
+    layerName = str(uuid.uuid4()).upper()
+    glyph.sources.append(
+        GlyphSource(
+            name="Intermediate Layer", location={"Weight": 99}, layerName=layerName
+        )
+    )
+    glyph.layers[layerName] = Layer(glyph=StaticGlyph(xAdvance=100))
+
+    with pytest.raises(
+        NotImplementedError,
+        match="Intermediate layers within smart glyphs are not yet implemented",
+    ):
+        await writableTestFont.putGlyph(glyphName, glyph, [])
+
+
+async def test_smartGlyphAddGlyphAxisWithDefaultNotMinOrMax(writableTestFont):
+    # This should fail, because not yet implemented.
+    glyphName = "_part.shoulder"
+    glyph = await writableTestFont.getGlyph(glyphName)
+    glyphAxis = GlyphAxis(name="Height", minValue=0, maxValue=100, defaultValue=50)
+    glyph.axes.append(glyphAxis)
+
+    with pytest.raises(
+        TypeError,
+        match="Glyph axis 'Height' defaultValue must be at MIN or MAX.",
+    ):
+        await writableTestFont.putGlyph(glyphName, glyph, [])
 
 
 async def test_deleteLayer(writableTestFont):
