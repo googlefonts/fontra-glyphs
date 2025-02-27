@@ -868,9 +868,9 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
             for axis in gsGlyph.smartComponentAxes:
                 gsGlyphLocation.append(glyphLocation[axis.name])
                 pole = (
-                    Pole.MIN
+                    int(Pole.MIN)  # convert to int for Python <= 3.10
                     if axis.bottomValue == glyphLocation[axis.name]
-                    else Pole.MAX
+                    else int(Pole.MAX)  # convert to int for Python <= 3.10
                 )
                 # Set pole, only MIN or MAX possible.
                 # NOTE: In GlyphsApp these are checkboxes, either: on or off.
