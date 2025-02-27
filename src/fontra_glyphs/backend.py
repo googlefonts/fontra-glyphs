@@ -187,7 +187,9 @@ class GlyphsBackend:
         pass
 
     async def deleteGlyph(self, glyphName):
-        raise NotImplementedError("deleting glyphs is not yet implemented")
+        raise NotImplementedError(
+            "GlyphsApp Backend: Deleting glyphs is not yet implemented."
+        )
 
     async def getFontInfo(self) -> FontInfo:
         infoDict = {}
@@ -205,25 +207,33 @@ class GlyphsBackend:
         return FontInfo(**infoDict)
 
     async def putFontInfo(self, fontInfo: FontInfo):
-        raise NotImplementedError("editing FontInfo is not yet implemented")
+        raise NotImplementedError(
+            "GlyphsApp Backend: Editing FontInfo is not yet implemented."
+        )
 
     async def getSources(self) -> dict[str, FontSource]:
         return gsMastersToFontraFontSources(self.gsFont, self.locationByMasterID)
 
     async def putSources(self, sources: dict[str, FontSource]) -> None:
-        raise NotImplementedError("editing FontSources is not yet implemented")
+        raise NotImplementedError(
+            "GlyphsApp Backend: Editing FontSources is not yet implemented."
+        )
 
     async def getAxes(self) -> Axes:
         return Axes(axes=deepcopy(self.axes))
 
     async def putAxes(self, axes: Axes) -> None:
-        raise NotImplementedError("editing Axes is not yet implemented")
+        raise NotImplementedError(
+            "GlyphsApp Backend: Editing Axes is not yet implemented."
+        )
 
     async def getUnitsPerEm(self) -> int:
         return self.gsFont.upm
 
     async def putUnitsPerEm(self, value: int) -> None:
-        raise NotImplementedError("editing UnitsPerEm is not yet implemented")
+        raise NotImplementedError(
+            "GlyphsApp Backend: Editing UnitsPerEm is not yet implemented."
+        )
 
     async def getKerning(self) -> dict[str, Kerning]:
         # TODO: RTL kerning: https://docu.glyphsapp.com/#GSFont.kerningRTL
@@ -245,26 +255,34 @@ class GlyphsBackend:
         return kerning
 
     async def putKerning(self, kerning: dict[str, Kerning]) -> None:
-        raise NotImplementedError("editing Kerning is not yet implemented")
+        raise NotImplementedError(
+            "GlyphsApp Backend: Editing Kerning is not yet implemented."
+        )
 
     async def getFeatures(self) -> OpenTypeFeatures:
         # TODO: extract features
         return OpenTypeFeatures()
 
     async def putFeatures(self, features: OpenTypeFeatures) -> None:
-        raise NotImplementedError("editing OpenTypeFeatures is not yet implemented")
+        raise NotImplementedError(
+            "GlyphsApp Backend: Editing OpenTypeFeatures is not yet implemented."
+        )
 
     async def getBackgroundImage(self, imageIdentifier: str) -> ImageData | None:
         return None
 
     async def putBackgroundImage(self, imageIdentifier: str, data: ImageData) -> None:
-        raise NotImplementedError("editing BackgroundImage is not yet implemented")
+        raise NotImplementedError(
+            "GlyphsApp Backend: Editing BackgroundImage is not yet implemented."
+        )
 
     async def getCustomData(self) -> dict[str, Any]:
         return {}
 
     async def putCustomData(self, lib):
-        raise NotImplementedError("editing CustomData is not yet implemented")
+        raise NotImplementedError(
+            "GlyphsApp Backend: Editing CustomData is not yet implemented."
+        )
 
     async def getGlyph(self, glyphName: str) -> VariableGlyph | None:
         if glyphName not in self.glyphNameToIndex:
@@ -372,6 +390,7 @@ class GlyphsBackend:
     def _getBraceLayerLocation(self, gsLayer):
         if not gsLayer._is_brace_layer():
             return {}
+
         return dict(
             (axis.name, value)
             for axis, value in zip(self.axes, gsLayer._brace_coordinates())
@@ -913,7 +932,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
                 if isIntermediateLayer:
                     raise NotImplementedError(
                         "GlyphsApp Backend: Intermediate layers "
-                        "within smart glyphs are not yet implemented"
+                        "within smart glyphs are not yet implemented."
                     )
 
             fontraLayerToGSLayer(layer, gsLayer)
