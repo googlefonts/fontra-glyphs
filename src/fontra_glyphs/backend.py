@@ -372,33 +372,19 @@ class GlyphsBackend:
     def _getBraceLayerLocation(self, gsLayer):
         if not gsLayer._is_brace_layer():
             return {}
-        if gsLayer.smartComponentPoleMapping:
-            # It's a intermediate layer within a smart component, if it has
-            # _brace_coordinates and smartComponentPoleMapping,
-            # We need to skip this and get the valid data via _getSmartLocation
-            return {}
-
         return dict(
             (axis.name, value)
             for axis, value in zip(self.axes, gsLayer._brace_coordinates())
         )
 
     def _getSmartLocation(self, gsLayer, localAxesByName):
-        # If has _brace_coordinates: it is an intermidiate layer in a smart component
-        coords = gsLayer._brace_coordinates() or []
         location = {
             name: (
-                coords[i]
-                if len(coords) - 1 >= i
-                else (
-                    localAxesByName[name].minValue
-                    if poleValue == Pole.MIN
-                    else localAxesByName[name].maxValue
-                )
+                localAxesByName[name].minValue
+                if int(poleValue) == Pole.MIN
+                else localAxesByName[name].maxValue
             )
-            for i, (name, poleValue) in enumerate(
-                gsLayer.smartComponentPoleMapping.items()
-            )
+            for name, poleValue in gsLayer.smartComponentPoleMapping.items()
         }
         return {
             disambiguateLocalAxisName(name, self.axisNames): value
@@ -649,7 +635,7 @@ def gsLocalAxesToFontraLocalAxes(gsGlyph):
             minValue=axis.bottomValue,
             defaultValue=(
                 axis.bottomValue
-                if basePoleMapping[axis.name] == Pole.MIN
+                if int(basePoleMapping[axis.name]) == Pole.MIN
                 else axis.topValue
             ),
             maxValue=axis.topValue,
@@ -813,6 +799,14 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
     smartComponentAxesNames = [axis.name for axis in gsGlyph.smartComponentAxes]
     for axis in variableGlyph.axes:
         if axis.name not in smartComponentAxesNames:
+            if axis.defaultValue not in [axis.minValue, axis.maxValue]:
+                # NOTE: GlyphsApp does not have axis.defaultValue,
+                # therefore it must be at MIN or MAX.
+                # https://docu.glyphsapp.com/#GSSmartComponentAxis
+                raise TypeError(
+                    f"GlyphsApp Backend: Glyph axis '{axis.name}' defaultValue "
+                    "must be at MIN or MAX."
+                )
             gsAxis = glyphsLib.classes.GSSmartComponentAxis()
             gsAxis.name = axis.name
             gsAxis.bottomValue = axis.minValue
@@ -853,41 +847,45 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
 
             gsGlyphLocation = []
             for axis in gsGlyph.smartComponentAxes:
-                if axis.name not in glyphLocation:
-                    # This might be the case if we create a new glyph axis in Fontra
-                    continue
                 gsGlyphLocation.append(glyphLocation[axis.name])
                 pole = (
                     Pole.MIN
                     if axis.bottomValue == glyphLocation[axis.name]
                     else Pole.MAX
                 )
+                # Set pole, only MIN or MAX possible.
+                # NOTE: In GlyphsApp these are checkboxes, either: on or off.
                 gsLayer.smartComponentPoleMapping[axis.name] = pole
 
             sourceName = getSourceNameWithLayerName(variableGlyph.sources, layerName)
             masterId = gsMasterAxesToIdMapping.get(tuple(gsFontLocation))
-            if masterId and not gsGlyphLocation:
+
+            isDefaultLayer = False
+            if masterId:
+                if not gsGlyphLocation:
+                    isDefaultLayer = True
+                elif defaultGlyphLocation == glyphLocation:
+                    isDefaultLayer = True
+
+            if isDefaultLayer:
                 gsLayer.name = gsMasterIdToNameMapping.get(masterId)
                 gsLayer.layerId = masterId
-                if gsLayer.name != sourceName:
-                    # for example 'default' instead of 'Regular'.
-                    gsLayer.userData["xyz.fontra.source-name"] = sourceName
-                if gsLayer.name != layerName:
-                    gsLayer.userData["xyz.fontra.layer-name"] = layerName
             else:
-                gsLocation = gsGlyphLocation or gsFontLocation
+                gsLayer.name = sourceName
                 gsLayer.layerId = layerName
-                gsLayer.userData["xyz.fontra.source-name"] = sourceName
-                gsLayer.attributes["coordinates"] = gsLocation
-
-                gsLayer.name = "{" + ",".join(str(x) for x in gsLocation) + "}"
                 gsLayer.isSpecialLayer = True
+                if not gsGlyphLocation:
+                    gsLayer.name = "{" + ",".join(str(x) for x in gsFontLocation) + "}"
+                    gsLayer.attributes["coordinates"] = gsFontLocation
 
                 associatedMasterId = getAssociatedMasterId(
                     gsGlyph.parent, gsFontLocation
                 )
                 if associatedMasterId:
                     gsLayer.associatedMasterId = associatedMasterId
+
+            gsLayer.userData["xyz.fontra.source-name"] = sourceName
+            gsLayer.userData["xyz.fontra.layer-name"] = layerName
 
             if glyphLocation:
                 # We have a smart component. Check if it is an intermediate master/layer,
@@ -914,7 +912,8 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
 
                 if isIntermediateLayer:
                     raise NotImplementedError(
-                        "Intermediate layer within a smart glyph is not yet implemented"
+                        "GlyphsApp Backend: Intermediate layers "
+                        "within smart glyphs are not yet implemented"
                     )
 
             fontraLayerToGSLayer(layer, gsLayer)
