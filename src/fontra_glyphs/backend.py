@@ -880,28 +880,26 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
             masterId = gsMasterAxesToIdMapping.get(tuple(gsFontLocation))
 
             isDefaultLayer = False
+            # It is not enough to check if it has a masterId, because in case of a smart component,
+            # the layer for each glyph axis has the same location as the master layer.
             if masterId:
                 if not gsGlyphLocation:
                     isDefaultLayer = True
                 elif defaultGlyphLocation == glyphLocation:
                     isDefaultLayer = True
 
-            if isDefaultLayer:
-                gsLayer.name = gsMasterIdToNameMapping.get(masterId)
-                gsLayer.layerId = masterId
-            else:
-                gsLayer.name = sourceName
-                gsLayer.layerId = layerName
-                gsLayer.isSpecialLayer = True
-                if not gsGlyphLocation:
-                    gsLayer.name = "{" + ",".join(str(x) for x in gsFontLocation) + "}"
-                    gsLayer.attributes["coordinates"] = gsFontLocation
+            gsLayer.name = (
+                gsMasterIdToNameMapping.get(masterId) if isDefaultLayer else sourceName
+            )
+            gsLayer.layerId = masterId if isDefaultLayer else layerName
+            gsLayer.associatedMasterId = getAssociatedMasterId(
+                gsGlyph.parent, gsFontLocation
+            )
 
-                associatedMasterId = getAssociatedMasterId(
-                    gsGlyph.parent, gsFontLocation
-                )
-                if associatedMasterId:
-                    gsLayer.associatedMasterId = associatedMasterId
+            if not isDefaultLayer and not gsGlyphLocation:
+                # This is an intermediate layer
+                gsLayer.name = "{" + ",".join(str(x) for x in gsFontLocation) + "}"
+                gsLayer.attributes["coordinates"] = gsFontLocation
 
             gsLayer.userData["xyz.fontra.source-name"] = sourceName
             gsLayer.userData["xyz.fontra.layer-name"] = layerName
@@ -918,7 +916,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
                 else:
                     # If it has glyph axes and is on a master location,
                     # but any of the glyph axes are not at min or max position,
-                    # is must be an intermediate layer.
+                    # it must be an intermediate layer.
                     if any(
                         [
                             True
