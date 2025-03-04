@@ -39,7 +39,7 @@ from glyphsLib.builder.axes import (
     to_designspace_axes,
 )
 from glyphsLib.builder.smart_components import Pole
-from glyphsLib.types import Transform
+from glyphsLib.types import Transform as GSTransform
 
 from .utils import (
     convertMatchesToTuples,
@@ -971,8 +971,8 @@ def fontraLayerToGSLayer(layer, gsLayer):
 def fontraComponentToGSComponent(component):
     gsComponent = glyphsLib.classes.GSComponent(component.name)
     transformation = component.transformation.toTransform()
-    if not isinstance(transformation, Transform):
-        gsComponent.transform = Transform(*transformation)
+    if not isinstance(transformation, GSTransform):
+        gsComponent.transform = GSTransform(*transformation)
     for axisName in component.location:
         gsComponent.smartComponentValues[axisName] = component.location[axisName]
     gsComponent.alignment = component.customData.get(
