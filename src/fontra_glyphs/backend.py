@@ -971,8 +971,7 @@ def fontraLayerToGSLayer(layer, gsLayer):
 def fontraComponentToGSComponent(component):
     gsComponent = glyphsLib.classes.GSComponent(component.name)
     transformation = component.transformation.toTransform()
-    if not isinstance(transformation, GSTransform):
-        gsComponent.transform = GSTransform(*transformation)
+    gsComponent.transform = GSTransform(*transformation)
     for axisName in component.location:
         gsComponent.smartComponentValues[axisName] = component.location[axisName]
     gsComponent.alignment = component.customData.get(
