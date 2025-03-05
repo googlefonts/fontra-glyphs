@@ -330,18 +330,24 @@ async def test_addLayerWithComponent(writableTestFont):
     assert glyph == savedGlyph
 
 
-async def test_skewComponent(writableTestFont):
+expectedSkewErrors = [
+    # skewValue, expectedErrorMatch
+    [20, "Does not support skewing of components"],
+    [-0.001, "Does not support skewing of components"],
+]
+
+
+@pytest.mark.parametrize("skewValue,expectedErrorMatch", expectedSkewErrors)
+async def test_skewComponent(writableTestFont, skewValue, expectedErrorMatch):
     glyphName = "Adieresis"  # Adieresis is made from components
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
 
-    layerName = mappingMasterIDs.get("Light")
-    glyph.layers[layerName].glyph.components[0].transformation.skewX = 20
-
-    await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
-
-    savedGlyph = await writableTestFont.getGlyph(glyphName)
-    assert glyph == savedGlyph
+    glyph.layers[mappingMasterIDs.get("Light")].glyph.components[
+        0
+    ].transformation.skewX = skewValue
+    with pytest.raises(TypeError, match=expectedErrorMatch):
+        await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
 
 
 async def test_addAnchor(writableTestFont):

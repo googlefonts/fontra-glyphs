@@ -968,7 +968,17 @@ def fontraLayerToGSLayer(layer, gsLayer):
     ]
 
 
+EPSILON = 1e-9
+
+
 def fontraComponentToGSComponent(component):
+    if (
+        abs(component.transformation.skewX) > EPSILON
+        or abs(component.transformation.skewY) > EPSILON
+    ):
+        raise TypeError(
+            "GlyphsApp Backend: Does not support skewing of components, yet."
+        )
     gsComponent = glyphsLib.classes.GSComponent(component.name)
     transformation = component.transformation.toTransform()
     gsComponent.transform = GSTransform(*transformation)
