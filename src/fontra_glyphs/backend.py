@@ -833,7 +833,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
 
     axisNamesToBeRemoved = []
     for i, axisName in reversed(list(enumerate(smartComponentAxesNames))):
-        if not defaultGlyphLocation.get(axisName):
+        if axisName not in defaultGlyphLocation:
             # An axis has been removed from the glyph,
             # therefore delete axis
             del gsGlyph.smartComponentAxes[i]
