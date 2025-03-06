@@ -280,6 +280,12 @@ async def test_smartGlyphRemoveGlyphAxis(writableTestFont):
     glyph = await writableTestFont.getGlyph(glyphName)
     del glyph.axes[0]
 
+    # We expect we cannot roundtrip a glyph when removing a glyph axis,
+    # because then some layers locations are not unique anymore.
+    for i in [8, 5, 2]:
+        del glyph.layers[glyph.sources[i].layerName]
+        del glyph.sources[i]
+
     await writableTestFont.putGlyph(glyphName, glyph, [])
 
     savedGlyph = await writableTestFont.getGlyph(glyphName)

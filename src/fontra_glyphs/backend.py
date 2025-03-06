@@ -831,6 +831,14 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
             gsAxis.topValue = axis.maxValue
             gsGlyph.smartComponentAxes.append(gsAxis)
 
+    axisNamesToBeRemoved = []
+    for i, axisName in reversed(list(enumerate(smartComponentAxesNames))):
+        if not defaultGlyphLocation.get(axisName):
+            # An axis has been removed from the glyph,
+            # therefore delete axis
+            del gsGlyph.smartComponentAxes[i]
+            axisNamesToBeRemoved.append(axisName)
+
     for layerName, layer in iter(variableGlyph.layers.items()):
         gsLayer = gsGlyph.layers[layerName]
         # layerName is equal to gsLayer.layerId if it comes from Glyphsapp,
@@ -851,6 +859,11 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
                     else int(Pole.MAX)  # convert to int for Python <= 3.10
                 )
                 gsLayer.smartComponentPoleMapping[axis.name] = pole
+
+            for axisName in axisNamesToBeRemoved:
+                # An axis has been removed from the glyph, therefore we need
+                # to delete the axis from smartComponentPoleMapping as well.
+                del gsLayer.smartComponentPoleMapping[axisName]
         else:
             # gsLayer does not exist – create new layer:
             gsLayer = glyphsLib.classes.GSLayer()
