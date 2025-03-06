@@ -399,7 +399,7 @@ class GlyphsBackend:
         location = {
             name: (
                 localAxesByName[name].minValue
-                if int(poleValue) == Pole.MIN
+                if poleValue == Pole.MIN
                 else localAxesByName[name].maxValue
             )
             for name, poleValue in gsLayer.smartComponentPoleMapping.items()
@@ -653,7 +653,7 @@ def gsLocalAxesToFontraLocalAxes(gsGlyph):
             minValue=axis.bottomValue,
             defaultValue=(
                 axis.bottomValue
-                if int(basePoleMapping[axis.name]) == Pole.MIN
+                if basePoleMapping[axis.name] == Pole.MIN
                 else axis.topValue
             ),
             maxValue=axis.topValue,
