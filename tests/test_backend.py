@@ -275,6 +275,17 @@ async def test_smartGlyphAddGlyphAxisWithDefaultAtMinOrMax(writableTestFont):
     assert glyph == savedGlyph
 
 
+async def test_smartGlyphRemoveGlyphAxis(writableTestFont):
+    glyphName = "_part.shoulder"
+    glyph = await writableTestFont.getGlyph(glyphName)
+    del glyph.axes[0]
+
+    await writableTestFont.putGlyph(glyphName, glyph, [])
+
+    savedGlyph = await writableTestFont.getGlyph(glyphName)
+    assert glyph == savedGlyph
+
+
 async def test_deleteLayer(writableTestFont):
     glyphName = "a"
     glyphMap = await writableTestFont.getGlyphMap()
