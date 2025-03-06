@@ -44,8 +44,7 @@ from glyphsLib.types import Transform as GSTransform
 from .utils import (
     convertMatchesToTuples,
     getAssociatedMasterId,
-    getLocationFromSources,
-    getSourceNameWithLayerName,
+    getSourceFromLayerName,
     matchTreeFont,
     splitLocation,
 )
@@ -857,9 +856,9 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
             gsLayer = glyphsLib.classes.GSLayer()
             gsLayer.parent = gsGlyph
 
-            sourceLocation = getLocationFromSources(variableGlyph.sources, layerName)
+            glyphSource = getSourceFromLayerName(variableGlyph.sources, layerName)
             fontLocation, glyphLocation = splitLocation(
-                sourceLocation, variableGlyph.axes
+                glyphSource.location, variableGlyph.axes
             )
             fontLocation = makeDenseLocation(fontLocation, defaultLocation)
             glyphLocation = makeDenseLocation(glyphLocation, defaultGlyphLocation)
@@ -888,7 +887,6 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
                 # NOTE: In GlyphsApp these are checkboxes, either: on or off.
                 gsLayer.smartComponentPoleMapping[axis.name] = pole
 
-            sourceName = getSourceNameWithLayerName(variableGlyph.sources, layerName)
             masterId = gsMasterAxesToIdMapping.get(tuple(gsFontLocation))
 
             isDefaultLayer = False
@@ -901,7 +899,9 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
                     isDefaultLayer = True
 
             gsLayer.name = (
-                gsMasterIdToNameMapping.get(masterId) if isDefaultLayer else sourceName
+                gsMasterIdToNameMapping.get(masterId)
+                if isDefaultLayer
+                else glyphSource.name
             )
             gsLayer.layerId = masterId if isDefaultLayer else layerName
             gsLayer.associatedMasterId = getAssociatedMasterId(
@@ -913,7 +913,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
                 gsLayer.name = "{" + ",".join(str(x) for x in gsFontLocation) + "}"
                 gsLayer.attributes["coordinates"] = gsFontLocation
 
-            gsLayer.userData["xyz.fontra.source-name"] = sourceName
+            gsLayer.userData["xyz.fontra.source-name"] = glyphSource.name
             gsLayer.userData["xyz.fontra.layer-name"] = layerName
 
             if glyphLocation:

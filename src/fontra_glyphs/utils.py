@@ -1,10 +1,13 @@
-def getLocationFromSources(sources, layerName):
-    s = sources[0]
+def getSourceFromLayerName(sources, layerName):
     for source in sources:
         if source.layerName == layerName:
-            s = source
-            break
-    return s.location
+            return source
+        if source.location == {}:
+            defaultSource = source
+
+    # NOTE: Theoretically it's possible to have a layer with no matching source.
+    # In that case, fallback to default.
+    return defaultSource
 
 
 def splitLocation(location, glyphAxes):
@@ -20,12 +23,6 @@ def splitLocation(location, glyphAxes):
             fontLocation[axisName] = axisValue
 
     return fontLocation, glyphLocation
-
-
-def getSourceNameWithLayerName(sources, layerName):
-    for source in sources:
-        if source.layerName == layerName:
-            return source.name
 
 
 def getAssociatedMasterId(gsFont, gsLocation):

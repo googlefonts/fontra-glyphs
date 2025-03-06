@@ -9,7 +9,7 @@ from glyphsLib.classes import GSAxis, GSFont, GSFontMaster, GSGlyph, GSLayer
 from fontra_glyphs.utils import (
     convertMatchesToTuples,
     getAssociatedMasterId,
-    getLocationFromSources,
+    getSourceFromLayerName,
     matchTreeFont,
     splitLocation,
 )
@@ -76,12 +76,12 @@ def testGSFontWW():
     return gsFont
 
 
-async def test_getLocationFromSources(testFont):
+async def test_getSourceFromLayerName(testFont):
     glyph = await testFont.getGlyph("a")
-    location = getLocationFromSources(
+    glyphSource = getSourceFromLayerName(
         glyph.sources, "1FA54028-AD2E-4209-AA7B-72DF2DF16264"
     )
-    assert location == {"Weight": 155}
+    assert glyphSource.location == {"Weight": 155}
 
 
 expectedLocations = [
@@ -111,8 +111,8 @@ async def test_splitLocation(
     testFont, gsLayerId, expectedFontLocation, expectedGlyphLocation
 ):
     glyph = await testFont.getGlyph("_part.shoulder")
-    location = getLocationFromSources(glyph.sources, gsLayerId)
-    fontLocation, glyphLocation = splitLocation(location, glyph.axes)
+    glyphSource = getSourceFromLayerName(glyph.sources, gsLayerId)
+    fontLocation, glyphLocation = splitLocation(glyphSource.location, glyph.axes)
     glyphLocation = makeDenseLocation(
         glyphLocation, {axis.name: axis.defaultValue for axis in glyph.axes}
     )
