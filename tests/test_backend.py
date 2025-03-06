@@ -297,6 +297,10 @@ async def test_smartGlyphChangeGlyphAxisValue(writableTestFont):
     glyph = await writableTestFont.getGlyph(glyphName)
 
     glyph.axes[1].maxValue = 200
+    # We expect we cannot roundtrip a glyph when changing a glyph axis min or
+    # max value without changing the default, because in GlyphsApp there is
+    # no defaultValue-concept. Therefore we need to change the defaultValue as well.
+    glyph.axes[1].defaultValue = 200
     await writableTestFont.putGlyph(glyphName, glyph, [])
 
     savedGlyph = await writableTestFont.getGlyph(glyphName)

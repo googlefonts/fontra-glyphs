@@ -839,6 +839,11 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
             del gsGlyph.smartComponentAxes[i]
             axisNamesToBeRemoved.append(axisName)
 
+    # update values, after deleting axis
+    for i, axis in enumerate(variableGlyph.axes):
+        gsGlyph.smartComponentAxes[i].bottomValue = axis.minValue
+        gsGlyph.smartComponentAxes[i].topValue = axis.maxValue
+
     for layerName, layer in iter(variableGlyph.layers.items()):
         gsLayer = gsGlyph.layers[layerName]
         # layerName is equal to gsLayer.layerId if it comes from Glyphsapp,
