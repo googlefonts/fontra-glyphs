@@ -103,7 +103,7 @@ class GlyphsBackend:
 
     def _setupFromPath(self, path: PathLike) -> None:
         gsFont = glyphsLib.classes.GSFont()
-        self.gsFilePath = path
+        self.gsFilePath = pathlib.Path(path)
 
         rawFontData, rawGlyphsData = self._loadFiles(path)
 
@@ -517,7 +517,7 @@ class GlyphsPackageBackend(GlyphsBackend):
         filePath.write_text(f.getvalue(), encoding="utf=8")
 
     def getGlyphFilePath(self, glyphName):
-        glyphsPath = pathlib.Path(self.gsFilePath) / "glyphs"
+        glyphsPath = self.gsFilePath / "glyphs"
         refFileName = userNameToFileName(glyphName, suffix=".glyph")
         return glyphsPath / refFileName
 
