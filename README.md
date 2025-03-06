@@ -12,6 +12,6 @@ It supports the following features:
 
 #### Glyph Layer
 - Contour (Paths, Nodes) ✅
-- Components ✅
+- (Smart) Components ✅
 - Anchors ✅
 - Guidelines ✅
