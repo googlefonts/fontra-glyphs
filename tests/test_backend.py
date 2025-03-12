@@ -193,6 +193,19 @@ async def test_duplicateGlyph(writableTestFont):
     assert glyph == savedGlyph
 
 
+async def test_updateGlyphCodePoints(writableTestFont):
+    # Use case: all uppercase font via double encodeding
+    # for example: A -> A, a [0x0041, 0x0061]
+    glyphName = "A"
+    glyph = await writableTestFont.getGlyph(glyphName)
+    codePoints = [0x0041, 0x0061]
+    await writableTestFont.putGlyph(glyphName, glyph, codePoints)
+
+    reopened = getFileSystemBackend(writableTestFont.gsFilePath)
+    reopenedGlyphMap = await reopened.getGlyphMap()
+    assert reopenedGlyphMap["A"] == [0x0041, 0x0061]
+
+
 async def test_createNewGlyph(writableTestFont):
     glyphName = "a.ss02"
     glyph = VariableGlyph(name=glyphName)
