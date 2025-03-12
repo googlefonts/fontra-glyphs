@@ -950,39 +950,47 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
             gsLayer.userData["xyz.fontra.source-name"] = glyphSource.name
             gsLayer.userData["xyz.fontra.layer-name"] = layerName
 
-            if glyphLocation:
-                # We have a smart component. Check if it is an intermediate master/layer,
-                # because we currently do not support writing this to GlyphsApp files.
-                isIntermediateLayer = False
-
-                if not masterId:
-                    # If it has glyph axes and is not on any master location,
-                    # it must be an intermediate master.
-                    isIntermediateLayer = True
-                else:
-                    # If it has glyph axes and is on a master location,
-                    # but any of the glyph axes are not at min or max position,
-                    # it must be an intermediate layer.
-                    if any(
-                        [
-                            True
-                            for axis in variableGlyph.axes
-                            if glyphLocation[axis.name]
-                            not in [axis.minValue, axis.maxValue]
-                        ]
-                    ):
-                        isIntermediateLayer = True
-
-                if isIntermediateLayer:
-                    raise NotImplementedError(
-                        "GlyphsApp Backend: Intermediate layers "
-                        "within smart glyphs are not yet implemented."
-                    )
+            raiseErrorIfIntermediateLayerInSmartComponent(
+                variableGlyph, glyphLocation, masterId
+            )
 
             fontraLayerToGSLayer(layer, gsLayer)
             gsGlyph.layers.append(gsLayer)
 
     return gsGlyph
+
+
+def raiseErrorIfIntermediateLayerInSmartComponent(
+    variableGlyph, glyphLocation, masterId
+):
+    # We have a smart component. Check if it is an intermediate master/layer,
+    # because we currently do not support writing this to GlyphsApp files.
+    # This will be obsolute once we support this feature.
+    if glyphLocation:
+        isIntermediateLayer = False
+
+        if not masterId:
+            # If it has glyph axes (glyphLocation) and is not on any master location,
+            # it must be an intermediate master.
+            isIntermediateLayer = True
+        else:
+            # If it has glyph axes (glyphLocation) and is on a master location,
+            # but any of the glyph axes are not at min or max position,
+            # it must be an intermediate layer.
+            if any(
+                [
+                    True
+                    for axis in variableGlyph.axes
+                    if glyphLocation[axis.name] not in [axis.minValue, axis.maxValue]
+                ]
+            ):
+                isIntermediateLayer = True
+
+        if isIntermediateLayer:
+            raise NotImplementedError(
+                "GlyphsApp Backend: Intermediate layers "
+                "within smart glyphs are not yet implemented."
+            )
 
 
 def fontraLayerToGSLayer(layer, gsLayer):
