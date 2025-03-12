@@ -439,10 +439,12 @@ class GlyphsBackend:
 
         # Replace original "raw" object with new "raw" object
         rawGlyphsData = self.rawFontData["glyphs"]
-        if len(rawGlyphsData) - 1 < self.glyphNameToIndex[glyphName]:
+        glyphIndex = self.glyphNameToIndex[glyphName]
+        if glyphIndex >= len(rawGlyphsData):
+            assert glyphIndex == len(rawGlyphsData)
             rawGlyphsData.append(rawGlyphData)
         else:
-            rawGlyphsData[self.glyphNameToIndex[glyphName]] = rawGlyphData
+            rawGlyphsData[glyphIndex] = rawGlyphData
 
         self._writeRawGlyph(glyphName, f)
 
