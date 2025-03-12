@@ -47,6 +47,7 @@ from .utils import (
     getSourceFromLayerName,
     matchTreeFont,
     matchTreeGlyph,
+    openstepPlistDumps,
     splitLocation,
 )
 
@@ -465,21 +466,8 @@ class GlyphsBackend:
         rawFontData = dict(self.rawFontData)
         rawFontData["glyphs"] = self.rawGlyphsData
 
-        result = convertMatchesToTuples(rawFontData, matchTreeFont)
-        out = (
-            openstep_plist.dumps(
-                result,
-                unicode_escape=False,
-                indent=0,
-                single_line_tuples=True,
-                escape_newlines=False,
-                sort_keys=False,
-                single_line_empty_objects=False,
-                binary_spaces=False,
-            )
-            + "\n"
-        )
-
+        rawFontData = convertMatchesToTuples(rawFontData, matchTreeFont)
+        out = openstepPlistDumps(rawFontData)
         self.gsFilePath.write_text(out)
 
     async def aclose(self) -> None:
@@ -525,20 +513,8 @@ class GlyphsPackageBackend(GlyphsBackend):
 
     def _writeRawGlyph(self, glyphName):
         rawGlyphData = self.rawGlyphsData[self.glyphNameToIndex[glyphName]]
-        result = convertMatchesToTuples(rawGlyphData, matchTreeGlyph)
-        out = (
-            openstep_plist.dumps(
-                result,
-                unicode_escape=False,
-                indent=0,
-                single_line_tuples=True,
-                escape_newlines=False,
-                sort_keys=False,
-                single_line_empty_objects=False,
-                binary_spaces=False,
-            )
-            + "\n"
-        )
+        rawGlyphData = convertMatchesToTuples(rawGlyphData, matchTreeGlyph)
+        out = openstepPlistDumps(rawGlyphData)
         filePath = self.getGlyphFilePath(glyphName)
         filePath.write_text(out, encoding="utf=8")
 

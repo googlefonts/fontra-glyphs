@@ -14,6 +14,7 @@ from fontra_glyphs.utils import (
     getAssociatedMasterId,
     getSourceFromLayerName,
     matchTreeFont,
+    openstepPlistDumps,
     splitLocation,
 )
 
@@ -145,22 +146,9 @@ def test_getAssociatedMasterId(testGSFontWW, gsLocation, expected):
 @pytest.mark.parametrize("path", [glyphs3Path])
 def test_roundtripGlyphsFileDumps(path):
     root = openstep_plist.loads(path.read_text(), use_numbers=True)
-    result = convertMatchesToTuples(root, matchTreeFont)
+    rawData = convertMatchesToTuples(root, matchTreeFont)
 
-    out = (
-        openstep_plist.dumps(
-            result,
-            unicode_escape=False,
-            indent=0,
-            single_line_tuples=True,
-            escape_newlines=False,
-            sort_keys=False,
-            single_line_empty_objects=False,
-            binary_spaces=False,
-        )
-        + "\n"
-    )
-
+    out = openstepPlistDumps(rawData)
     for root_line, out_line in zip(path.read_text().splitlines(), out.splitlines()):
         assert root_line == out_line
 

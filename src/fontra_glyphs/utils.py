@@ -1,3 +1,22 @@
+import openstep_plist
+
+
+def openstepPlistDumps(rawData):
+    return (
+        openstep_plist.dumps(
+            rawData,
+            unicode_escape=False,
+            indent=0,
+            single_line_tuples=True,
+            escape_newlines=False,
+            sort_keys=False,
+            single_line_empty_objects=False,
+            binary_spaces=False,
+        )
+        + "\n"
+    )
+
+
 def getSourceFromLayerName(sources, layerName):
     for source in sources:
         if source.layerName == layerName:
