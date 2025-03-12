@@ -178,12 +178,12 @@ async def test_roundtripGlyphsFile(tmpdir, path):
             getListOfGlyphsPagesFiles(path),
             getListOfGlyphsPagesFiles(testFont.gsFilePath),
         ):
-            compareFilesPyLines(path, path2)
+            compareFilesByLines(path, path2)
     else:
-        compareFilesPyLines(path, testFont.gsFilePath)
+        compareFilesByLines(path, testFont.gsFilePath)
 
 
-def compareFilesPyLines(path, path2):
+def compareFilesByLines(path, path2):
     lineIndex = 0
     for orig_line in path.read_text().splitlines():
         if "kernTop" in orig_line or "kernBottom" in orig_line:
