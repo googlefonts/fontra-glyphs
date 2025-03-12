@@ -175,6 +175,8 @@ class GlyphsBackend:
         with open(path, "r", encoding="utf-8") as fp:
             rawFontData = openstep_plist.load(fp, use_numbers=True)
 
+        # We separate the "glyphs" list from the rest, so we can prevent glyphsLib
+        # from eagerly parsing all glyphs
         rawGlyphsData = rawFontData["glyphs"]
         rawFontData["glyphs"] = []
         return rawFontData, rawGlyphsData
