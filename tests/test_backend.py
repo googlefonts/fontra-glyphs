@@ -192,6 +192,13 @@ async def test_duplicateGlyph(writableTestFont):
     savedGlyph = await writableTestFont.getGlyph(glyphName)
     assert glyph == savedGlyph
 
+    if os.path.isdir(writableTestFont.gsFilePath):
+        # This is a glyphspackage:
+        # check if the order.plist has been updated as well.
+        packagePath = pathlib.Path(writableTestFont.gsFilePath)
+        orderPath = packagePath / "order.plist"
+        assert f"{glyphName}," in orderPath.read_text().splitlines()
+
 
 async def test_updateGlyphCodePoints(writableTestFont):
     # Use case: all uppercase font via double encodeding
