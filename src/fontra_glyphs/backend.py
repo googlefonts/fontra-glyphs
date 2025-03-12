@@ -447,6 +447,8 @@ class GlyphsBackend:
         else:
             self.rawGlyphsData[glyphIndex] = rawGlyphData
 
+        self.rawFontData["glyphs"] = self.rawGlyphsData  # TODO: this is not correct
+
         self._writeRawGlyph(glyphName, f)
 
         # Remove glyph from parsed glyph names, because we changed it.
