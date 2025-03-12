@@ -421,8 +421,9 @@ class GlyphsBackend:
         assert all(isinstance(cp, int) for cp in codePoints)
         self.glyphMap[glyphName] = codePoints
 
+        isNewGlyph = glyphName not in self.gsFont.glyphs
         # Glyph does not exist: create new one.
-        if not self.gsFont.glyphs[glyphName]:
+        if isNewGlyph:
             gsGlyph = glyphsLib.classes.GSGlyph(glyphName)
             self.gsFont.glyphs.append(gsGlyph)
             self.glyphNameToIndex[glyphName] = len(self.gsFont.glyphs) - 1
@@ -447,21 +448,21 @@ class GlyphsBackend:
 
         # Replace original "raw" object with new "raw" object
         glyphIndex = self.glyphNameToIndex[glyphName]
-        if glyphIndex >= len(self.rawGlyphsData):
+        if isNewGlyph:
             assert glyphIndex == len(self.rawGlyphsData)
             self.rawGlyphsData.append(rawGlyphData)
         else:
             self.rawGlyphsData[glyphIndex] = rawGlyphData
 
-        self._writeRawGlyph(glyphName)
+        self._writeRawGlyph(glyphName, isNewGlyph)
 
         # Remove glyph from parsed glyph names, because we changed it.
         # Next time it needs to be parsed again.
         self.parsedGlyphNames.discard(glyphName)
 
-    def _writeRawGlyph(self, glyphName):
+    def _writeRawGlyph(self, glyphName, isNewGlyph):
         # Write whole file with openstep_plist
-        # 'glyphName' argument not used, because we write the whole file,
+        # 'glyphName' and 'isNewGlyph' arguments not used, because we write the whole file,
         # but is required for the glyphspackge backend
         rawFontData = dict(self.rawFontData)
         rawFontData["glyphs"] = self.rawGlyphsData
@@ -511,16 +512,18 @@ class GlyphsPackageBackend(GlyphsBackend):
 
         return rawFontData, rawGlyphsData
 
-    def _writeRawGlyph(self, glyphName):
+    def _writeRawGlyph(self, glyphName, isNewGlyph):
         rawGlyphData = self.rawGlyphsData[self.glyphNameToIndex[glyphName]]
         rawGlyphData = convertMatchesToTuples(rawGlyphData, matchTreeGlyph)
         out = openstepPlistDumps(rawGlyphData)
         filePath = self.getGlyphFilePath(glyphName)
         filePath.write_text(out, encoding="utf=8")
 
-        filePathGlyphOrder = self.gsFilePath / "order.plist"
-        out = openstepPlistDumps(list(self.glyphMap))
-        filePathGlyphOrder.write_text(out, encoding="utf=8")
+        if isNewGlyph:
+            filePathGlyphOrder = self.gsFilePath / "order.plist"
+            glyphOrder = [glyph["glyphname"] for glyph in self.rawGlyphsData]
+            out = openstepPlistDumps(glyphOrder)
+            filePathGlyphOrder.write_text(out, encoding="utf=8")
 
     def getGlyphFilePath(self, glyphName):
         glyphsPath = self.gsFilePath / "glyphs"

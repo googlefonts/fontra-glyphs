@@ -4,6 +4,7 @@ import shutil
 import uuid
 from copy import deepcopy
 
+import openstep_plist
 import pytest
 from fontra.backends import getFileSystemBackend
 from fontra.core.classes import (
@@ -197,7 +198,9 @@ async def test_duplicateGlyph(writableTestFont):
         # check if the order.plist has been updated as well.
         packagePath = pathlib.Path(writableTestFont.gsFilePath)
         orderPath = packagePath / "order.plist"
-        assert glyphName in orderPath.read_text().splitlines()
+        with open(orderPath, "r", encoding="utf-8") as fp:
+            glyphOrder = openstep_plist.load(fp, use_numbers=True)
+            assert glyphName == glyphOrder[-1]
 
 
 async def test_updateGlyphCodePoints(writableTestFont):
