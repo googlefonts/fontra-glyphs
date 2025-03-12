@@ -140,7 +140,7 @@ def test_getAssociatedMasterId(testGSFontWW, gsLocation, expected):
 
 
 @pytest.mark.parametrize("path", [glyphs3Path])
-def test_roundtrip_glyphs_file_dumps(path):
+def test_roundtripGlyphsFileDumps(path):
     root = openstep_plist.loads(path.read_text(), use_numbers=True)
     result = convertMatchesToTuples(root, matchTreeFont)
 
@@ -160,3 +160,35 @@ def test_roundtrip_glyphs_file_dumps(path):
 
     for root_line, out_line in zip(path.read_text().splitlines(), out.splitlines()):
         assert root_line == out_line
+
+
+@pytest.mark.parametrize("path", [glyphsPackagePath])
+def test_roundtripGlyphsPackageFileDumps(path):
+    packagePath = pathlib.Path(path)
+    fontInfoPath = packagePath / "fontinfo.plist"
+    orderPath = packagePath / "order.plist"
+    glyphsPath = packagePath / "glyphs"
+    for filePath in [fontInfoPath, orderPath] + [
+        glyphfile for glyphfile in glyphsPath.glob("*.glyph")
+    ]:
+        root = openstep_plist.loads(filePath.read_text(), use_numbers=True)
+        result = convertMatchesToTuples(root, matchTreeFont)
+
+        out = (
+            openstep_plist.dumps(
+                result,
+                unicode_escape=False,
+                indent=0,
+                single_line_tuples=True,
+                escape_newlines=False,
+                sort_keys=False,
+                single_line_empty_objects=False,
+                binary_spaces=False,
+            )
+            + "\n"
+        )
+
+        for root_line, out_line in zip(
+            filePath.read_text().splitlines(), out.splitlines()
+        ):
+            assert root_line == out_line
