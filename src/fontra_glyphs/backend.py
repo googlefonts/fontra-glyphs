@@ -117,8 +117,11 @@ class GlyphsBackend:
         self.gsFont.glyphs = [
             glyphsLib.classes.GSGlyph() for i in range(len(rawGlyphsData))
         ]
-        self.rawFontData = rawFontData
-        self.rawGlyphsData = rawGlyphsData
+        self.rawFontData = convertMatchesToTuples(rawFontData, matchTreeFont)
+        self.rawGlyphsData = [
+            convertMatchesToTuples(rawGlyph, matchTreeGlyph)
+            for rawGlyph in rawGlyphsData
+        ]
 
         self.glyphNameToIndex = {
             glyphData["glyphname"]: i for i, glyphData in enumerate(rawGlyphsData)
@@ -443,6 +446,7 @@ class GlyphsBackend:
         # Parse stream into "raw" object
         f.seek(0)
         rawGlyphData = openstep_plist.load(f, use_numbers=True)
+        rawGlyphData = convertMatchesToTuples(rawGlyphData, matchTreeGlyph)
 
         # Replace original "raw" object with new "raw" object
         glyphIndex = self.glyphNameToIndex[glyphName]
@@ -465,10 +469,9 @@ class GlyphsBackend:
         rawFontData = dict(self.rawFontData)
         rawFontData["glyphs"] = self.rawGlyphsData
 
-        result = convertMatchesToTuples(rawFontData, matchTreeFont)
         out = (
             openstep_plist.dumps(
-                result,
+                rawFontData,
                 unicode_escape=False,
                 indent=0,
                 single_line_tuples=True,
@@ -525,10 +528,9 @@ class GlyphsPackageBackend(GlyphsBackend):
 
     def _writeRawGlyph(self, glyphName):
         rawGlyphData = self.rawGlyphsData[self.glyphNameToIndex[glyphName]]
-        result = convertMatchesToTuples(rawGlyphData, matchTreeGlyph)
         out = (
             openstep_plist.dumps(
-                result,
+                rawGlyphData,
                 unicode_escape=False,
                 indent=0,
                 single_line_tuples=True,
