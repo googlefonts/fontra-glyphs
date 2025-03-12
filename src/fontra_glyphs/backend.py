@@ -105,7 +105,8 @@ class GlyphsBackend:
         gsFont = glyphsLib.classes.GSFont()
         self.gsFilePath = pathlib.Path(path)
 
-        rawFontData, rawGlyphsData = self._loadFiles(path)
+        rawFontData = self._loadFiles(path)
+        rawGlyphsData = rawFontData["glyphs"]
 
         parser = glyphsLib.parser.Parser(current_type=gsFont.__class__)
         parser.parse_into_object(gsFont, rawFontData)
@@ -117,7 +118,6 @@ class GlyphsBackend:
             glyphsLib.classes.GSGlyph() for i in range(len(rawGlyphsData))
         ]
         self.rawFontData = rawFontData
-        self.rawGlyphsData = rawGlyphsData
 
         self.glyphNameToIndex = {
             glyphData["glyphname"]: i for i, glyphData in enumerate(rawGlyphsData)
@@ -175,9 +175,7 @@ class GlyphsBackend:
         with open(path, "r", encoding="utf-8") as fp:
             rawFontData = openstep_plist.load(fp, use_numbers=True)
 
-        rawGlyphsData = rawFontData["glyphs"]
-        rawFontData["glyphs"] = []
-        return rawFontData, rawGlyphsData
+        return rawFontData
 
     async def getGlyphMap(self) -> dict[str, list[int]]:
         return deepcopy(self.glyphMap)
@@ -367,7 +365,7 @@ class GlyphsBackend:
             return
 
         glyphIndex = self.glyphNameToIndex[glyphName]
-        rawGlyphData = self.rawGlyphsData[glyphIndex]
+        rawGlyphData = self.rawFontData["glyphs"][glyphIndex]
         self.parsedGlyphNames.add(glyphName)
 
         gsGlyph = glyphsLib.classes.GSGlyph()
@@ -440,11 +438,11 @@ class GlyphsBackend:
         rawGlyphData = openstep_plist.load(f, use_numbers=True)
 
         # Replace original "raw" object with new "raw" object
-        if len(self.rawGlyphsData) - 1 < self.glyphNameToIndex[glyphName]:
-            self.rawGlyphsData.append(rawGlyphData)
+        rawGlyphsData = self.rawFontData["glyphs"]
+        if len(rawGlyphsData) - 1 < self.glyphNameToIndex[glyphName]:
+            rawGlyphsData.append(rawGlyphData)
         else:
-            self.rawGlyphsData[self.glyphNameToIndex[glyphName]] = rawGlyphData
-        self.rawFontData["glyphs"] = self.rawGlyphsData
+            rawGlyphsData[self.glyphNameToIndex[glyphName]] = rawGlyphData
 
         self._writeRawGlyph(glyphName, f)
 
@@ -492,8 +490,6 @@ class GlyphsPackageBackend(GlyphsBackend):
         with open(fontInfoPath, "r", encoding="utf-8") as fp:
             rawFontData = openstep_plist.load(fp, use_numbers=True)
 
-        rawFontData["glyphs"] = []
-
         rawGlyphsData = []
         for glyphfile in glyphsPath.glob("*.glyph"):
             with open(glyphfile, "r") as fp:
@@ -510,7 +506,9 @@ class GlyphsPackageBackend(GlyphsBackend):
 
         rawGlyphsData.sort(key=sortKey)
 
-        return rawFontData, rawGlyphsData
+        rawFontData["glyphs"] = rawGlyphsData
+
+        return rawFontData
 
     def _writeRawGlyph(self, glyphName, f):
         filePath = self.getGlyphFilePath(glyphName)
