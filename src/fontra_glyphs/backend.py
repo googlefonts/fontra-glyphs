@@ -322,7 +322,7 @@ class GlyphsBackend:
             braceLocation = self._getBraceLayerLocation(gsLayer)
             smartLocation = self._getSmartLocation(gsLayer, localAxesByName)
             masterName = self.gsFont.masters[gsLayer.associatedMasterId].name
-            if gsLayer.userData["xyz.fontra.source-name"]:
+            if "xyz.fontra.source-name" in gsLayer.userData:
                 sourceName = gsLayer.userData["xyz.fontra.source-name"]
             elif braceLocation or smartLocation:
                 sourceName = f"{masterName} / {gsLayer.name}"
