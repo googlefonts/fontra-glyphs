@@ -822,25 +822,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
         # Removing layer:
         del gsGlyph.layers[gsLayerId]
 
-    # prepare smart component glyph
-    smartComponentAxesByName = {axis.name: axis for axis in gsGlyph.smartComponentAxes}
-    gsGlyph.smartComponentAxes = []
-    for axis in variableGlyph.axes:
-        if axis.defaultValue not in [axis.minValue, axis.maxValue]:
-            # NOTE: GlyphsApp does not have axis.defaultValue,
-            # therefore it must be at MIN or MAX.
-            # https://docu.glyphsapp.com/#GSSmartComponentAxis
-            raise TypeError(
-                f"GlyphsApp Backend: Glyph axis '{axis.name}' "
-                "defaultValue must be at MIN or MAX."
-            )
-        gsAxis = smartComponentAxesByName.get(axis.name)
-        if gsAxis is None:
-            gsAxis = glyphsLib.classes.GSSmartComponentAxis()
-            gsAxis.name = axis.name
-        gsAxis.bottomValue = axis.minValue
-        gsAxis.topValue = axis.maxValue
-        gsGlyph.smartComponentAxes.append(gsAxis)
+    fontraGlyphAxesToGSSmartComponentAxes(variableGlyph, gsGlyph)
 
     for layerName, layer in iter(variableGlyph.layers.items()):
         gsLayer = gsGlyph.layers[layerName]
@@ -974,6 +956,27 @@ def raiseErrorIfIntermediateLayerInSmartComponent(
                 "GlyphsApp Backend: Intermediate layers "
                 "within smart glyphs are not yet implemented."
             )
+
+
+def fontraGlyphAxesToGSSmartComponentAxes(variableGlyph, gsGlyph):
+    smartComponentAxesByName = {axis.name: axis for axis in gsGlyph.smartComponentAxes}
+    gsGlyph.smartComponentAxes = []
+    for axis in variableGlyph.axes:
+        if axis.defaultValue not in [axis.minValue, axis.maxValue]:
+            # NOTE: GlyphsApp does not have axis.defaultValue,
+            # therefore it must be at MIN or MAX.
+            # https://docu.glyphsapp.com/#GSSmartComponentAxis
+            raise TypeError(
+                f"GlyphsApp Backend: Glyph axis '{axis.name}' "
+                "defaultValue must be at MIN or MAX."
+            )
+        gsAxis = smartComponentAxesByName.get(axis.name)
+        if gsAxis is None:
+            gsAxis = glyphsLib.classes.GSSmartComponentAxis()
+            gsAxis.name = axis.name
+        gsAxis.bottomValue = axis.minValue
+        gsAxis.topValue = axis.maxValue
+        gsGlyph.smartComponentAxes.append(gsAxis)
 
 
 def fontraLayerToGSLayer(layer, gsLayer):
