@@ -46,6 +46,7 @@ from .utils import (
     getAssociatedMasterId,
     getSourceFromLayerName,
     matchTreeFont,
+    matchTreeGlyph,
     splitLocation,
 )
 
@@ -449,14 +450,16 @@ class GlyphsBackend:
         else:
             self.rawGlyphsData[glyphIndex] = rawGlyphData
 
-        self._writeRawGlyph(glyphName, f)
+        self._writeRawGlyph(glyphName)
 
         # Remove glyph from parsed glyph names, because we changed it.
         # Next time it needs to be parsed again.
         self.parsedGlyphNames.discard(glyphName)
 
-    def _writeRawGlyph(self, glyphName, f):
+    def _writeRawGlyph(self, glyphName):
         # Write whole file with openstep_plist
+        # 'glyphName' argument not used, because we write the whole file,
+        # but is required for the glyphspackge backend
         rawFontData = dict(self.rawFontData)
         rawFontData["glyphs"] = self.rawGlyphsData
 
@@ -518,9 +521,24 @@ class GlyphsPackageBackend(GlyphsBackend):
 
         return rawFontData, rawGlyphsData
 
-    def _writeRawGlyph(self, glyphName, f):
+    def _writeRawGlyph(self, glyphName):
+        rawGlyphData = self.rawGlyphsData[self.glyphNameToIndex[glyphName]]
+        result = convertMatchesToTuples(rawGlyphData, matchTreeGlyph)
+        out = (
+            openstep_plist.dumps(
+                result,
+                unicode_escape=False,
+                indent=0,
+                single_line_tuples=True,
+                escape_newlines=False,
+                sort_keys=False,
+                single_line_empty_objects=False,
+                binary_spaces=False,
+            )
+            + "\n"
+        )
         filePath = self.getGlyphFilePath(glyphName)
-        filePath.write_text(f.getvalue(), encoding="utf=8")
+        filePath.write_text(out, encoding="utf=8")
 
     def getGlyphFilePath(self, glyphName):
         glyphsPath = self.gsFilePath / "glyphs"

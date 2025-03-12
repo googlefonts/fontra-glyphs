@@ -1,10 +1,13 @@
+import os
 import pathlib
+import shutil
 
 import openstep_plist
 import pytest
 from fontra.backends import getFileSystemBackend
 from fontra.core.varutils import makeDenseLocation
 from glyphsLib.classes import GSAxis, GSFont, GSFontMaster, GSGlyph, GSLayer
+from test_backend import expectedGlyphMap
 
 from fontra_glyphs.utils import (
     convertMatchesToTuples,
@@ -162,33 +165,63 @@ def test_roundtripGlyphsFileDumps(path):
         assert root_line == out_line
 
 
-@pytest.mark.parametrize("path", [glyphsPackagePath])
-def test_roundtripGlyphsPackageFileDumps(path):
-    packagePath = pathlib.Path(path)
-    fontInfoPath = packagePath / "fontinfo.plist"
-    orderPath = packagePath / "order.plist"
-    glyphsPath = packagePath / "glyphs"
-    for filePath in [fontInfoPath, orderPath] + [
-        glyphfile for glyphfile in glyphsPath.glob("*.glyph")
-    ]:
-        root = openstep_plist.loads(filePath.read_text(), use_numbers=True)
-        result = convertMatchesToTuples(root, matchTreeFont)
+def getWritableTestFont(tmpdir, srcPath):
+    dstPath = tmpdir / os.path.basename(srcPath)
+    if os.path.isdir(srcPath):
+        shutil.copytree(srcPath, dstPath)
+    else:
+        shutil.copy(srcPath, dstPath)
+    return getFileSystemBackend(dstPath)
 
-        out = (
-            openstep_plist.dumps(
-                result,
-                unicode_escape=False,
-                indent=0,
-                single_line_tuples=True,
-                escape_newlines=False,
-                sort_keys=False,
-                single_line_empty_objects=False,
-                binary_spaces=False,
-            )
-            + "\n"
-        )
 
-        for root_line, out_line in zip(
-            filePath.read_text().splitlines(), out.splitlines()
+@pytest.mark.parametrize("path", [glyphsPackagePath, glyphs3Path])
+async def test_roundtripGlyphsFile(tmpdir, path):
+    testFont = getWritableTestFont(tmpdir, path)
+    glyphMap = await testFont.getGlyphMap()
+
+    # open and save same glyphs without changes
+    for glyphName in expectedGlyphMap.keys():
+        glyph = await testFont.getGlyph(glyphName)
+        await testFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
+
+    if os.path.isdir(path):
+        # If path is a dir, it's a glyphs package.
+        for path, path2 in zip(
+            getListOfGlyphsPagesFiles(path),
+            getListOfGlyphsPagesFiles(testFont.gsFilePath),
         ):
-            assert root_line == out_line
+            compareFilesPyLines(path, path2)
+    else:
+        compareFilesPyLines(path, testFont.gsFilePath)
+
+
+def compareFilesPyLines(path, path2):
+    lineIndex = 0
+    for orig_line in path.read_text().splitlines():
+        if "kernTop" in orig_line or "kernBottom" in orig_line:
+            # kernTop and kernBottom are not yet supported by glyphsLib.
+            # There it's expected, that these are missing. Skip these lines.
+            continue
+        if "rememberToMakeCoffee" in orig_line:
+            # It is expected, that this is not written brack to the glyphs file.
+            continue
+        new_line = path2.read_text().splitlines()[lineIndex]
+        assert orig_line == new_line
+        lineIndex += 1
+
+
+def getGlyhphsPackageFilePath(path, packageFile):
+    packagePath = pathlib.Path(path)
+    return packagePath / packageFile
+
+
+def getListOfGlyphsPagesFiles(path):
+    filePathList = [
+        getGlyhphsPackageFilePath(path, "fontinfo.plist"),
+        getGlyhphsPackageFilePath(path, "order.plist"),
+    ]
+    filePathList += [
+        glyphfile
+        for glyphfile in getGlyhphsPackageFilePath(path, "glyphs").glob("*.glyph")
+    ]
+    return filePathList
