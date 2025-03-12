@@ -280,6 +280,20 @@ async def test_smartGlyphAddGlyphAxisWithDefaultNotMinOrMax(writableTestFont):
         await writableTestFont.putGlyph(glyphName, glyph, [])
 
 
+async def test_smartGlyphUpdateGlyphAxisWithDefaultNotMinOrMax(writableTestFont):
+    # This should fail, because not yet implemented.
+    glyphName = "_part.shoulder"
+    glyph = await writableTestFont.getGlyph(glyphName)
+    glyphAxis = glyph.axes[0]
+    glyphAxis.defaultValue = 50
+
+    with pytest.raises(
+        TypeError,
+        match="defaultValue must be at MIN or MAX.",
+    ):
+        await writableTestFont.putGlyph(glyphName, glyph, [])
+
+
 async def test_smartGlyphAddGlyphAxisWithDefaultAtMinOrMax(writableTestFont):
     glyphName = "_part.shoulder"
     glyph = await writableTestFont.getGlyph(glyphName)
