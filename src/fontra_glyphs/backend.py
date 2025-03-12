@@ -518,6 +518,10 @@ class GlyphsPackageBackend(GlyphsBackend):
         filePath = self.getGlyphFilePath(glyphName)
         filePath.write_text(out, encoding="utf=8")
 
+        filePathGlyphOrder = self.gsFilePath / "order.plist"
+        out = openstepPlistDumps(list(self.glyphMap))
+        filePathGlyphOrder.write_text(out, encoding="utf=8")
+
     def getGlyphFilePath(self, glyphName):
         glyphsPath = self.gsFilePath / "glyphs"
         refFileName = userNameToFileName(glyphName, suffix=".glyph")

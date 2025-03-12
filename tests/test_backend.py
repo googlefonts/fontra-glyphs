@@ -197,7 +197,7 @@ async def test_duplicateGlyph(writableTestFont):
         # check if the order.plist has been updated as well.
         packagePath = pathlib.Path(writableTestFont.gsFilePath)
         orderPath = packagePath / "order.plist"
-        assert f"{glyphName}," in orderPath.read_text().splitlines()
+        assert glyphName in orderPath.read_text().splitlines()
 
 
 async def test_updateGlyphCodePoints(writableTestFont):
