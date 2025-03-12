@@ -840,9 +840,8 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
         del gsGlyph.layers[gsLayerId]
 
     # prepare smart component glyph
-    smartComponentAxesNamesDict = {
-        axis.name: i for i, axis in enumerate(gsGlyph.smartComponentAxes)
-    }
+    smartComponentAxesByName = {axis.name: axis for axis in gsGlyph.smartComponentAxes}
+    gsGlyph.smartComponentAxes = []
     for axis in variableGlyph.axes:
         if axis.defaultValue not in [axis.minValue, axis.maxValue]:
             # NOTE: GlyphsApp does not have axis.defaultValue,
@@ -852,22 +851,13 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
                 f"GlyphsApp Backend: Glyph axis '{axis.name}' "
                 "defaultValue must be at MIN or MAX."
             )
-        if axis.name in smartComponentAxesNamesDict:
-            i = smartComponentAxesNamesDict[axis.name]
-            gsGlyph.smartComponentAxes[i].bottomValue = axis.minValue
-            gsGlyph.smartComponentAxes[i].topValue = axis.maxValue
-        else:
+        gsAxis = smartComponentAxesByName.get(axis.name)
+        if gsAxis is None:
             gsAxis = glyphsLib.classes.GSSmartComponentAxis()
             gsAxis.name = axis.name
-            gsAxis.bottomValue = axis.minValue
-            gsAxis.topValue = axis.maxValue
-            gsGlyph.smartComponentAxes.append(gsAxis)
-
-    for i, axisName in reversed(list(enumerate(smartComponentAxesNamesDict.keys()))):
-        if axisName not in defaultGlyphLocation:
-            # An axis has been removed from the glyph,
-            # therefore delete axis
-            del gsGlyph.smartComponentAxes[i]
+        gsAxis.bottomValue = axis.minValue
+        gsAxis.topValue = axis.maxValue
+        gsGlyph.smartComponentAxes.append(gsAxis)
 
     for layerName, layer in iter(variableGlyph.layers.items()):
         gsLayer = gsGlyph.layers[layerName]
