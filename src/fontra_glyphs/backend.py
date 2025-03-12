@@ -882,7 +882,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
 
             gsFontLocation = []
             for axis in gsGlyph.parent.axes:
-                if fontLocation.get(axis.name):
+                if axis.name in fontLocation:
                     gsFontLocation.append(fontLocation[axis.name])
                 else:
                     # This 'else' is necessary for GlyphsApp 2 files, only.
