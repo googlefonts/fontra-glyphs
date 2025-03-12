@@ -178,6 +178,10 @@ async def test_putGlyph(writableTestFont, glyphName):
     savedGlyph = await writableTestFont.getGlyph(glyphName)
     assert glyph == savedGlyph
 
+    reopened = getFileSystemBackend(writableTestFont.gsFilePath)
+    reopenedGlyph = await reopened.getGlyph(glyphName)
+    assert glyph == reopenedGlyph
+
 
 async def test_duplicateGlyph(writableTestFont):
     glyphName = "a.ss01"
