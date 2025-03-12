@@ -423,7 +423,6 @@ class GlyphsBackend:
         # Glyph does not exist: create new one.
         if not self.gsFont.glyphs[glyphName]:
             gsGlyph = glyphsLib.classes.GSGlyph(glyphName)
-            gsGlyph.unicodes = codePoints
             self.gsFont.glyphs.append(gsGlyph)
             self.glyphNameToIndex[glyphName] = len(self.gsFont.glyphs) - 1
 
@@ -431,6 +430,9 @@ class GlyphsBackend:
         gsGlyphNew = variableGlyphToGSGlyph(
             self.defaultLocation, glyph, deepcopy(self.gsFont.glyphs[glyphName])
         )
+
+        # Update unicodes: need to be converted from decimal to hex strings
+        gsGlyphNew.unicodes = [str(hex(codePoint)) for codePoint in codePoints]
 
         # Serialize to text with glyphsLib.writer.Writer(), using io.StringIO
         f = io.StringIO()
