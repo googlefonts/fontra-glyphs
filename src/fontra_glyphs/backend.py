@@ -171,7 +171,7 @@ class GlyphsBackend:
             )
 
     @staticmethod
-    def _loadFiles(path: PathLike) -> tuple[dict[str, Any], list[Any]]:
+    def _loadFiles(path: PathLike) -> dict[str, Any]:
         with open(path, "r", encoding="utf-8") as fp:
             rawFontData = openstep_plist.load(fp, use_numbers=True)
 
@@ -475,7 +475,7 @@ class GlyphsBackend:
 
 class GlyphsPackageBackend(GlyphsBackend):
     @staticmethod
-    def _loadFiles(path: PathLike) -> tuple[dict[str, Any], list[Any]]:
+    def _loadFiles(path: PathLike) -> dict[str, Any]:
         packagePath = pathlib.Path(path)
         fontInfoPath = packagePath / "fontinfo.plist"
         orderPath = packagePath / "order.plist"
