@@ -823,6 +823,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
         del gsGlyph.layers[gsLayerId]
 
     fontraGlyphAxesToGSSmartComponentAxes(variableGlyph, gsGlyph)
+    isSmartCompGlyph = len(gsGlyph.smartComponentAxes) > 0
 
     for layerName, layer in iter(variableGlyph.layers.items()):
         gsLayer = gsGlyph.layers[layerName]
@@ -835,15 +836,9 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
             # It might be, that we added a new glyph axis within Fontra
             # for an existing smart comp glyph, in that case we need to add
             # the new axis to gsLayer.smartComponentPoleMapping.
-            for axis in variableGlyph.axes:
-                if axis.name in gsLayer.smartComponentPoleMapping:
-                    continue
-                pole = (
-                    int(Pole.MIN)  # convert to int for Python <= 3.10
-                    if axis.minValue == defaultGlyphLocation[axis.name]
-                    else int(Pole.MAX)  # convert to int for Python <= 3.10
-                )
-                gsLayer.smartComponentPoleMapping[axis.name] = pole
+            updateGSLayerSmartComponentPoleMapping(
+                variableGlyph.axes, gsLayer, defaultGlyphLocation
+            )
 
             gsLayer.smartComponentPoleMapping = {
                 axisName: pole
@@ -874,17 +869,9 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
                     axis_def = factory.get(axis.axisTag, axis.name)
                     gsFontLocation.append(axis_def.default_user_loc)
 
-            gsGlyphLocation = []
-            for axis in gsGlyph.smartComponentAxes:
-                gsGlyphLocation.append(glyphLocation[axis.name])
-                pole = (
-                    int(Pole.MIN)  # convert to int for Python <= 3.10
-                    if axis.bottomValue == glyphLocation[axis.name]
-                    else int(Pole.MAX)  # convert to int for Python <= 3.10
-                )
-                # Set pole, only MIN or MAX possible.
-                # NOTE: In GlyphsApp these are checkboxes, either: on or off.
-                gsLayer.smartComponentPoleMapping[axis.name] = pole
+            updateGSLayerSmartComponentPoleMapping(
+                variableGlyph.axes, gsLayer, glyphLocation
+            )
 
             masterId = gsMasterAxesToIdMapping.get(tuple(gsFontLocation))
 
@@ -892,7 +879,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
             # It is not enough to check if it has a masterId, because in case of a smart component,
             # the layer for each glyph axis has the same location as the master layer.
             if masterId:
-                if not gsGlyphLocation:
+                if not isSmartCompGlyph:
                     isDefaultLayer = True
                 elif defaultGlyphLocation == glyphLocation:
                     isDefaultLayer = True
@@ -907,7 +894,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
                 gsGlyph.parent, gsFontLocation
             )
 
-            if not isDefaultLayer and not gsGlyphLocation:
+            if not isDefaultLayer and not isSmartCompGlyph:
                 # This is an intermediate layer
                 gsLayer.name = "{" + ",".join(str(x) for x in gsFontLocation) + "}"
                 gsLayer.attributes["coordinates"] = gsFontLocation
@@ -977,6 +964,20 @@ def fontraGlyphAxesToGSSmartComponentAxes(variableGlyph, gsGlyph):
         gsAxis.bottomValue = axis.minValue
         gsAxis.topValue = axis.maxValue
         gsGlyph.smartComponentAxes.append(gsAxis)
+
+
+def updateGSLayerSmartComponentPoleMapping(axes, gsLayer, location):
+    for axis in axes:
+        if axis.name in gsLayer.smartComponentPoleMapping:
+            continue
+        pole = (
+            int(Pole.MIN)  # convert to int for Python <= 3.10
+            if axis.minValue == location[axis.name]
+            else int(Pole.MAX)  # convert to int for Python <= 3.10
+        )
+        # Set pole, only MIN or MAX possible.
+        # NOTE: In GlyphsApp these are checkboxes, either: on or off.
+        gsLayer.smartComponentPoleMapping[axis.name] = pole
 
 
 def fontraLayerToGSLayer(layer, gsLayer):
