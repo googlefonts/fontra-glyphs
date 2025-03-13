@@ -830,14 +830,21 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
         # layerName is equal to gsLayer.layerId if it comes from Glyphsapp,
         # otherwise the layer has been newly created within Fontra.
 
+        glyphSource = getSourceFromLayerName(variableGlyph.sources, layerName)
+        fontLocation, glyphLocation = splitLocation(
+            glyphSource.location, variableGlyph.axes
+        )
+        fontLocation = makeDenseLocation(fontLocation, defaultLocation)
+        glyphLocation = makeDenseLocation(glyphLocation, defaultGlyphLocation)
+
         if gsLayer is not None:
             # gsLayer exists – modify existing gsLayer:
             fontraLayerToGSLayer(layer, gsLayer)
             # It might be, that we added a new glyph axis within Fontra
             # for an existing smart comp glyph, in that case we need to add
             # the new axis to gsLayer.smartComponentPoleMapping.
-            updateGSLayerSmartComponentPoleMapping(
-                variableGlyph.axes, gsLayer, defaultGlyphLocation
+            fontraGlyphAxesToGSLayerSmartComponentPoleMapping(
+                variableGlyph.axes, gsLayer, glyphLocation
             )
 
             gsLayer.smartComponentPoleMapping = {
@@ -849,13 +856,6 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
             # gsLayer does not exist – create new layer:
             gsLayer = glyphsLib.classes.GSLayer()
             gsLayer.parent = gsGlyph
-
-            glyphSource = getSourceFromLayerName(variableGlyph.sources, layerName)
-            fontLocation, glyphLocation = splitLocation(
-                glyphSource.location, variableGlyph.axes
-            )
-            fontLocation = makeDenseLocation(fontLocation, defaultLocation)
-            glyphLocation = makeDenseLocation(glyphLocation, defaultGlyphLocation)
 
             gsFontLocation = []
             for axis in gsGlyph.parent.axes:
@@ -869,7 +869,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
                     axis_def = factory.get(axis.axisTag, axis.name)
                     gsFontLocation.append(axis_def.default_user_loc)
 
-            updateGSLayerSmartComponentPoleMapping(
+            fontraGlyphAxesToGSLayerSmartComponentPoleMapping(
                 variableGlyph.axes, gsLayer, glyphLocation
             )
 
@@ -966,10 +966,12 @@ def fontraGlyphAxesToGSSmartComponentAxes(variableGlyph, gsGlyph):
         gsGlyph.smartComponentAxes.append(gsAxis)
 
 
-def updateGSLayerSmartComponentPoleMapping(axes, gsLayer, location):
-    for axis in axes:
-        if axis.name in gsLayer.smartComponentPoleMapping:
-            continue
+def fontraGlyphAxesToGSLayerSmartComponentPoleMapping(glyphAxes, gsLayer, location):
+    if len(glyphAxes) == 0:
+        return
+    # https://docu.glyphsapp.com/#GSLayer.smartComponentPoleMapping
+    gsLayer.smartComponentPoleMapping = {}
+    for axis in glyphAxes:
         pole = (
             int(Pole.MIN)  # convert to int for Python <= 3.10
             if axis.minValue == location[axis.name]
