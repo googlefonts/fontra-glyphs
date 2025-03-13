@@ -44,7 +44,6 @@ from glyphsLib.types import Transform as GSTransform
 from .utils import (
     convertMatchesToTuples,
     getAssociatedMasterId,
-    getSourceFromLayerName,
     matchTreeFont,
     matchTreeGlyph,
     openstepPlistDumps,
@@ -825,12 +824,15 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
     fontraGlyphAxesToGSSmartComponentAxes(variableGlyph, gsGlyph)
     isSmartCompGlyph = len(gsGlyph.smartComponentAxes) > 0
 
-    for layerName, layer in iter(variableGlyph.layers.items()):
+    nonSourceLayerNames = set(variableGlyph.layers)
+    for glyphSource in variableGlyph.sources:
+        layerName = glyphSource.layerName
+        nonSourceLayerNames.discard(layerName)
+        layer = variableGlyph.layers[layerName]
         gsLayer = gsGlyph.layers[layerName]
         # layerName is equal to gsLayer.layerId if it comes from Glyphsapp,
         # otherwise the layer has been newly created within Fontra.
 
-        glyphSource = getSourceFromLayerName(variableGlyph.sources, layerName)
         fontLocation, glyphLocation = splitLocation(
             glyphSource.location, variableGlyph.axes
         )
@@ -909,6 +911,10 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
             fontraLayerToGSLayer(layer, gsLayer)
             gsGlyph.layers.append(gsLayer)
 
+    if nonSourceLayerNames:
+        raise NotImplementedError(
+            "GlyphsApp Backend: Layer without glyph source is not yet implemented."
+        )
     return gsGlyph
 
 

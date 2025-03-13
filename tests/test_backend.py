@@ -355,7 +355,9 @@ async def test_deleteLayer(writableTestFont):
     numGlyphLayers = len(glyph.layers)
 
     # delete intermediate layer
-    del glyph.layers["1FA54028-AD2E-4209-AA7B-72DF2DF16264"]
+    sourceIndex = 1
+    del glyph.layers[glyph.sources[sourceIndex].layerName]
+    del glyph.sources[sourceIndex]
 
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
 
@@ -381,6 +383,23 @@ async def test_addLayer(writableTestFont):
 
     savedGlyph = await writableTestFont.getGlyph(glyphName)
     assert glyph == savedGlyph
+
+
+async def test_addLayerWithoutSource(writableTestFont):
+    glyphName = "a"
+    glyphMap = await writableTestFont.getGlyphMap()
+    glyph = await writableTestFont.getGlyph(glyphName)
+
+    layerName = str(uuid.uuid4()).upper()
+    # Copy StaticGlyph from Bold:
+    glyph.layers[layerName] = Layer(
+        glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
+    )
+
+    with pytest.raises(
+        NotImplementedError, match="Layer without glyph source is not yet implemented"
+    ):
+        await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
 
 
 async def test_addLayerWithComponent(writableTestFont):
@@ -429,6 +448,9 @@ async def test_addAnchor(writableTestFont):
     glyph = await writableTestFont.getGlyph(glyphName)
 
     layerName = str(uuid.uuid4()).upper()
+    glyph.sources.append(
+        GlyphSource(name="SemiBold", location={"Weight": 166}, layerName=layerName)
+    )
     glyph.layers[layerName] = Layer(glyph=StaticGlyph(xAdvance=0))
     glyph.layers[layerName].glyph.anchors.append(Anchor(name="top", x=207, y=746))
 
@@ -448,6 +470,9 @@ async def test_addGuideline(writableTestFont):
     glyph = await writableTestFont.getGlyph(glyphName)
 
     layerName = str(uuid.uuid4()).upper()
+    glyph.sources.append(
+        GlyphSource(name="SemiBold", location={"Weight": 166}, layerName=layerName)
+    )
     glyph.layers[layerName] = Layer(glyph=StaticGlyph(xAdvance=0))
     glyph.layers[layerName].glyph.guidelines.append(Guideline(name="top", x=207, y=746))
 
