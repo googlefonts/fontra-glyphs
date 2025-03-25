@@ -352,7 +352,13 @@ class GlyphsBackend:
                     inactive=inactive,
                 )
             )
-            layers[layerName] = gsLayerToFontraLayer(gsLayer, self.axisNames)
+            layers[layerName] = gsLayerToFontraLayer(
+                gsLayer, self.axisNames, gsLayer.width
+            )
+            if gsLayer.hasBackground:
+                layers[layerName + "^background"] = gsLayerToFontraLayer(
+                    gsLayer.background, self.axisNames, gsLayer.width
+                )
 
         fixSourceLocations(sources, set(smartLocation))
 
@@ -569,7 +575,7 @@ def _readGlyphMapAndKerningGroups(
     return glyphMap, kerningGroups
 
 
-def gsLayerToFontraLayer(gsLayer, globalAxisNames):
+def gsLayerToFontraLayer(gsLayer, globalAxisNames, gsLayerWidth):
     pen = PackedPathPointPen()
     gsLayer.drawPoints(pen)
 
@@ -585,7 +591,7 @@ def gsLayerToFontraLayer(gsLayer, globalAxisNames):
 
     return Layer(
         glyph=StaticGlyph(
-            xAdvance=gsLayer.width,
+            xAdvance=gsLayerWidth,
             path=pen.getPath(),
             components=components,
             anchors=anchors,
