@@ -103,6 +103,9 @@
 "y": 700
 }
 ]
+},
+"customData": {
+"com.glyphsapp.layer.layerId": "3E7589AA-8194-470F-8E2F-13C1C581BE24"
 }
 },
 "BFFFD157-90D3-4B85-B99D-9A2F366F03CA": {
@@ -187,6 +190,58 @@
 "y": 700
 }
 ]
+},
+"customData": {
+"com.glyphsapp.layer.layerId": "BFFFD157-90D3-4B85-B99D-9A2F366F03CA"
+}
+},
+"BFFFD157-90D3-4B85-B99D-9A2F366F03CA^background": {
+"glyph": {
+"path": {
+"contours": [
+{
+"points": [
+{
+"x": 733,
+"y": 0
+},
+{
+"x": 566.99,
+"y": 700
+},
+{
+"x": 191,
+"y": 700
+},
+{
+"x": 24,
+"y": 0
+},
+{
+"x": 270,
+"y": 0
+},
+{
+"x": 364,
+"y": 470
+},
+{
+"x": 379,
+"y": 470
+},
+{
+"x": 477,
+"y": 0
+}
+],
+"isClosed": true
+}
+]
+},
+"xAdvance": 753
+},
+"customData": {
+"com.glyphsapp.layer.layerId": ""
 }
 },
 "C4872ECA-A3A9-40AB-960A-1DB2202F16DE": {
@@ -281,6 +336,42 @@
 "angle": 71.7587
 }
 ]
+},
+"customData": {
+"com.glyphsapp.layer.layerId": "C4872ECA-A3A9-40AB-960A-1DB2202F16DE"
+}
+},
+"C4872ECA-A3A9-40AB-960A-1DB2202F16DE^background": {
+"glyph": {
+"path": {
+"contours": [
+{
+"points": [
+{
+"x": 455,
+"y": 253
+},
+{
+"x": 133,
+"y": 253
+},
+{
+"x": 134,
+"y": 215
+},
+{
+"x": 451,
+"y": 215
+}
+],
+"isClosed": true
+}
+]
+},
+"xAdvance": 593
+},
+"customData": {
+"com.glyphsapp.layer.layerId": ""
 }
 }
 },
