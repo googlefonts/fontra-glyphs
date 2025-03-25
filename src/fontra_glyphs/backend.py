@@ -429,7 +429,10 @@ class GlyphsBackend:
 
         # Convert VariableGlyph to GSGlyph
         gsGlyphNew = variableGlyphToGSGlyph(
-            self.defaultLocation, glyph, deepcopy(self.gsFont.glyphs[glyphName])
+            self.defaultLocation,
+            glyph,
+            deepcopy(self.gsFont.glyphs[glyphName]),
+            self.locationByMasterID,
         )
 
         # Update unicodes: need to be converted from decimal to hex strings
@@ -809,7 +812,7 @@ def gsVerticalMetricsToFontraLineMetricsHorizontal(gsFont, gsMaster):
     return lineMetricsHorizontal
 
 
-def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
+def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMasterID):
     defaultGlyphLocation = {axis.name: axis.defaultValue for axis in variableGlyph.axes}
     gsMasterAxesToIdMapping = {tuple(m.axes): m.id for m in gsGlyph.parent.masters}
     gsMasterIdToNameMapping = {m.id: m.name for m in gsGlyph.parent.masters}
@@ -833,9 +836,13 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
         # layerName is equal to gsLayer.layerId if it comes from Glyphsapp,
         # otherwise the layer has been newly created within Fontra.
 
-        fontLocation, glyphLocation = splitLocation(
-            glyphSource.location, variableGlyph.axes
+        baseLocation = (
+            {}
+            if glyphSource.locationBase is None
+            else locationByMasterID[glyphSource.locationBase]
         )
+        location = baseLocation | glyphSource.location
+        fontLocation, glyphLocation = splitLocation(location, variableGlyph.axes)
         fontLocation = makeDenseLocation(fontLocation, defaultLocation)
         glyphLocation = makeDenseLocation(glyphLocation, defaultGlyphLocation)
 
@@ -901,7 +908,10 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
                 gsLayer.name = "{" + ",".join(str(x) for x in gsFontLocation) + "}"
                 gsLayer.attributes["coordinates"] = gsFontLocation
 
-            gsLayer.userData["xyz.fontra.source-name"] = glyphSource.name
+            if glyphSource.name:
+                gsLayer.userData["xyz.fontra.source-name"] = glyphSource.name
+            elif gsLayer.userData["xyz.fontra.source-name"]:
+                del gsLayer.userData["xyz.fontra.source-name"]
             gsLayer.userData["xyz.fontra.layer-name"] = layerName
 
             raiseErrorIfIntermediateLayerInSmartComponent(
