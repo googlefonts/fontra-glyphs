@@ -1,5 +1,6 @@
 import io
 import pathlib
+import uuid
 from collections import defaultdict
 from copy import deepcopy
 from os import PathLike
@@ -593,7 +594,10 @@ def gsLayerToFontraLayer(gsLayer, globalAxisNames, gsLayerWidth):
             components=components,
             anchors=anchors,
             guidelines=guidelines,
-        )
+        ),
+        customData={
+            "com.glyphsapp.layer.layerId": gsLayer.layerId,
+        },
     )
 
 
@@ -817,8 +821,12 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
     gsMasterAxesToIdMapping = {tuple(m.axes): m.id for m in gsGlyph.parent.masters}
     gsMasterIdToNameMapping = {m.id: m.name for m in gsGlyph.parent.masters}
     # Convert Fontra variableGlyph to GlyphsApp glyph
+    layerIdsInUse = [
+        variableGlyph.layers[layerName].customData.get("com.glyphsapp.layer.layerId")
+        for layerName in variableGlyph.layers
+    ]
     for gsLayerId in [gsLayer.layerId for gsLayer in gsGlyph.layers]:
-        if gsLayerId in variableGlyph.layers:
+        if gsLayerId in layerIdsInUse:
             # This layer will be modified later.
             continue
         # Removing layer:
@@ -827,14 +835,39 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
     fontraGlyphAxesToGSSmartComponentAxes(variableGlyph, gsGlyph)
     isSmartCompGlyph = len(gsGlyph.smartComponentAxes) > 0
 
-    nonSourceLayerNames = set(variableGlyph.layers)
-    for glyphSource in variableGlyph.sources:
-        layerName = glyphSource.layerName
-        nonSourceLayerNames.discard(layerName)
+    nonSourceLayerNames = set()
+    layerNameToGlyphSourceMapping = {
+        glyphSource.layerName: glyphSource for glyphSource in variableGlyph.sources
+    }
+    for layerName in variableGlyph.layers:
         layer = variableGlyph.layers[layerName]
-        gsLayer = gsGlyph.layers[layerName]
+        # "^" not in layerName:
         # layerName is equal to gsLayer.layerId if it comes from Glyphsapp,
         # otherwise the layer has been newly created within Fontra.
+
+        layerNameDescriptor = None
+        associatedMasterId = None
+        if "^" in layerName:
+            # Example: <parent-layer-name>^<background-layer-name>
+            glyphSourceLayerName, layerNameDescriptor = layerName.split("^")
+            associatedMasterId = glyphSourceLayerName
+        else:
+            glyphSourceLayerName = layerName
+
+        glyphSource = layerNameToGlyphSourceMapping.get(glyphSourceLayerName)
+        if glyphSource is None:
+            nonSourceLayerNames.add(layerName)
+            continue
+
+        if layerNameDescriptor == "background":
+            gsLayer = gsGlyph.layers[glyphSourceLayerName]
+            fontraLayerToGSLayer(layer, gsLayer.background)
+            continue
+        elif layerNameDescriptor:
+            gsLayerId = layer.customData.get("com.glyphsapp.layer.layerId")
+            gsLayer = gsGlyph.layers[gsLayerId]
+        else:
+            gsLayer = gsGlyph.layers[layerName]
 
         fontLocation, glyphLocation = splitLocation(
             glyphSource.location, variableGlyph.axes
@@ -884,22 +917,33 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
             # It is not enough to check if it has a masterId, because in case of a smart component,
             # the layer for each glyph axis has the same location as the master layer.
             if masterId:
-                if not isSmartCompGlyph:
+                if layerNameDescriptor:
+                    isDefaultLayer = False
+                elif not isSmartCompGlyph:
                     isDefaultLayer = True
                 elif defaultGlyphLocation == glyphLocation:
                     isDefaultLayer = True
 
-            gsLayer.name = (
-                gsMasterIdToNameMapping.get(masterId)
-                if isDefaultLayer
-                else glyphSource.name
-            )
-            gsLayer.layerId = masterId if isDefaultLayer else layerName
-            gsLayer.associatedMasterId = getAssociatedMasterId(
-                gsGlyph.parent, gsFontLocation
+            newLayerName = glyphSource.name
+            if isDefaultLayer:
+                newLayerName = gsMasterIdToNameMapping.get(masterId)
+            elif layerNameDescriptor:
+                newLayerName = layerNameDescriptor
+
+            gsLayer.name = newLayerName
+
+            if isDefaultLayer:
+                gsLayer.layerId = masterId
+            else:
+                gsLayer.layerId = str(uuid.uuid4()).upper()
+
+            gsLayer.associatedMasterId = (
+                associatedMasterId
+                if associatedMasterId
+                else getAssociatedMasterId(gsGlyph.parent, gsFontLocation)
             )
 
-            if not isDefaultLayer and not isSmartCompGlyph:
+            if not isDefaultLayer and not isSmartCompGlyph and not layerNameDescriptor:
                 # This is an intermediate layer
                 gsLayer.name = "{" + ",".join(str(x) for x in gsFontLocation) + "}"
                 gsLayer.attributes["coordinates"] = gsFontLocation

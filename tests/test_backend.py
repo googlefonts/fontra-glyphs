@@ -356,6 +356,7 @@ async def test_deleteLayer(writableTestFont):
 
     # delete intermediate layer
     sourceIndex = 1
+    del glyph.layers[glyph.sources[sourceIndex].layerName + "^background"]
     del glyph.layers[glyph.sources[sourceIndex].layerName]
     del glyph.sources[sourceIndex]
 
@@ -379,10 +380,26 @@ async def test_addLayer(writableTestFont):
         glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
     )
 
-    # # add background layer
-    # glyph.layers[layerName + "^background"] = Layer(
-    #     glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
-    # )
+    # add background layer
+    glyph.layers[layerName + "^background"] = Layer(
+        glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
+    )
+
+    await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
+
+    savedGlyph = await writableTestFont.getGlyph(glyphName)
+    assert glyph == savedGlyph
+
+
+async def test_addLayoutLayer(writableTestFont):
+    glyphName = "A"
+    glyphMap = await writableTestFont.getGlyphMap()
+    glyph = await writableTestFont.getGlyph(glyphName)
+
+    # add layout layer:
+    glyph.layers[mappingMasterIDs.get("Regular") + "^Layout Layer"] = Layer(
+        glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
+    )
 
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
 
