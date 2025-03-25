@@ -380,9 +380,20 @@ async def test_addLayer(writableTestFont):
         glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
     )
 
-    # add background layer
-    glyph.layers[layerName + "^background"] = Layer(
-        glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
+    await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
+
+    savedGlyph = await writableTestFont.getGlyph(glyphName)
+    assert glyph == savedGlyph
+
+
+async def test_addBackgroundLayer(writableTestFont):
+    glyphName = "a"
+    glyphMap = await writableTestFont.getGlyphMap()
+    glyph = await writableTestFont.getGlyph(glyphName)
+
+    # add background layer:
+    glyph.layers[mappingMasterIDs.get("Regular") + "^background"] = Layer(
+        glyph=deepcopy(glyph.layers[mappingMasterIDs.get("Regular")].glyph)
     )
 
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])

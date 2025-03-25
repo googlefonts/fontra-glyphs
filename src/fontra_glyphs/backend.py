@@ -860,9 +860,30 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
             continue
 
         if layerNameDescriptor == "background":
+            # Here it get's complecated, keyword: "nested background layers".
+            # In glyphsapp every layer may have a backgrlound. This is different for Fontra.
+            # A background in Fontra is a layer, only named differently.
             gsLayer = gsGlyph.layers[glyphSourceLayerName]
-            fontraLayerToGSLayer(layer, gsLayer.background)
-            continue
+            if gsLayer and gsLayer.hasBackground:
+                # The follwing comment is a copy from glyphslib:
+                # https://github.com/googlefonts/glyphsLib/blob/c4db6b981d577f456d64ebe9993818770e170454/tests/classes_test.py#L1818
+                # The only way to modify a background layer in glyphsLib is to get it
+                # from a GSLayer object.
+                bgLayer = gsLayer.background
+                bgLayer.width = gsLayer.width
+                fontraLayerToGSLayer(layer, bgLayer)
+                # a background layer does not have a layerId, therefor set to empty string.
+                layer.customData["com.glyphsapp.layer.layerId"] = ""
+                continue
+            else:
+                # https://github.com/googlefonts/glyphsLib/blob/c4db6b981d577f456d64ebe9993818770e170454/Lib/glyphsLib/classes.py#L3874
+                # raise NotImplementedError(
+                #     "GlyphsApp Backend: Adding background to layer is not yet implemented."
+                # )
+                # NOTE: Raising an error causes outher issues, for example:
+                # We cannot duplicate a glyph.
+                # Therefore better do nothing.
+                continue
         elif layerNameDescriptor:
             gsLayerId = layer.customData.get("com.glyphsapp.layer.layerId")
             gsLayer = gsGlyph.layers[gsLayerId]
@@ -936,6 +957,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph):
                 gsLayer.layerId = masterId
             else:
                 gsLayer.layerId = str(uuid.uuid4()).upper()
+            layer.customData["com.glyphsapp.layer.layerId"] = gsLayer.layerId
 
             gsLayer.associatedMasterId = (
                 associatedMasterId
