@@ -1051,6 +1051,23 @@ nodes = (
 }
 );
 width = 496;
+},
+{
+associatedMasterId = "BFFFD157-90D3-4B85-B99D-9A2F366F03CA";
+layerId = "87AB3CED-DF6C-4519-A28D-DDC41E652F55";
+name = "Mar 25, 25 at 10:20";
+paths = (
+{
+closed = 1;
+nodes = (
+"0 0 LINE",
+"100 0 LINE",
+"100 100 LINE",
+"0 100 LINE"
+);
+}
+);
+width = 518;
 }
 );
 leftKerningGroup = a;
