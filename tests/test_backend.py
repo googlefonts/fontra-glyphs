@@ -534,3 +534,41 @@ async def test_getKerning(testFont, referenceFont):
 
 async def test_getSources(testFont, referenceFont):
     assert await testFont.getSources() == await referenceFont.getSources()
+
+
+async def test_locationBaseWrite(writableTestFont):
+    # TODO: This will have to be adjusted (simplified) once the backend emits
+    # glyphs that use locationBase. Some of this test code is about accounting
+    # for the before/after differences. We _write_ a glyph using locationBase,
+    # we _read_ one without it. Round-tripping should be perfect after
+    # https://github.com/googlefonts/fontra-glyphs/issues/89 has been implemented
+    # fully.
+    glyphName = "q"  # Any glyph that doesn't exist yet
+
+    defaultLocation = {"Weight": 90}  # hard-coded because of axis.mapping laziness
+
+    fontSources = await writableTestFont.getSources()
+
+    glyph = VariableGlyph(name=glyphName)
+
+    for sourceIdentifier in fontSources.keys():
+        glyph.sources.append(
+            GlyphSource(
+                name="", locationBase=sourceIdentifier, layerName=sourceIdentifier
+            )
+        )
+        glyph.layers[sourceIdentifier] = Layer(glyph=StaticGlyph(xAdvance=333))
+
+    await writableTestFont.putGlyph(glyphName, glyph, [])
+
+    savedGlyph = await writableTestFont.getGlyph(glyphName)
+
+    for (sourceIdentifier, fontSource), glyphSource in zip(
+        fontSources.items(), savedGlyph.sources, strict=True
+    ):
+        assert glyphSource.name == fontSource.name
+        assert (
+            defaultLocation | glyphSource.location == fontSource.location
+        ), glyphSource
+
+    assert glyph.layers == savedGlyph.layers
