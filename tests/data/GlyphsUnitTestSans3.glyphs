@@ -1126,6 +1126,7 @@ nodes = (
 }
 );
 width = 496;
+},
 {
 associatedMasterId = "BFFFD157-90D3-4B85-B99D-9A2F366F03CA";
 layerId = "C9B4D17F-45BA-49C3-82A0-CAD90EF183F2";
