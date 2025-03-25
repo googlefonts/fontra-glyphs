@@ -339,19 +339,16 @@ class GlyphsBackend:
             }
 
             if location in seenLocations:
-                inactive = True
+                layerName = f"{gsLayer.associatedMasterId}^{gsLayer.name}"
             else:
                 seenLocations.append(location)
-                inactive = False
-
-            sources.append(
-                GlyphSource(
-                    name=sourceName,
-                    location=location,
-                    layerName=layerName,
-                    inactive=inactive,
+                sources.append(
+                    GlyphSource(
+                        name=sourceName,
+                        location=location,
+                        layerName=layerName,
+                    )
                 )
-            )
             layers[layerName] = gsLayerToFontraLayer(
                 gsLayer, self.axisNames, gsLayer.width
             )
