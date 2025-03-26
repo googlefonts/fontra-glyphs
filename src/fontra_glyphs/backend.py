@@ -866,7 +866,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMa
             continue
 
         gsLayerId = layer.customData.get("com.glyphsapp.layer.layerId")
-        if layerName.endswith("background"):
+        if layerNameDescriptor == "background" or layerName.endswith("/background"):
             if gsLayerId is None:
                 gsLayerId = glyphSourceLayerName
             gsLayer = gsGlyph.layers[gsLayerId]
