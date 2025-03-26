@@ -865,14 +865,9 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMa
             continue
 
         gsLayerId = layer.customData.get("com.glyphsapp.layer.layerId")
-        if layerNameDescriptor == "background":
+        if layerNameDescriptor == "background" or layerName.endswith("/background"):
             if gsLayerId is None:
                 gsLayerId = glyphSourceLayerName
-            gsLayer = gsGlyph.layers[gsLayerId]
-            layer.customData["com.glyphsapp.layer.layerId"] = gsLayer.layerId
-            fontraLayerToGSLayer(layer, gsLayer.background)
-            continue
-        elif layerName.endswith("/background"):
             gsLayer = gsGlyph.layers[gsLayerId]
             layer.customData["com.glyphsapp.layer.layerId"] = gsLayer.layerId
             fontraLayerToGSLayer(layer, gsLayer.background)
