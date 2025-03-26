@@ -848,6 +848,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMa
         # If it comes from GlyphsApp the layerName is equal to:
         # - gsLayer.layerId
         # - <masterId>^background
+        # - <masterId>^<layer-name>
         # - <masterId>^<layer-name>/background
         # otherwise the layer has been newly created within Fontra.
 
@@ -865,17 +866,15 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMa
             continue
 
         gsLayerId = layer.customData.get("com.glyphsapp.layer.layerId")
-        if layerNameDescriptor == "background" or layerName.endswith("/background"):
+        if layerName.endswith("background"):
             if gsLayerId is None:
                 gsLayerId = glyphSourceLayerName
             gsLayer = gsGlyph.layers[gsLayerId]
             layer.customData["com.glyphsapp.layer.layerId"] = gsLayer.layerId
             fontraLayerToGSLayer(layer, gsLayer.background)
             continue
-        elif layerNameDescriptor:
-            gsLayer = gsGlyph.layers[gsLayerId]
         else:
-            gsLayer = gsGlyph.layers[layerName]
+            gsLayer = gsGlyph.layers[gsLayerId]
 
         fontLocation, glyphLocation = splitLocation(
             glyphSource.location, variableGlyph.axes
