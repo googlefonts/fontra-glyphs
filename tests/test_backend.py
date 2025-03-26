@@ -496,6 +496,11 @@ async def test_addLayerWithComponent(writableTestFont):
         glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
     )
 
+    # add background layer
+    glyph.layers[layerName + "^background"] = Layer(
+        glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
+    )
+
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
 
     savedGlyph = await writableTestFont.getGlyph(glyphName)
