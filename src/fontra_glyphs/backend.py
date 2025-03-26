@@ -842,8 +842,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMa
     layerNameToGlyphSourceMapping = {
         glyphSource.layerName: glyphSource for glyphSource in variableGlyph.sources
     }
-    for layerName in variableGlyph.layers:
-        layer = variableGlyph.layers[layerName]
+    for layerName, layer in variableGlyph.layers.items():
         # "^" not in layerName:
         # layerName is equal to gsLayer.layerId if it comes from Glyphsapp,
         # otherwise the layer has been newly created within Fontra.
