@@ -28,11 +28,11 @@ glyphsPackagePath = dataDir / "GlyphsUnitTestSans3.glyphspackage"
 referenceFontPath = dataDir / "GlyphsUnitTestSans3.fontra"
 
 
-mappingMasterIDs = {
-    "Light": "C4872ECA-A3A9-40AB-960A-1DB2202F16DE",
-    "Regular": "3E7589AA-8194-470F-8E2F-13C1C581BE24",
-    "Bold": "BFFFD157-90D3-4B85-B99D-9A2F366F03CA",
-}
+def sourceNameMappingFromSources(fontSources):
+    return {
+        source.name: sourceIdentifier
+        for sourceIdentifier, source in fontSources.items()
+    }
 
 
 @pytest.fixture(scope="module", params=[glyphs2Path, glyphs3Path, glyphsPackagePath])
@@ -239,6 +239,8 @@ async def test_createNewGlyph(writableTestFont):
 
 
 async def test_createNewSmartGlyph(writableTestFont):
+    fontSources = await writableTestFont.getSources()
+    sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
     glyphName = "a.smart"
     glyphAxis = GlyphAxis(name="Height", minValue=0, maxValue=100, defaultValue=0)
     glyph = VariableGlyph(name=glyphName, axes=[glyphAxis])
@@ -252,7 +254,7 @@ async def test_createNewSmartGlyph(writableTestFont):
         "Bold": {"Weight": 220},
         "Bold-Height": {"Weight": 220, "Height": 100},
     }.items():
-        layerName = mappingMasterIDs.get(sourceName) or str(uuid.uuid4()).upper()
+        layerName = sourceNameMappingToIDs.get(sourceName) or str(uuid.uuid4()).upper()
         glyph.sources.append(
             GlyphSource(name=sourceName, location=location, layerName=layerName)
         )
@@ -395,13 +397,15 @@ async def test_addLayer(writableTestFont):
 
 
 async def test_addBackgroundLayer(writableTestFont):
+    fontSources = await writableTestFont.getSources()
+    sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
     glyphName = "a"
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
 
     # add background layer:
-    glyph.layers[mappingMasterIDs.get("Regular") + "^background"] = Layer(
-        glyph=deepcopy(glyph.layers[mappingMasterIDs.get("Regular")].glyph)
+    glyph.layers[sourceNameMappingToIDs.get("Regular") + "^background"] = Layer(
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs.get("Regular")].glyph)
     )
 
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
@@ -411,12 +415,14 @@ async def test_addBackgroundLayer(writableTestFont):
 
 
 async def test_addLayoutLayer(writableTestFont):
+    fontSources = await writableTestFont.getSources()
+    sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
     glyphName = "A"
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
 
     # add layout layer:
-    glyph.layers[mappingMasterIDs.get("Regular") + "^Layout Layer"] = Layer(
+    glyph.layers[sourceNameMappingToIDs.get("Regular") + "^Layout Layer"] = Layer(
         glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
     )
 
@@ -481,11 +487,13 @@ expectedSkewErrors = [
 
 @pytest.mark.parametrize("skewValue,expectedErrorMatch", expectedSkewErrors)
 async def test_skewComponent(writableTestFont, skewValue, expectedErrorMatch):
+    fontSources = await writableTestFont.getSources()
+    sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
     glyphName = "Adieresis"  # Adieresis is made from components
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
 
-    glyph.layers[mappingMasterIDs.get("Light")].glyph.components[
+    glyph.layers[sourceNameMappingToIDs.get("Light")].glyph.components[
         0
     ].transformation.skewX = skewValue
     with pytest.raises(TypeError, match=expectedErrorMatch):
