@@ -845,15 +845,15 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMa
         glyphSource.layerName: glyphSource for glyphSource in variableGlyph.sources
     }
     for layerName, layer in variableGlyph.layers.items():
-        # "^" not in layerName:
-        # layerName is equal to gsLayer.layerId if it comes from Glyphsapp,
+        # If it comes from GlyphsApp the layerName is equal to:
+        # - gsLayer.layerId
+        # - <masterId>^background
+        # - <masterId>^<layer-name>/background
         # otherwise the layer has been newly created within Fontra.
 
         layerNameDescriptor = None
         associatedMasterId = None
         if "^" in layerName:
-            # Example: <parent-layer-name>^<background-layer-name>/background
-            # Example: <masterId>^background
             glyphSourceLayerName, layerNameDescriptor = layerName.split("^", 1)
             associatedMasterId = glyphSourceLayerName
         else:
