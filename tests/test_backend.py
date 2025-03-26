@@ -379,6 +379,8 @@ async def test_deleteLayer(writableTestFont):
 
 
 async def test_addLayer(writableTestFont):
+    fontSources = await writableTestFont.getSources()
+    sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
     glyphName = "a"
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
@@ -389,7 +391,7 @@ async def test_addLayer(writableTestFont):
     )
     # Copy StaticGlyph from Bold:
     glyph.layers[layerName] = Layer(
-        glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs["Bold"]].glyph)
     )
 
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
@@ -449,7 +451,7 @@ async def test_addLayoutLayer(writableTestFont):
 
     # add layout layer:
     glyph.layers[sourceNameMappingToIDs.get("Regular") + "^Layout Layer"] = Layer(
-        glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs["Bold"]].glyph)
     )
 
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
@@ -468,6 +470,8 @@ async def test_readBackgroundLayer(writableTestFont):
 
 
 async def test_addLayerWithoutSource(writableTestFont):
+    fontSources = await writableTestFont.getSources()
+    sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
     glyphName = "a"
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
@@ -475,7 +479,7 @@ async def test_addLayerWithoutSource(writableTestFont):
     layerName = str(uuid.uuid4()).upper()
     # Copy StaticGlyph from Bold:
     glyph.layers[layerName] = Layer(
-        glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs["Bold"]].glyph)
     )
 
     with pytest.raises(
@@ -485,6 +489,8 @@ async def test_addLayerWithoutSource(writableTestFont):
 
 
 async def test_addLayerWithComponent(writableTestFont):
+    fontSources = await writableTestFont.getSources()
+    sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
     glyphName = "n"  # n is made from components
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
@@ -495,12 +501,12 @@ async def test_addLayerWithComponent(writableTestFont):
     )
     # Copy StaticGlyph of Bold:
     glyph.layers[layerName] = Layer(
-        glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs["Bold"]].glyph)
     )
 
     # add background layer
     glyph.layers[layerName + "^background"] = Layer(
-        glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs["Bold"]].glyph)
     )
 
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
@@ -511,6 +517,8 @@ async def test_addLayerWithComponent(writableTestFont):
 
 async def test_addLayoutLayerToBraceLayer(writableTestFont):
     # This is a fundamental difference between Fontra and Glyphs. Therefore raise error.
+    fontSources = await writableTestFont.getSources()
+    sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
     glyphName = "n"
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
@@ -522,7 +530,7 @@ async def test_addLayoutLayerToBraceLayer(writableTestFont):
 
     # add layout layer
     glyph.layers[layerName + "^Layout Layer"] = Layer(
-        glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs["Bold"]].glyph)
     )
 
     with pytest.raises(
