@@ -341,6 +341,7 @@ class GlyphsBackend:
 
             if location in seenLocations:
                 layerName = f"{gsLayer.associatedMasterId}^{gsLayer.name}"
+                bgSeparator = "/"
             else:
                 seenLocations.append(location)
                 sources.append(
@@ -350,12 +351,13 @@ class GlyphsBackend:
                         layerName=layerName,
                     )
                 )
+                bgSeparator = "^"
             layers[layerName] = gsLayerToFontraLayer(
-                gsLayer, self.axisNames, gsLayer.width
+                gsLayer, self.axisNames, gsLayer.width, gsLayer.layerId
             )
             if gsLayer.hasBackground:
-                layers[layerName + "^background"] = gsLayerToFontraLayer(
-                    gsLayer.background, self.axisNames, gsLayer.width
+                layers[layerName + bgSeparator + "background"] = gsLayerToFontraLayer(
+                    gsLayer.background, self.axisNames, gsLayer.width, gsLayer.layerId
                 )
 
         fixSourceLocations(sources, set(smartLocation))
@@ -576,7 +578,7 @@ def _readGlyphMapAndKerningGroups(
     return glyphMap, kerningGroups
 
 
-def gsLayerToFontraLayer(gsLayer, globalAxisNames, gsLayerWidth):
+def gsLayerToFontraLayer(gsLayer, globalAxisNames, gsLayerWidth, gsLayerId):
     pen = PackedPathPointPen()
     gsLayer.drawPoints(pen)
 
@@ -599,7 +601,7 @@ def gsLayerToFontraLayer(gsLayer, globalAxisNames, gsLayerWidth):
             guidelines=guidelines,
         ),
         customData={
-            "com.glyphsapp.layer.layerId": gsLayer.layerId,
+            "com.glyphsapp.layer.layerId": gsLayerId,
         },
     )
 
@@ -850,7 +852,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMa
         layerNameDescriptor = None
         associatedMasterId = None
         if "^" in layerName:
-            # Example: <parent-layer-name>^<background-layer-name>
+            # Example: <parent-layer-name>^<background-layer-name>/background
             # Example: <masterId>^background
             glyphSourceLayerName, layerNameDescriptor = layerName.split("^", 1)
             associatedMasterId = glyphSourceLayerName
@@ -862,16 +864,20 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMa
             nonSourceLayerNames.add(layerName)
             continue
 
+        gsLayerId = layer.customData.get("com.glyphsapp.layer.layerId")
         if layerNameDescriptor == "background":
-            gsLayer = gsGlyph.layers[glyphSourceLayerName]
-            # A background layer does not have it's own layerId,
-            # because it it always part of a different layer.
-            # Therefore set to empty string.
-            layer.customData["com.glyphsapp.layer.layerId"] = ""
+            if gsLayerId is None:
+                gsLayerId = glyphSourceLayerName
+            gsLayer = gsGlyph.layers[gsLayerId]
+            layer.customData["com.glyphsapp.layer.layerId"] = gsLayer.layerId
+            fontraLayerToGSLayer(layer, gsLayer.background)
+            continue
+        elif layerName.endswith("/background"):
+            gsLayer = gsGlyph.layers[gsLayerId]
+            layer.customData["com.glyphsapp.layer.layerId"] = gsLayer.layerId
             fontraLayerToGSLayer(layer, gsLayer.background)
             continue
         elif layerNameDescriptor:
-            gsLayerId = layer.customData.get("com.glyphsapp.layer.layerId")
             gsLayer = gsGlyph.layers[gsLayerId]
         else:
             gsLayer = gsGlyph.layers[layerName]
@@ -946,9 +952,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMa
                 newLayerName = layerNameDescriptor
 
             gsLayer.name = newLayerName
-            gsLayer.layerId = (
-                layerName if "^" not in layerName else str(uuid.uuid4()).upper()
-            )
+            gsLayer.layerId = gsLayerId if gsLayerId else str(uuid.uuid4()).upper()
             layer.customData["com.glyphsapp.layer.layerId"] = gsLayer.layerId
 
             gsLayer.associatedMasterId = (
