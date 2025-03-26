@@ -414,6 +414,30 @@ async def test_addBackgroundLayer(writableTestFont):
     assert glyph == savedGlyph
 
 
+async def test_addBackgroundLayerToLayer(writableTestFont):
+    # This is a nested behaviour.
+    fontSources = await writableTestFont.getSources()
+    sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
+    glyphName = "A"
+    glyphMap = await writableTestFont.getGlyphMap()
+    glyph = await writableTestFont.getGlyph(glyphName)
+
+    # add layout layer:
+    glyph.layers[sourceNameMappingToIDs.get("Regular") + "^Testing"] = Layer(
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs.get("Regular")].glyph)
+    )
+
+    # add background to layout layer:
+    glyph.layers[sourceNameMappingToIDs.get("Regular") + "^Testing/background"] = Layer(
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs.get("Regular")].glyph)
+    )
+
+    await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
+
+    savedGlyph = await writableTestFont.getGlyph(glyphName)
+    assert glyph == savedGlyph
+
+
 async def test_addLayoutLayer(writableTestFont):
     fontSources = await writableTestFont.getSources()
     sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
