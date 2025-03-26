@@ -853,7 +853,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMa
         if "^" in layerName:
             # Example: <parent-layer-name>^<background-layer-name>
             # Example: <masterId>^background
-            glyphSourceLayerName, layerNameDescriptor = layerName.split("^")
+            glyphSourceLayerName, layerNameDescriptor = layerName.split("^", 1)
             associatedMasterId = glyphSourceLayerName
         else:
             glyphSourceLayerName = layerName
