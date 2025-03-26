@@ -20,6 +20,8 @@ from fontra.core.classes import (
     structure,
 )
 
+from fontra_glyphs.backend import GlyphsBackendError
+
 dataDir = pathlib.Path(__file__).resolve().parent / "data"
 
 glyphs2Path = dataDir / "GlyphsUnitTestSans.glyphs"
@@ -280,7 +282,7 @@ async def test_extendSmartGlyphWithIntermedaiteLayer(writableTestFont):
     glyph.layers[layerName] = Layer(glyph=StaticGlyph(xAdvance=100))
 
     with pytest.raises(
-        NotImplementedError,
+        GlyphsBackendError,
         match="Intermediate layers within smart glyphs are not yet implemented",
     ):
         await writableTestFont.putGlyph(glyphName, glyph, [])
@@ -477,7 +479,7 @@ async def test_addLayerWithoutSource(writableTestFont):
     )
 
     with pytest.raises(
-        NotImplementedError, match="Layer without glyph source is not yet implemented"
+        GlyphsBackendError, match="Layer without glyph source is not yet implemented"
     ):
         await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
 
@@ -524,7 +526,7 @@ async def test_addLayoutLayerToBraceLayer(writableTestFont):
     )
 
     with pytest.raises(
-        NotImplementedError,
+        GlyphsBackendError,
         match="A brace layer can only have an additional source layer named 'background'",
     ):
         await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])

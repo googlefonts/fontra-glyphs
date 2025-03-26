@@ -51,6 +51,11 @@ from .utils import (
     splitLocation,
 )
 
+
+class GlyphsBackendError(Exception):
+    pass
+
+
 rootInfoNames = [
     "familyName",
     "versionMajor",
@@ -190,7 +195,7 @@ class GlyphsBackend:
         pass
 
     async def deleteGlyph(self, glyphName):
-        raise NotImplementedError(
+        raise GlyphsBackendError(
             "GlyphsApp Backend: Deleting glyphs is not yet implemented."
         )
 
@@ -210,7 +215,7 @@ class GlyphsBackend:
         return FontInfo(**infoDict)
 
     async def putFontInfo(self, fontInfo: FontInfo):
-        raise NotImplementedError(
+        raise GlyphsBackendError(
             "GlyphsApp Backend: Editing FontInfo is not yet implemented."
         )
 
@@ -218,7 +223,7 @@ class GlyphsBackend:
         return gsMastersToFontraFontSources(self.gsFont, self.locationByMasterID)
 
     async def putSources(self, sources: dict[str, FontSource]) -> None:
-        raise NotImplementedError(
+        raise GlyphsBackendError(
             "GlyphsApp Backend: Editing FontSources is not yet implemented."
         )
 
@@ -226,7 +231,7 @@ class GlyphsBackend:
         return Axes(axes=deepcopy(self.axes))
 
     async def putAxes(self, axes: Axes) -> None:
-        raise NotImplementedError(
+        raise GlyphsBackendError(
             "GlyphsApp Backend: Editing Axes is not yet implemented."
         )
 
@@ -234,7 +239,7 @@ class GlyphsBackend:
         return self.gsFont.upm
 
     async def putUnitsPerEm(self, value: int) -> None:
-        raise NotImplementedError(
+        raise GlyphsBackendError(
             "GlyphsApp Backend: Editing UnitsPerEm is not yet implemented."
         )
 
@@ -258,7 +263,7 @@ class GlyphsBackend:
         return kerning
 
     async def putKerning(self, kerning: dict[str, Kerning]) -> None:
-        raise NotImplementedError(
+        raise GlyphsBackendError(
             "GlyphsApp Backend: Editing Kerning is not yet implemented."
         )
 
@@ -267,7 +272,7 @@ class GlyphsBackend:
         return OpenTypeFeatures()
 
     async def putFeatures(self, features: OpenTypeFeatures) -> None:
-        raise NotImplementedError(
+        raise GlyphsBackendError(
             "GlyphsApp Backend: Editing OpenTypeFeatures is not yet implemented."
         )
 
@@ -275,7 +280,7 @@ class GlyphsBackend:
         return None
 
     async def putBackgroundImage(self, imageIdentifier: str, data: ImageData) -> None:
-        raise NotImplementedError(
+        raise GlyphsBackendError(
             "GlyphsApp Backend: Editing BackgroundImage is not yet implemented."
         )
 
@@ -283,7 +288,7 @@ class GlyphsBackend:
         return {}
 
     async def putCustomData(self, lib):
-        raise NotImplementedError(
+        raise GlyphsBackendError(
             "GlyphsApp Backend: Editing CustomData is not yet implemented."
         )
 
@@ -875,7 +880,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMa
 
         if "^" in layerName and glyphSourceLayerName not in gsMasterIdToNameMapping:
             # This is a fundamental difference between Fontra and Glyphs. Therefore raise error.
-            raise NotImplementedError(
+            raise GlyphsBackendError(
                 "GlyphsApp Backend: "
                 "A brace layer can only have an additional source layer named 'background'."
             )
@@ -981,7 +986,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMa
             gsGlyph.layers.append(gsLayer)
 
     if nonSourceLayerNames:
-        raise NotImplementedError(
+        raise GlyphsBackendError(
             "GlyphsApp Backend: Layer without glyph source is not yet implemented."
         )
     return gsGlyph
@@ -1014,7 +1019,7 @@ def raiseErrorIfIntermediateLayerInSmartComponent(
                 isIntermediateLayer = True
 
         if isIntermediateLayer:
-            raise NotImplementedError(
+            raise GlyphsBackendError(
                 "GlyphsApp Backend: Intermediate layers "
                 "within smart glyphs are not yet implemented."
             )
