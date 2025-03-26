@@ -864,23 +864,13 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMa
             continue
 
         if layerNameDescriptor == "background":
-            # Here it get's complicated, keyword: "nested background layers".
-            # In glyphsapp every layer may have a backgrlound. This is different for Fontra.
-            # A background in Fontra is a layer, only named differently.
             gsLayer = gsGlyph.layers[glyphSourceLayerName]
-            if gsLayer:
-                # https://github.com/googlefonts/glyphsLib/blob/c4db6b981d577f456d64ebe9993818770e170454/tests/classes_test.py#L1818
-                bgLayer = gsLayer.background
-                bgLayer.width = gsLayer.width
-                # A background layer does not have it's own layerId,
-                # because it it always part of a different layer.
-                # Therefore set to empty string.
-                layer.customData["com.glyphsapp.layer.layerId"] = ""
-                fontraLayerToGSLayer(layer, bgLayer)
-                continue
-            else:
-                print("something went wrong.")
-                continue
+            # A background layer does not have it's own layerId,
+            # because it it always part of a different layer.
+            # Therefore set to empty string.
+            layer.customData["com.glyphsapp.layer.layerId"] = ""
+            fontraLayerToGSLayer(layer, gsLayer.background)
+            continue
         elif layerNameDescriptor:
             gsLayerId = layer.customData.get("com.glyphsapp.layer.layerId")
             gsLayer = gsGlyph.layers[gsLayerId]
@@ -957,11 +947,9 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMa
                 newLayerName = layerNameDescriptor
 
             gsLayer.name = newLayerName
-
-            if isDefaultLayer:
-                gsLayer.layerId = masterId
-            else:
-                gsLayer.layerId = str(uuid.uuid4()).upper()
+            gsLayer.layerId = (
+                layerName if "^" not in layerName else str(uuid.uuid4()).upper()
+            )
             layer.customData["com.glyphsapp.layer.layerId"] = gsLayer.layerId
 
             gsLayer.associatedMasterId = (

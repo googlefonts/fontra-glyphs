@@ -184,13 +184,21 @@ async def test_putGlyph(writableTestFont, glyphName):
     assert glyph == reopenedGlyph
 
 
-async def test_duplicateGlyph(writableTestFont):
-    glyphName = "a.ss01"
-    glyph = deepcopy(await writableTestFont.getGlyph("a"))
+@pytest.mark.asyncio
+@pytest.mark.parametrize("gName", ["a", "A"])
+async def test_duplicateGlyph(writableTestFont, gName):
+    glyphName = f"{gName}.ss01"
+    glyph = deepcopy(await writableTestFont.getGlyph(gName))
     glyph.name = glyphName
     await writableTestFont.putGlyph(glyphName, glyph, [])
 
     savedGlyph = await writableTestFont.getGlyph(glyphName)
+
+    # glyphsLib doesn't read the color attr from Glyphs-2 files,
+    # so let's monkeypatch the data
+    glyph.customData["com.glyphsapp.glyph-color"] = [120, 220, 20, 4]
+    savedGlyph.customData["com.glyphsapp.glyph-color"] = [120, 220, 20, 4]
+
     assert glyph == savedGlyph
 
     if os.path.isdir(writableTestFont.gsFilePath):
