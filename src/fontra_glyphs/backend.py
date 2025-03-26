@@ -358,7 +358,10 @@ class GlyphsBackend:
                 )
                 bgSeparator = "^"
             layers[layerName] = gsLayerToFontraLayer(
-                gsLayer, self.axisNames, gsLayer.width, gsLayer.layerId
+                gsLayer,
+                self.axisNames,
+                gsLayer.width,
+                gsLayer.layerId if layerName != gsLayer.layerId else None,
             )
             if gsLayer.hasBackground:
                 layers[layerName + bgSeparator + "background"] = gsLayerToFontraLayer(
@@ -597,6 +600,10 @@ def gsLayerToFontraLayer(gsLayer, globalAxisNames, gsLayerWidth, gsLayerId):
         gsGuidelineToFontraGuideline(gsGuideline) for gsGuideline in gsLayer.guides
     ]
 
+    customData = (
+        {"com.glyphsapp.layer.layerId": gsLayerId} if gsLayerId is not None else {}
+    )
+
     return Layer(
         glyph=StaticGlyph(
             xAdvance=gsLayerWidth,
@@ -605,9 +612,7 @@ def gsLayerToFontraLayer(gsLayer, globalAxisNames, gsLayerWidth, gsLayerId):
             anchors=anchors,
             guidelines=guidelines,
         ),
-        customData={
-            "com.glyphsapp.layer.layerId": gsLayerId,
-        },
+        customData=customData,
     )
 
 
@@ -832,9 +837,10 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMa
     gsMasterIdToNameMapping = {m.id: m.name for m in gsGlyph.parent.masters}
     # Convert Fontra variableGlyph to GlyphsApp glyph
     layerIdsInUse = {
-        layer.customData.get("com.glyphsapp.layer.layerId")
-        for layer in variableGlyph.layers.values()
+        layer.customData.get("com.glyphsapp.layer.layerId") or layerName
+        for layerName, layer in variableGlyph.layers.items()
     }
+
     for gsLayerId in [gsLayer.layerId for gsLayer in gsGlyph.layers]:
         if gsLayerId in layerIdsInUse:
             # This layer will be modified later.
@@ -871,10 +877,14 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMa
             continue
 
         if layerNameDescriptor == "background" or layerName.endswith("/background"):
-            baselayer = variableGlyph.layers[layerName[:-11]]
-            gsLayerId = baselayer.customData.get("com.glyphsapp.layer.layerId")
+            baseLayerName = layerName[:-11]  # minus "^background" or "/background"
+            baseLayer = variableGlyph.layers[baseLayerName]
+            gsLayerId = (
+                baseLayer.customData.get("com.glyphsapp.layer.layerId") or baseLayerName
+            )
             gsLayer = gsGlyph.layers[gsLayerId]
-            layer.customData["com.glyphsapp.layer.layerId"] = gsLayer.layerId
+            if layerName != gsLayer.layerId:
+                layer.customData["com.glyphsapp.layer.layerId"] = gsLayer.layerId
             fontraLayerToGSLayer(layer, gsLayer.background)
             continue
 
@@ -885,7 +895,7 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMa
                 "A brace layer can only have an additional source layer named 'background'."
             )
 
-        gsLayerId = layer.customData.get("com.glyphsapp.layer.layerId")
+        gsLayerId = layer.customData.get("com.glyphsapp.layer.layerId") or layerName
         gsLayer = gsGlyph.layers[gsLayerId]
 
         fontLocation, glyphLocation = splitLocation(
@@ -959,7 +969,8 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMa
 
             gsLayer.name = newLayerName
             gsLayer.layerId = gsLayerId if gsLayerId else str(uuid.uuid4()).upper()
-            layer.customData["com.glyphsapp.layer.layerId"] = gsLayer.layerId
+            if layerName != gsLayer.layerId:
+                layer.customData["com.glyphsapp.layer.layerId"] = gsLayer.layerId
 
             gsLayer.associatedMasterId = (
                 associatedMasterId
