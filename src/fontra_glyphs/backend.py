@@ -824,10 +824,10 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMa
     gsMasterAxesToIdMapping = {tuple(m.axes): m.id for m in gsGlyph.parent.masters}
     gsMasterIdToNameMapping = {m.id: m.name for m in gsGlyph.parent.masters}
     # Convert Fontra variableGlyph to GlyphsApp glyph
-    layerIdsInUse = [
-        variableGlyph.layers[layerName].customData.get("com.glyphsapp.layer.layerId")
-        for layerName in variableGlyph.layers
-    ]
+    layerIdsInUse = {
+        layer.customData.get("com.glyphsapp.layer.layerId")
+        for layer in variableGlyph.layers.values()
+    }
     for gsLayerId in [gsLayer.layerId for gsLayer in gsGlyph.layers]:
         if gsLayerId in layerIdsInUse:
             # This layer will be modified later.
