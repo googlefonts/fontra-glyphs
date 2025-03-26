@@ -507,6 +507,29 @@ async def test_addLayerWithComponent(writableTestFont):
     assert glyph == savedGlyph
 
 
+async def test_addLayoutLayerToBraceLayer(writableTestFont):
+    # This is a fundamental difference between Fontra and Glyphs. Therefore raise error.
+    glyphName = "n"
+    glyphMap = await writableTestFont.getGlyphMap()
+    glyph = await writableTestFont.getGlyph(glyphName)
+
+    layerName = str(uuid.uuid4()).upper()
+    glyph.sources.append(
+        GlyphSource(name="SemiBold", location={"Weight": 166}, layerName=layerName)
+    )
+
+    # add layout layer
+    glyph.layers[layerName + "^Layout Layer"] = Layer(
+        glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
+    )
+
+    with pytest.raises(
+        NotImplementedError,
+        match="A brace layer can only have an additional source layer named 'background'",
+    ):
+        await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
+
+
 expectedSkewErrors = [
     # skewValue, expectedErrorMatch
     [20, "Does not support skewing of components"],

@@ -873,6 +873,13 @@ def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMa
             fontraLayerToGSLayer(layer, gsLayer.background)
             continue
 
+        if "^" in layerName and glyphSourceLayerName not in gsMasterIdToNameMapping:
+            # This is a fundamental difference between Fontra and Glyphs. Therefore raise error.
+            raise NotImplementedError(
+                "GlyphsApp Backend: "
+                "A brace layer can only have an additional source layer named 'background'."
+            )
+
         gsLayerId = layer.customData.get("com.glyphsapp.layer.layerId")
         gsLayer = gsGlyph.layers[gsLayerId]
 
