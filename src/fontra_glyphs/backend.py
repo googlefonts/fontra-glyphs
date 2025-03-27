@@ -567,12 +567,6 @@ class GlyphsBackend:
                 fontraGlyphAxesToGSLayerSmartComponentPoleMapping(
                     variableGlyph.axes, gsLayer, glyphLocation
                 )
-
-                gsLayer.smartComponentPoleMapping = {
-                    axisName: pole
-                    for axisName, pole in gsLayer.smartComponentPoleMapping.items()
-                    if axisName in defaultGlyphLocation
-                }
             else:
                 # gsLayer does not exist – create new layer:
                 gsLayer, gsFontLocation = setupGSLayer(
