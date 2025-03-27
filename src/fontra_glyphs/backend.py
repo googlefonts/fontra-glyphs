@@ -491,12 +491,12 @@ class GlyphsBackend:
             for layerName, layer in variableGlyph.layers.items()
         }
 
-        for gsLayerId in [gsLayer.layerId for gsLayer in gsGlyph.layers]:
-            if gsLayerId in layerIdsInUse:
+        for gsLayer in list(gsGlyph.layers):
+            if gsLayer.layerId in layerIdsInUse:
                 # This layer will be modified later.
                 continue
             # Removing layer:
-            del gsGlyph.layers[gsLayerId]
+            del gsGlyph.layers[gsLayer.layerId]
 
         fontraGlyphAxesToGSSmartComponentAxes(variableGlyph, gsGlyph)
         isSmartCompGlyph = len(gsGlyph.smartComponentAxes) > 0
