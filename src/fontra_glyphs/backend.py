@@ -30,7 +30,12 @@ from fontra.core.classes import (
 from fontra.core.discretevariationmodel import findNearestLocationIndex
 from fontra.core.path import PackedPathPointPen
 from fontra.core.protocols import WritableFontBackend
-from fontra.core.varutils import locationToTuple, makeDenseLocation, makeSparseLocation
+from fontra.core.varutils import (
+    locationToTuple,
+    makeDenseLocation,
+    makeSparseLocation,
+    mapAxesFromUserSpaceToSourceSpace,
+)
 from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.misc.transform import DecomposedTransform
 from fontTools.ufoLib.filenames import userNameToFileName
@@ -171,12 +176,10 @@ class GlyphsBackend:
             axes.append(axis)
         self.axes = axes
 
-        self.defaultLocation = {}
-        for axis in self.axes:
-            self.defaultLocation[axis.name] = next(
-                (v for k, v in axis.mapping if k == axis.defaultValue),
-                axis.defaultValue,
-            )
+        axesSourceSpace = mapAxesFromUserSpaceToSourceSpace(self.axes)
+        self.defaultLocation = {
+            axis.name: axis.defaultValue for axis in axesSourceSpace
+        }
 
     @staticmethod
     def _loadFiles(path: PathLike) -> tuple[dict[str, Any], list[Any]]:
