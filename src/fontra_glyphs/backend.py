@@ -357,12 +357,14 @@ class GlyphsBackend:
                     )
                 )
                 bgSeparator = "^"
+
             layers[layerName] = gsLayerToFontraLayer(
                 gsLayer,
                 self.axisNames,
                 gsLayer.width,
                 gsLayer.layerId if layerName != gsLayer.layerId else None,
             )
+
             if gsLayer.hasBackground:
                 layers[layerName + bgSeparator + "background"] = gsLayerToFontraLayer(
                     gsLayer.background, self.axisNames, gsLayer.width, gsLayer.layerId
