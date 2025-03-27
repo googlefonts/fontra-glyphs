@@ -11,7 +11,6 @@ from test_backend import expectedGlyphMap
 
 from fontra_glyphs.utils import (
     convertMatchesToTuples,
-    getAssociatedMasterId,
     getSourceFromLayerName,
     matchTreeFont,
     openstepPlistDumps,
@@ -122,25 +121,6 @@ async def test_splitLocation(
     )
     assert fontLocation == expectedFontLocation
     assert glyphLocation == expectedGlyphLocation
-
-
-expectedAssociatedMasterId = [
-    # gsLocation, associatedMasterId
-    [[14, 155, 900], "MasterID-TextWideBold"],
-    [[14, 155, 100], "MasterID-TextWideLight"],
-    [[14, 55, 900], "MasterID-TextCondBold"],
-    [[14, 55, 110], "MasterID-TextCondLight"],
-    [[55, 155, 900], "MasterID-PosterWideBold"],
-    [[55, 155, 100], "MasterID-PosterWideLight"],
-    [[55, 55, 900], "MasterID-PosterCondBold"],
-    [[55, 55, 110], "MasterID-PosterCondLight"],
-    [[30, 100, 399], "MasterID-TextCondRegular"],
-]
-
-
-@pytest.mark.parametrize("gsLocation,expected", expectedAssociatedMasterId)
-def test_getAssociatedMasterId(testGSFontWW, gsLocation, expected):
-    assert getAssociatedMasterId(testGSFontWW, gsLocation) == expected
 
 
 @pytest.mark.parametrize("path", [glyphs3Path])

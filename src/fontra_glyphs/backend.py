@@ -27,14 +27,14 @@ from fontra.core.classes import (
     StaticGlyph,
     VariableGlyph,
 )
+from fontra.core.discretevariationmodel import findNearestLocationIndex
 from fontra.core.path import PackedPathPointPen
 from fontra.core.protocols import WritableFontBackend
-from fontra.core.varutils import makeDenseLocation, makeSparseLocation
+from fontra.core.varutils import locationToTuple, makeDenseLocation, makeSparseLocation
 from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.misc.transform import DecomposedTransform
 from fontTools.ufoLib.filenames import userNameToFileName
 from glyphsLib.builder.axes import (
-    AxisDefinitionFactory,
     get_axis_definitions,
     get_regular_master,
     to_designspace_axes,
@@ -44,7 +44,6 @@ from glyphsLib.types import Transform as GSTransform
 
 from .utils import (
     convertMatchesToTuples,
-    getAssociatedMasterId,
     matchTreeFont,
     matchTreeGlyph,
     openstepPlistDumps,
@@ -141,12 +140,14 @@ class GlyphsBackend:
         self.axisNames = {axis.name for axis in dsAxes}
 
         self.locationByMasterID = {}
+        self.masterIDByLocationTuple = {}
         for master in self.gsFont.masters:
             location = {}
             for axisDef in get_axis_definitions(self.gsFont):
                 if axisDef.name in self.axisNames:
                     location[axisDef.name] = axisDef.get_design_loc(master)
             self.locationByMasterID[master.id] = location
+            self.masterIDByLocationTuple[locationToTuple(location)] = master.id
 
         self.glyphMap, self.kerningGroups = _readGlyphMapAndKerningGroups(
             rawGlyphsData,
@@ -480,7 +481,6 @@ class GlyphsBackend:
         defaultGlyphLocation = {
             axis.name: axis.defaultValue for axis in variableGlyph.axes
         }
-        gsMasterAxesToIdMapping = {tuple(m.axes): m.id for m in self.gsFont.masters}
         gsMasterIdToNameMapping = {m.id: m.name for m in self.gsFont.masters}
         # Convert Fontra variableGlyph to GlyphsApp glyph
         layerIdsInUse = {
@@ -571,10 +571,12 @@ class GlyphsBackend:
                 fontraLayerToGSLayer(layer, gsLayer)
             else:
                 # gsLayer does not exist – create new layer:
-                gsLayer, gsFontLocation = setupGSLayer(
-                    gsGlyph, self.gsFont.axes, fontLocation
+                gsLayer = glyphsLib.classes.GSLayer()
+                gsLayer.parent = gsGlyph
+
+                masterId = self.masterIDByLocationTuple.get(
+                    locationToTuple(fontLocation)
                 )
-                masterId = gsMasterAxesToIdMapping.get(tuple(gsFontLocation))
 
                 fontraGlyphAxesToGSLayerSmartComponentPoleMapping(
                     variableGlyph.axes, gsLayer, glyphLocation
@@ -606,7 +608,7 @@ class GlyphsBackend:
                 gsLayer.associatedMasterId = (
                     associatedMasterId
                     if associatedMasterId
-                    else getAssociatedMasterId(self.gsFont, gsFontLocation)
+                    else self._findNearestMasterId(fontLocation)
                 )
 
                 if (
@@ -615,8 +617,10 @@ class GlyphsBackend:
                     and not layerNameDescriptor
                 ):
                     # This is an intermediate layer
-                    gsLayer.name = "{" + ",".join(str(x) for x in gsFontLocation) + "}"
-                    gsLayer.attributes["coordinates"] = gsFontLocation
+                    gsLayer.name = (
+                        "{" + ",".join(str(x) for x in fontLocation.values()) + "}"
+                    )
+                    gsLayer.attributes["coordinates"] = list(fontLocation.values())
 
                 if glyphSource.name:
                     gsLayer.userData["xyz.fontra.source-name"] = glyphSource.name
@@ -648,26 +652,14 @@ class GlyphsBackend:
         out = openstepPlistDumps(rawFontData)
         self.gsFilePath.write_text(out)
 
+    def _findNearestMasterId(self, fontLocation):
+        masterIDs = list(self.locationByMasterID)
+        locations = list(self.locationByMasterID.values())
+        index = findNearestLocationIndex(fontLocation, locations)
+        return masterIDs[index]
+
     async def aclose(self) -> None:
         pass
-
-
-def setupGSLayer(gsGlyph, axes, fontLocation):
-    gsLayer = glyphsLib.classes.GSLayer()
-    gsLayer.parent = gsGlyph
-
-    gsFontLocation = []
-    for axis in axes:
-        if axis.name in fontLocation:
-            gsFontLocation.append(fontLocation[axis.name])
-        else:
-            # This 'else' is necessary for GlyphsApp 2 files, only.
-            # 'Weight' and 'Width' are always there,
-            # even if there is no axis specified for it.
-            factory = AxisDefinitionFactory()
-            axis_def = factory.get(axis.axisTag, axis.name)
-            gsFontLocation.append(axis_def.default_user_loc)
-    return gsLayer, gsFontLocation
 
 
 class GlyphsPackageBackend(GlyphsBackend):
