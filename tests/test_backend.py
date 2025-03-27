@@ -282,7 +282,7 @@ async def test_extendSmartGlyphWithIntermedaiteLayer(writableTestFont):
     glyph.layers[layerName] = Layer(glyph=StaticGlyph(xAdvance=100))
 
     with pytest.raises(
-        GlyphsBackendError,
+        NotImplementedError,
         match="Intermediate layers within smart glyphs are not yet implemented",
     ):
         await writableTestFont.putGlyph(glyphName, glyph, [])
@@ -483,7 +483,7 @@ async def test_addLayerWithoutSource(writableTestFont):
     )
 
     with pytest.raises(
-        GlyphsBackendError, match="Layer without glyph source is not yet implemented"
+        GlyphsBackendError, match="Layer without glyph source is not supported"
     ):
         await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
 
