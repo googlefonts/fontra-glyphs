@@ -541,9 +541,6 @@ class GlyphsBackend:
                     "A brace layer can only have an additional source layer named 'background'."
                 )
 
-            gsLayerId = layer.customData.get("com.glyphsapp.layer.layerId") or layerName
-            gsLayer = gsGlyph.layers[gsLayerId]
-
             fontLocation, glyphLocation = splitLocation(
                 glyphSource.location, variableGlyph.axes
             )
@@ -558,15 +555,18 @@ class GlyphsBackend:
             fontLocation = makeDenseLocation(fontLocation, self.defaultLocation)
             glyphLocation = makeDenseLocation(glyphLocation, defaultGlyphLocation)
 
+            gsLayerId = layer.customData.get("com.glyphsapp.layer.layerId") or layerName
+            gsLayer = gsGlyph.layers[gsLayerId]
+
             if gsLayer is not None:
-                # gsLayer exists – modify existing gsLayer:
-                fontraLayerToGSLayer(layer, gsLayer)
                 # It might be, that we added a new glyph axis within Fontra
                 # for an existing smart comp glyph, in that case we need to add
                 # the new axis to gsLayer.smartComponentPoleMapping.
                 fontraGlyphAxesToGSLayerSmartComponentPoleMapping(
                     variableGlyph.axes, gsLayer, glyphLocation
                 )
+                # gsLayer exists – modify existing gsLayer:
+                fontraLayerToGSLayer(layer, gsLayer)
             else:
                 # gsLayer does not exist – create new layer:
                 gsLayer, gsFontLocation = setupGSLayer(
