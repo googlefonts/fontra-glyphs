@@ -478,8 +478,8 @@ class GlyphsBackend:
         defaultGlyphLocation = {
             axis.name: axis.defaultValue for axis in variableGlyph.axes
         }
-        gsMasterAxesToIdMapping = {tuple(m.axes): m.id for m in gsGlyph.parent.masters}
-        gsMasterIdToNameMapping = {m.id: m.name for m in gsGlyph.parent.masters}
+        gsMasterAxesToIdMapping = {tuple(m.axes): m.id for m in self.gsFont.masters}
+        gsMasterIdToNameMapping = {m.id: m.name for m in self.gsFont.masters}
         # Convert Fontra variableGlyph to GlyphsApp glyph
         layerIdsInUse = {
             layer.customData.get("com.glyphsapp.layer.layerId") or layerName
@@ -575,26 +575,14 @@ class GlyphsBackend:
                 }
             else:
                 # gsLayer does not exist – create new layer:
-                gsLayer = glyphsLib.classes.GSLayer()
-                gsLayer.parent = gsGlyph
-
-                gsFontLocation = []
-                for axis in gsGlyph.parent.axes:
-                    if axis.name in fontLocation:
-                        gsFontLocation.append(fontLocation[axis.name])
-                    else:
-                        # This 'else' is necessary for GlyphsApp 2 files, only.
-                        # 'Weight' and 'Width' are always there,
-                        # even if there is no axis specified for it.
-                        factory = AxisDefinitionFactory()
-                        axis_def = factory.get(axis.axisTag, axis.name)
-                        gsFontLocation.append(axis_def.default_user_loc)
+                gsLayer, gsFontLocation = setupGSLayer(
+                    gsGlyph, self.gsFont.axes, fontLocation
+                )
+                masterId = gsMasterAxesToIdMapping.get(tuple(gsFontLocation))
 
                 fontraGlyphAxesToGSLayerSmartComponentPoleMapping(
                     variableGlyph.axes, gsLayer, glyphLocation
                 )
-
-                masterId = gsMasterAxesToIdMapping.get(tuple(gsFontLocation))
 
                 isDefaultLayer = False
                 # It is not enough to check if it has a masterId, because in case of a
@@ -622,7 +610,7 @@ class GlyphsBackend:
                 gsLayer.associatedMasterId = (
                     associatedMasterId
                     if associatedMasterId
-                    else getAssociatedMasterId(gsGlyph.parent, gsFontLocation)
+                    else getAssociatedMasterId(self.gsFont, gsFontLocation)
                 )
 
                 if (
@@ -666,6 +654,24 @@ class GlyphsBackend:
 
     async def aclose(self) -> None:
         pass
+
+
+def setupGSLayer(gsGlyph, axes, fontLocation):
+    gsLayer = glyphsLib.classes.GSLayer()
+    gsLayer.parent = gsGlyph
+
+    gsFontLocation = []
+    for axis in axes:
+        if axis.name in fontLocation:
+            gsFontLocation.append(fontLocation[axis.name])
+        else:
+            # This 'else' is necessary for GlyphsApp 2 files, only.
+            # 'Weight' and 'Width' are always there,
+            # even if there is no axis specified for it.
+            factory = AxisDefinitionFactory()
+            axis_def = factory.get(axis.axisTag, axis.name)
+            gsFontLocation.append(axis_def.default_user_loc)
+    return gsLayer, gsFontLocation
 
 
 class GlyphsPackageBackend(GlyphsBackend):
