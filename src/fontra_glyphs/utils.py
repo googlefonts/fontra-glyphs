@@ -44,23 +44,6 @@ def splitLocation(location, glyphAxes):
     return fontLocation, glyphLocation
 
 
-def getAssociatedMasterId(gsFont, gsLocation):
-    # Best guess for associatedMasterId
-    closestMasterID = gsFont.masters[0].id  # default first master.
-    closestDistance = float("inf")
-    for gsMaster in gsFont.masters:
-        distance = sum(
-            abs(gsMaster.axes[i] - gsLocation[i])
-            for i in range(len(gsMaster.axes))
-            if i < len(gsLocation)
-        )
-        if distance < closestDistance:
-            closestDistance = distance
-            closestMasterID = gsMaster.id
-
-    return closestMasterID
-
-
 LEAF = object()
 
 
