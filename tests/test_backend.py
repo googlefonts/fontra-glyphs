@@ -233,7 +233,7 @@ async def test_updateSourceName(writableTestFont):
     for i, source in enumerate(glyph.sources):
         source.name = f"source#{i}"
 
-    await writableTestFont.putGlyph(glyphName, glyph, [0x0041])
+    await writableTestFont.putGlyph(glyphName, glyph, [ord("a")])
 
     savedGlyph = await writableTestFont.getGlyph(glyphName)
     assert glyph == savedGlyph
