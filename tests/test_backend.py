@@ -226,6 +226,19 @@ async def test_updateGlyphCodePoints(writableTestFont):
     assert reopenedGlyphMap["A"] == [0x0041, 0x0061]
 
 
+async def test_updateSourceName(writableTestFont):
+    glyphName = "a"
+    glyph = await writableTestFont.getGlyph(glyphName)
+
+    source = glyph.sources[2]
+    assert "{" in source.name
+    source.name += "TEST"
+    await writableTestFont.putGlyph(glyphName, glyph, [0x0041])
+
+    savedGlyph = await writableTestFont.getGlyph(glyphName)
+    assert glyph == savedGlyph
+
+
 async def test_createNewGlyph(writableTestFont):
     glyphName = "a.ss02"
     glyph = VariableGlyph(name=glyphName)
