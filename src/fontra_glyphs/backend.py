@@ -576,6 +576,7 @@ class GlyphsBackend:
                 # gsLayer does not exist – create new layer:
                 gsLayer = glyphsLib.classes.GSLayer()
                 gsLayer.parent = gsGlyph
+                gsGlyph.layers.append(gsLayer)
 
                 masterId = self.masterIDByLocationTuple.get(
                     locationToTuple(fontLocation)
@@ -636,7 +637,6 @@ class GlyphsBackend:
                 )
 
                 fontraLayerToGSLayer(layer, gsLayer)
-                gsGlyph.layers.append(gsLayer)
 
         if nonSourceLayerNames:
             raise GlyphsBackendError(
