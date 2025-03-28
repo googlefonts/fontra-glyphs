@@ -163,19 +163,14 @@ async def test_roundtripGlyphsFile(tmpdir, path):
         compareFilesByLines(path, testFont.gsFilePath)
 
 
-def compareFilesByLines(path, path2):
-    lineIndex = 0
-    for orig_line in path.read_text().splitlines():
-        if "kernTop" in orig_line or "kernBottom" in orig_line:
-            # kernTop and kernBottom are not yet supported by glyphsLib.
-            # There it's expected, that these are missing. Skip these lines.
-            continue
-        if "rememberToMakeCoffee" in orig_line:
-            # It is expected, that this is not written brack to the glyphs file.
-            continue
-        new_line = path2.read_text().splitlines()[lineIndex]
-        assert orig_line == new_line
-        lineIndex += 1
+def compareFilesByLines(pathA, pathB):
+    linesA = pathA.read_text().splitlines()
+    linesB = pathB.read_text().splitlines()
+
+    skipWords = ["kernTop", "kernBottom", "rememberToMakeCoffee"]
+    linesA = [line for line in linesA if not any(w in line for w in skipWords)]
+
+    assert linesA == linesB
 
 
 def getGlyhphsPackageFilePath(path, packageFile):
