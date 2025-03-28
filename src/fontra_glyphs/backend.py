@@ -626,7 +626,16 @@ class GlyphsBackend:
                     )
                     gsLayer.attributes["coordinates"] = list(fontLocation.values())
 
-                if glyphSource.name:
+                shouldStoreFontraSourceName = True
+                if " / " in glyphSource.name:
+                    masterName, sourceName = glyphSource.name.split(" / ", 1)
+                    if masterName == gsMasterIdToNameMapping.get(
+                        gsLayer.associatedMasterId
+                    ):
+                        gsLayer.name = sourceName
+                        shouldStoreFontraSourceName = False
+
+                if glyphSource.name and shouldStoreFontraSourceName:
                     gsLayer.userData["xyz.fontra.source-name"] = glyphSource.name
                 elif gsLayer.userData["xyz.fontra.source-name"]:
                     del gsLayer.userData["xyz.fontra.source-name"]
