@@ -515,6 +515,7 @@ class GlyphsBackend:
 
             layerNameDescriptor = None
             associatedMasterId = None
+            glyphSourceLayerName = layerName
             if "^" in layerName:
                 glyphSourceLayerName, layerNameDescriptor = layerName.split("^", 1)
                 associatedMasterId = glyphSourceLayerName
@@ -563,89 +564,82 @@ class GlyphsBackend:
             gsLayerId = layer.customData.get("com.glyphsapp.layer.layerId") or layerName
             gsLayer = gsGlyph.layers[gsLayerId]
 
-            if gsLayer is not None:
-                # It might be, that we added a new glyph axis within Fontra
-                # for an existing smart comp glyph, in that case we need to add
-                # the new axis to gsLayer.smartComponentPoleMapping.
-                fontraGlyphAxesToGSLayerSmartComponentPoleMapping(
-                    variableGlyph.axes, gsLayer, glyphLocation
-                )
-                # gsLayer exists – modify existing gsLayer:
-                fontraLayerToGSLayer(layer, gsLayer)
-            else:
+            if gsLayer is None:
                 # gsLayer does not exist – create new layer:
                 gsLayer = glyphsLib.classes.GSLayer()
                 gsLayer.parent = gsGlyph
                 gsGlyph.layers.append(gsLayer)
 
-                masterId = self.masterIDByLocationTuple.get(
-                    locationToTuple(fontLocation)
+            masterId = self.masterIDByLocationTuple.get(locationToTuple(fontLocation))
+
+            fontraGlyphAxesToGSLayerSmartComponentPoleMapping(
+                variableGlyph.axes, gsLayer, glyphLocation
+            )
+
+            isDefaultLayer = False
+            # It is not enough to check if it has a masterId, because in case of a
+            # smart component, the layer for each glyph axis has the same location
+            # as the master layer.
+            if masterId:
+                if layerNameDescriptor:
+                    isDefaultLayer = False
+                elif not isSmartCompGlyph:
+                    isDefaultLayer = True
+                elif defaultGlyphLocation == glyphLocation:
+                    isDefaultLayer = True
+
+            newLayerName = glyphSource.name
+            if isDefaultLayer:
+                newLayerName = gsMasterIdToNameMapping.get(masterId)
+            elif layerNameDescriptor:
+                newLayerName = layerNameDescriptor
+
+            gsLayer.name = newLayerName
+            gsLayer.layerId = gsLayerId if gsLayerId else str(uuid.uuid4()).upper()
+            if layerName != gsLayer.layerId:
+                layer.customData["com.glyphsapp.layer.layerId"] = gsLayer.layerId
+
+            gsLayer.associatedMasterId = (
+                associatedMasterId
+                if associatedMasterId
+                else self._findNearestMasterId(fontLocation)
+            )
+
+            if not isDefaultLayer and not isSmartCompGlyph and not layerNameDescriptor:
+                # This is an intermediate layer
+                gsLayer.name = (
+                    "{" + ",".join(str(x) for x in fontLocation.values()) + "}"
                 )
+                gsLayer.attributes["coordinates"] = list(fontLocation.values())
 
-                fontraGlyphAxesToGSLayerSmartComponentPoleMapping(
-                    variableGlyph.axes, gsLayer, glyphLocation
-                )
+            associatedMasterName = gsMasterIdToNameMapping.get(
+                gsLayer.associatedMasterId
+            )
+            shouldStoreFontraSourceName = glyphSource.name != associatedMasterName
+            if " / " in glyphSource.name:
+                masterName, sourceName = glyphSource.name.split(" / ", 1)
+                if masterName == associatedMasterName:
+                    gsLayer.name = sourceName
+                    shouldStoreFontraSourceName = False
 
-                isDefaultLayer = False
-                # It is not enough to check if it has a masterId, because in case of a
-                # smart component, the layer for each glyph axis has the same location
-                # as the master layer.
-                if masterId:
-                    if layerNameDescriptor:
-                        isDefaultLayer = False
-                    elif not isSmartCompGlyph:
-                        isDefaultLayer = True
-                    elif defaultGlyphLocation == glyphLocation:
-                        isDefaultLayer = True
+            if glyphSource.name and shouldStoreFontraSourceName:
+                gsLayer.userData["xyz.fontra.source-name"] = glyphSource.name
+            elif gsLayer.userData["xyz.fontra.source-name"]:
+                del gsLayer.userData["xyz.fontra.source-name"]
 
-                newLayerName = glyphSource.name
-                if isDefaultLayer:
-                    newLayerName = gsMasterIdToNameMapping.get(masterId)
-                elif layerNameDescriptor:
-                    newLayerName = layerNameDescriptor
-
-                gsLayer.name = newLayerName
-                gsLayer.layerId = gsLayerId if gsLayerId else str(uuid.uuid4()).upper()
-                if layerName != gsLayer.layerId:
-                    layer.customData["com.glyphsapp.layer.layerId"] = gsLayer.layerId
-
-                gsLayer.associatedMasterId = (
-                    associatedMasterId
-                    if associatedMasterId
-                    else self._findNearestMasterId(fontLocation)
-                )
-
-                if (
-                    not isDefaultLayer
-                    and not isSmartCompGlyph
-                    and not layerNameDescriptor
-                ):
-                    # This is an intermediate layer
-                    gsLayer.name = (
-                        "{" + ",".join(str(x) for x in fontLocation.values()) + "}"
-                    )
-                    gsLayer.attributes["coordinates"] = list(fontLocation.values())
-
-                shouldStoreFontraSourceName = True
-                if " / " in glyphSource.name:
-                    masterName, sourceName = glyphSource.name.split(" / ", 1)
-                    if masterName == gsMasterIdToNameMapping.get(
-                        gsLayer.associatedMasterId
-                    ):
-                        gsLayer.name = sourceName
-                        shouldStoreFontraSourceName = False
-
-                if glyphSource.name and shouldStoreFontraSourceName:
-                    gsLayer.userData["xyz.fontra.source-name"] = glyphSource.name
-                elif gsLayer.userData["xyz.fontra.source-name"]:
-                    del gsLayer.userData["xyz.fontra.source-name"]
+            if (
+                glyphSourceLayerName != gsLayer.layerId
+                and glyphSourceLayerName != associatedMasterId
+            ):
                 gsLayer.userData["xyz.fontra.layer-name"] = layerName
+            elif gsLayer.userData["xyz.fontra.layer-name"]:
+                del gsLayer.userData["xyz.fontra.layer-name"]
 
-                raiseErrorIfIntermediateLayerInSmartComponent(
-                    variableGlyph, glyphLocation, masterId
-                )
+            raiseErrorIfIntermediateLayerInSmartComponent(
+                variableGlyph, glyphLocation, masterId
+            )
 
-                fontraLayerToGSLayer(layer, gsLayer)
+            fontraLayerToGSLayer(layer, gsLayer)
 
         if nonSourceLayerNames:
             raise GlyphsBackendError(
