@@ -445,7 +445,9 @@ async def test_addBackgroundLayerToLayer(writableTestFont):
 
     # add layout layer:
     glyph.layers[sourceNameMappingToIDs.get("Regular") + "^Testing"] = Layer(
-        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs.get("Regular")].glyph)
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs.get("Regular")].glyph),
+        # Add explicit layerId for perfect round tripping
+        customData={"com.glyphsapp.layer.layerId": str(uuid.uuid4()).upper()},
     )
 
     # add background to layout layer:
@@ -468,7 +470,9 @@ async def test_addLayoutLayer(writableTestFont):
 
     # add layout layer:
     glyph.layers[sourceNameMappingToIDs.get("Regular") + "^Layout Layer"] = Layer(
-        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs["Bold"]].glyph)
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs["Bold"]].glyph),
+        # Add explicit layerId for perfect round tripping
+        customData={"com.glyphsapp.layer.layerId": str(uuid.uuid4()).upper()},
     )
 
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
