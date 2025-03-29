@@ -5,6 +5,7 @@ import uuid
 from collections import defaultdict
 from copy import deepcopy
 from os import PathLike
+from types import SimpleNamespace
 from typing import Any
 
 import glyphsLib
@@ -500,29 +501,9 @@ class GlyphsBackend:
         layerIdsInUse = set()
 
         for glyphSource in variableGlyph.sources:
-            fontLocation, glyphLocation = self._getSourceLocations(
-                glyphSource, variableGlyph.axes, defaultGlyphLocation
+            sourceInfo = self._setupSourceInfo(
+                glyphSource, sourceLayers, variableGlyph, defaultGlyphLocation
             )
-
-            masterId = self.masterIDByLocationTuple.get(locationToTuple(fontLocation))
-            masterName = (
-                self.gsFont.masters[masterId].name if masterId is not None else None
-            )
-            isBraceLayer = masterId is None
-            isSmartComponentLayer = glyphLocation != defaultGlyphLocation
-
-            if isBraceLayer and isSmartCompGlyph:
-                raise NotImplementedError(
-                    "GlyphsApp Backend: Brace layers "
-                    "within smart glyphs are not yet implemented."
-                )
-
-            associatedMasterId = (
-                masterId
-                or glyphSource.customData.get("com.glyphsapp.layer.associatedMasterId")
-                or self._findNearestMasterId(fontLocation)
-            )
-            associatedMasterName = self.gsFont.masters[associatedMasterId].name
 
             sourceLayerNames = [glyphSource.layerName] + sorted(
                 sourceLayers[glyphSource.layerName]
@@ -531,22 +512,26 @@ class GlyphsBackend:
             for layerName in sourceLayerNames:
                 assert layerName in variableGlyph.layers
                 isMainLayer = layerName == glyphSource.layerName
-                shouldStoreFontraSourceName = glyphSource.name != associatedMasterName
+                shouldStoreFontraSourceName = (
+                    glyphSource.name != sourceInfo.associatedMasterName
+                )
                 shouldStoreFontraLayerName = True
                 if isMainLayer:
-                    if isSmartComponentLayer:
+                    if sourceInfo.isSmartComponentLayer:
                         gsLayerName = glyphSource.name
                         gsLayerId = getLayerId(variableGlyph, layerName, None)
                     else:
-                        gsLayerId = getLayerId(variableGlyph, layerName, masterId)
+                        gsLayerId = getLayerId(
+                            variableGlyph, layerName, sourceInfo.masterId
+                        )
                         gsLayerName = (
-                            getBraceLayerName(fontLocation)
-                            if isBraceLayer
-                            else masterName
+                            getBraceLayerName(sourceInfo.fontLocation)
+                            if sourceInfo.isBraceLayer
+                            else sourceInfo.masterName
                         )
                     if " / " in glyphSource.name:
                         masterName, sourceName = glyphSource.name.split(" / ", 1)
-                        if masterName == associatedMasterName:
+                        if masterName == sourceInfo.associatedMasterName:
                             gsLayerName = sourceName
                             shouldStoreFontraSourceName = False
                 else:
@@ -561,14 +546,18 @@ class GlyphsBackend:
                         gsLayerId = getLayerId(
                             variableGlyph,
                             baseLayerName,
-                            masterId if localLayerName == "background" else None,
+                            (
+                                sourceInfo.masterId
+                                if localLayerName == "background"
+                                else None
+                            ),
                         )
                     else:
                         gsLayerName = localLayerName
                         gsLayerId = getLayerId(variableGlyph, layerName, None)
                         shouldStoreFontraLayerName = False
                         if gsLayerId not in gsGlyph.layers:
-                            if isBraceLayer:
+                            if sourceInfo.isBraceLayer:
                                 raise GlyphsBackendError(
                                     "A brace layer can only have an additional source "
                                     "layer named 'background'"
@@ -580,10 +569,10 @@ class GlyphsBackend:
                 if gsLayerName is not None:
                     assert gsLayer.layerId == gsLayerId
                     gsLayer.name = gsLayerName
-                    gsLayer.associatedMasterId = associatedMasterId
+                    gsLayer.associatedMasterId = sourceInfo.associatedMasterId
                     if isMainLayer and isSmartCompGlyph:
                         gsLayer.smartComponentPoleMapping = setupPoleMapping(
-                            variableGlyph.axes, glyphLocation
+                            variableGlyph.axes, sourceInfo.glyphLocation
                         )
                     targetLayer = gsLayer
 
@@ -606,12 +595,52 @@ class GlyphsBackend:
 
                 layer = variableGlyph.layers[layerName]
                 fontraLayerToGSLayer(layer, targetLayer)
-                if isBraceLayer:
-                    gsLayer.attributes["coordinates"] = list(fontLocation.values())
+                if sourceInfo.isBraceLayer:
+                    gsLayer.attributes["coordinates"] = list(
+                        sourceInfo.fontLocation.values()
+                    )
 
         for gsLayer in list(gsGlyph.layers):
             if gsLayer.layerId not in layerIdsInUse:
                 del gsGlyph.layers[gsLayer.layerId]
+
+    def _setupSourceInfo(
+        self, glyphSource, sourceLayers, variableGlyph, defaultGlyphLocation
+    ):
+        fontLocation, glyphLocation = self._getSourceLocations(
+            glyphSource, variableGlyph.axes, defaultGlyphLocation
+        )
+
+        masterId = self.masterIDByLocationTuple.get(locationToTuple(fontLocation))
+        masterName = (
+            self.gsFont.masters[masterId].name if masterId is not None else None
+        )
+        isBraceLayer = masterId is None
+        isSmartComponentLayer = glyphLocation != defaultGlyphLocation
+
+        if isBraceLayer and variableGlyph.axes:
+            raise NotImplementedError(
+                "GlyphsApp Backend: Brace layers "
+                "within smart glyphs are not yet implemented."
+            )
+
+        associatedMasterId = (
+            masterId
+            or glyphSource.customData.get("com.glyphsapp.layer.associatedMasterId")
+            or self._findNearestMasterId(fontLocation)
+        )
+        associatedMasterName = self.gsFont.masters[associatedMasterId].name
+
+        return SimpleNamespace(
+            fontLocation=fontLocation,
+            glyphLocation=glyphLocation,
+            masterId=masterId,
+            masterName=masterName,
+            isBraceLayer=isBraceLayer,
+            isSmartComponentLayer=isSmartComponentLayer,
+            associatedMasterId=associatedMasterId,
+            associatedMasterName=associatedMasterName,
+        )
 
     def _getSourceLocations(self, glyphSource, glyphAxes, defaultGlyphLocation):
         location = self._getSourceLocation(glyphSource)
