@@ -574,13 +574,7 @@ class GlyphsBackend:
                                     "layer named 'background'"
                                 )
 
-                gsLayer = gsGlyph.layers[gsLayerId]
-                if gsLayer is None:
-                    gsLayer = glyphsLib.classes.GSLayer()
-                    gsLayer.layerId = gsLayerId
-                    gsLayer.parent = gsGlyph
-                    gsGlyph.layers.append(gsLayer)
-
+                gsLayer = getOrCreateGSLayer(gsGlyph, gsLayerId)
                 layerIdsInUse.add(gsLayerId)
 
                 if gsLayerName is not None:
@@ -699,6 +693,16 @@ def getLayerId(variableGlyph, layerName, suggestedLayerId):
             layerId = str(uuid.UUID(bytes=h[:16])).upper()
 
     return layerId
+
+
+def getOrCreateGSLayer(gsGlyph, gsLayerId):
+    gsLayer = gsGlyph.layers[gsLayerId]
+    if gsLayer is None:
+        gsLayer = glyphsLib.classes.GSLayer()
+        gsLayer.layerId = gsLayerId
+        gsLayer.parent = gsGlyph
+        gsGlyph.layers.append(gsLayer)
+    return gsLayer
 
 
 def isGlyphsUUID(maybeUUID):
