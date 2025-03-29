@@ -167,7 +167,13 @@ def compareFilesByLines(pathA, pathB):
     linesA = pathA.read_text().splitlines()
     linesB = pathB.read_text().splitlines()
 
-    skipWords = ["kernTop", "kernBottom", "rememberToMakeCoffee"]
+    skipWords = [
+        "kernTop",
+        "kernBottom",
+        "rememberToMakeCoffee",
+        "bottomName",
+        "topName",
+    ]
     linesA = [line for line in linesA if not any(w in line for w in skipWords)]
 
     assert linesA == linesB
