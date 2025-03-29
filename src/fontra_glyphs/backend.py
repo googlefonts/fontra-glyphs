@@ -513,7 +513,7 @@ class GlyphsBackend:
 
             if isBraceLayer and isSmartCompGlyph:
                 raise NotImplementedError(
-                    "GlyphsApp Backend: Intermediate layers "
+                    "GlyphsApp Backend: Brace layers "
                     "within smart glyphs are not yet implemented."
                 )
 
@@ -1094,9 +1094,14 @@ def fontraGlyphAxesToGSLayerSmartComponentPoleMapping(glyphAxes, gsLayer, locati
     # https://docu.glyphsapp.com/#GSLayer.smartComponentPoleMapping
     gsLayer.smartComponentPoleMapping = {}
     for axis in glyphAxes:
+        axisValue = location[axis.name]
+        if axisValue != axis.minValue and axisValue != axis.maxValue:
+            raise NotImplementedError(
+                "Intermediate layers within smart glyphs are not yet implemented"
+            )
         pole = (
             int(Pole.MIN)  # convert to int for Python <= 3.10
-            if axis.minValue == location[axis.name]
+            if axis.minValue == axisValue
             else int(Pole.MAX)  # convert to int for Python <= 3.10
         )
         # Set pole, only MIN or MAX possible.

@@ -285,7 +285,7 @@ async def test_createNewSmartGlyph(writableTestFont):
     assert glyph == savedGlyph
 
 
-async def test_extendSmartGlyphWithIntermediateLayer(writableTestFont):
+async def test_extendSmartGlyphWithIntermediateLayerOnFontAxis(writableTestFont):
     # This should fail, because not yet implemented.
     glyphName = "_part.shoulder"
     glyph = await writableTestFont.getGlyph(glyphName)
@@ -294,6 +294,28 @@ async def test_extendSmartGlyphWithIntermediateLayer(writableTestFont):
     glyph.sources.append(
         GlyphSource(
             name="Intermediate Layer", location={"Weight": 99}, layerName=layerName
+        )
+    )
+    glyph.layers[layerName] = Layer(glyph=StaticGlyph(xAdvance=100))
+
+    with pytest.raises(
+        NotImplementedError,
+        match="Brace layers within smart glyphs are not yet implemented",
+    ):
+        await writableTestFont.putGlyph(glyphName, glyph, [])
+
+
+async def test_extendSmartGlyphWithIntermediateLayerOnGlyphAxis(writableTestFont):
+    # This should fail, because not yet implemented.
+    glyphName = "_part.shoulder"
+    glyph = await writableTestFont.getGlyph(glyphName)
+
+    layerName = str(uuid.uuid4()).upper()
+    glyph.sources.append(
+        GlyphSource(
+            name="Intermediate Layer",
+            location={"shoulderWidth": 50},
+            layerName=layerName,
         )
     )
     glyph.layers[layerName] = Layer(glyph=StaticGlyph(xAdvance=100))
