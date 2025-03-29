@@ -511,66 +511,19 @@ class GlyphsBackend:
 
             for layerName in sourceLayerNames:
                 assert layerName in variableGlyph.layers
-                isMainLayer = layerName == glyphSource.layerName
-                shouldStoreFontraSourceName = (
-                    glyphSource.name != sourceInfo.associatedMasterName
+
+                layerInfo = setupLayerInfo(
+                    glyphSource, sourceInfo, layerName, variableGlyph, gsGlyph
                 )
-                shouldStoreFontraLayerName = True
-                if isMainLayer:
-                    if sourceInfo.isSmartComponentLayer:
-                        gsLayerName = glyphSource.name
-                        gsLayerId = getLayerId(variableGlyph, layerName, None)
-                    else:
-                        gsLayerId = getLayerId(
-                            variableGlyph, layerName, sourceInfo.masterId
-                        )
-                        gsLayerName = (
-                            getBraceLayerName(sourceInfo.fontLocation)
-                            if sourceInfo.isBraceLayer
-                            else sourceInfo.masterName
-                        )
-                    if " / " in glyphSource.name:
-                        masterName, sourceName = glyphSource.name.split(" / ", 1)
-                        if masterName == sourceInfo.associatedMasterName:
-                            gsLayerName = sourceName
-                            shouldStoreFontraSourceName = False
-                else:
-                    _, localLayerName = layerName.split("^", 1)
-                    if localLayerName == "background" or localLayerName.endswith(
-                        "/background"
-                    ):
-                        baseLayerName = layerName[
-                            :-11
-                        ]  # minus "^background" or "/background"
-                        gsLayerName = None
-                        gsLayerId = getLayerId(
-                            variableGlyph,
-                            baseLayerName,
-                            (
-                                sourceInfo.masterId
-                                if localLayerName == "background"
-                                else None
-                            ),
-                        )
-                    else:
-                        gsLayerName = localLayerName
-                        gsLayerId = getLayerId(variableGlyph, layerName, None)
-                        shouldStoreFontraLayerName = False
-                        if gsLayerId not in gsGlyph.layers:
-                            if sourceInfo.isBraceLayer:
-                                raise GlyphsBackendError(
-                                    "A brace layer can only have an additional source "
-                                    "layer named 'background'"
-                                )
 
-                gsLayer = getOrCreateGSLayer(gsGlyph, gsLayerId)
-                layerIdsInUse.add(gsLayerId)
+                gsLayer = getOrCreateGSLayer(gsGlyph, layerInfo.gsLayerId)
+                layerIdsInUse.add(layerInfo.gsLayerId)
 
-                if gsLayerName is not None:
-                    assert gsLayer.layerId == gsLayerId
-                    gsLayer.name = gsLayerName
+                if layerInfo.gsLayerName is not None:
+                    assert gsLayer.layerId == layerInfo.gsLayerId
+                    gsLayer.name = layerInfo.gsLayerName
                     gsLayer.associatedMasterId = sourceInfo.associatedMasterId
-                    if isMainLayer and isSmartCompGlyph:
+                    if layerInfo.isMainLayer and isSmartCompGlyph:
                         gsLayer.smartComponentPoleMapping = setupPoleMapping(
                             variableGlyph.axes, sourceInfo.glyphLocation
                         )
@@ -580,14 +533,15 @@ class GlyphsBackend:
                         gsLayer.userData,
                         "xyz.fontra.layer-name",
                         layerName,
-                        layerName != gsLayerId and shouldStoreFontraLayerName,
+                        layerName != layerInfo.gsLayerId
+                        and layerInfo.shouldStoreFontraLayerName,
                     )
 
                     storeInDict(
                         gsLayer.userData,
                         "xyz.fontra.source-name",
                         glyphSource.name,
-                        glyphSource.name and shouldStoreFontraSourceName,
+                        glyphSource.name and layerInfo.shouldStoreFontraSourceName,
                     )
                 else:
                     # background layer
@@ -704,6 +658,57 @@ def getSourceLayerNames(variableGlyph):
 
 def getDefaultLocation(axes):
     return {axis.name: axis.defaultValue for axis in axes}
+
+
+def setupLayerInfo(glyphSource, sourceInfo, layerName, variableGlyph, gsGlyph):
+    isMainLayer = layerName == glyphSource.layerName
+    shouldStoreFontraSourceName = glyphSource.name != sourceInfo.associatedMasterName
+    shouldStoreFontraLayerName = True
+
+    if isMainLayer:
+        if sourceInfo.isSmartComponentLayer:
+            gsLayerName = glyphSource.name
+            gsLayerId = getLayerId(variableGlyph, layerName, None)
+        else:
+            gsLayerId = getLayerId(variableGlyph, layerName, sourceInfo.masterId)
+            gsLayerName = (
+                getBraceLayerName(sourceInfo.fontLocation)
+                if sourceInfo.isBraceLayer
+                else sourceInfo.masterName
+            )
+        if " / " in glyphSource.name:
+            masterName, sourceName = glyphSource.name.split(" / ", 1)
+            if masterName == sourceInfo.associatedMasterName:
+                gsLayerName = sourceName
+                shouldStoreFontraSourceName = False
+    else:
+        _, localLayerName = layerName.split("^", 1)
+        if localLayerName == "background" or localLayerName.endswith("/background"):
+            baseLayerName = layerName[:-11]  # minus "^background" or "/background"
+            gsLayerName = None
+            gsLayerId = getLayerId(
+                variableGlyph,
+                baseLayerName,
+                (sourceInfo.masterId if localLayerName == "background" else None),
+            )
+        else:
+            gsLayerName = localLayerName
+            gsLayerId = getLayerId(variableGlyph, layerName, None)
+            shouldStoreFontraLayerName = False
+            if gsLayerId not in gsGlyph.layers:
+                if sourceInfo.isBraceLayer:
+                    raise GlyphsBackendError(
+                        "A brace layer can only have an additional source "
+                        "layer named 'background'"
+                    )
+
+    return SimpleNamespace(
+        isMainLayer=isMainLayer,
+        gsLayerName=gsLayerName,
+        gsLayerId=gsLayerId,
+        shouldStoreFontraSourceName=shouldStoreFontraSourceName,
+        shouldStoreFontraLayerName=shouldStoreFontraLayerName,
+    )
 
 
 def getLayerId(variableGlyph, layerName, suggestedLayerId):
