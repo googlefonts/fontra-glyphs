@@ -582,8 +582,8 @@ class GlyphsBackend:
                     gsLayer.name = gsLayerName
                     gsLayer.associatedMasterId = associatedMasterId
                     if isMainLayer and isSmartCompGlyph:
-                        fontraGlyphAxesToGSLayerSmartComponentPoleMapping(
-                            variableGlyph.axes, gsLayer, glyphLocation
+                        gsLayer.smartComponentPoleMapping = setupPoleMapping(
+                            variableGlyph.axes, glyphLocation
                         )
                     targetLayer = gsLayer
 
@@ -1088,11 +1088,9 @@ def fontraGlyphAxesToGSSmartComponentAxes(variableGlyph, gsGlyph):
         gsGlyph.smartComponentAxes.append(gsAxis)
 
 
-def fontraGlyphAxesToGSLayerSmartComponentPoleMapping(glyphAxes, gsLayer, location):
-    if len(glyphAxes) == 0:
-        return
+def setupPoleMapping(glyphAxes, location):
     # https://docu.glyphsapp.com/#GSLayer.smartComponentPoleMapping
-    gsLayer.smartComponentPoleMapping = {}
+    smartComponentPoleMapping = {}
     for axis in glyphAxes:
         axisValue = location[axis.name]
         if axisValue != axis.minValue and axisValue != axis.maxValue:
@@ -1106,7 +1104,8 @@ def fontraGlyphAxesToGSLayerSmartComponentPoleMapping(glyphAxes, gsLayer, locati
         )
         # Set pole, only MIN or MAX possible.
         # NOTE: In GlyphsApp these are checkboxes, either: on or off.
-        gsLayer.smartComponentPoleMapping[axis.name] = pole
+        smartComponentPoleMapping[axis.name] = pole
+    return smartComponentPoleMapping
 
 
 def fontraLayerToGSLayer(layer, gsLayer):
