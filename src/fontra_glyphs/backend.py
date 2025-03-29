@@ -1074,7 +1074,7 @@ def setupSmartComponentAxes(variableGlyph):
             # NOTE: GlyphsApp does not have axis.defaultValue,
             # therefore it must be at MIN or MAX.
             # https://docu.glyphsapp.com/#GSSmartComponentAxis
-            raise TypeError(
+            raise GlyphsBackendError(
                 f"GlyphsApp Backend: Glyph axis '{axis.name}' "
                 "defaultValue must be at MIN or MAX."
             )
