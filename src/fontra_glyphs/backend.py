@@ -519,7 +519,9 @@ class GlyphsBackend:
                 gsLayer = getOrCreateGSLayer(gsGlyph, layerInfo.gsLayerId)
                 layerIdsInUse.add(layerInfo.gsLayerId)
 
-                if layerInfo.gsLayerName is not None:
+                if layerInfo.isBackgroundLayer:
+                    targetLayer = gsLayer.background
+                else:
                     assert gsLayer.layerId == layerInfo.gsLayerId
                     gsLayer.name = layerInfo.gsLayerName
                     gsLayer.associatedMasterId = sourceInfo.associatedMasterId
@@ -543,9 +545,6 @@ class GlyphsBackend:
                         glyphSource.name,
                         glyphSource.name and layerInfo.shouldStoreFontraSourceName,
                     )
-                else:
-                    # background layer
-                    targetLayer = gsLayer.background
 
                 layer = variableGlyph.layers[layerName]
                 fontraLayerToGSLayer(layer, targetLayer)
@@ -704,6 +703,7 @@ def setupLayerInfo(glyphSource, sourceInfo, layerName, variableGlyph, gsGlyph):
 
     return SimpleNamespace(
         isMainLayer=isMainLayer,
+        isBackgroundLayer=gsLayerName is None,
         gsLayerName=gsLayerName,
         gsLayerId=gsLayerId,
         shouldStoreFontraSourceName=shouldStoreFontraSourceName,
