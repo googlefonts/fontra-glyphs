@@ -494,7 +494,7 @@ class GlyphsBackend:
 
         defaultGlyphLocation = getDefaultLocation(variableGlyph.axes)
 
-        fontraGlyphAxesToGSSmartComponentAxes(variableGlyph, gsGlyph)
+        gsGlyph.smartComponentAxes = setupSmartComponentAxes(variableGlyph)
         isSmartCompGlyph = bool(variableGlyph.axes)
 
         layerIdsInUse = set()
@@ -1067,9 +1067,8 @@ def gsVerticalMetricsToFontraLineMetricsHorizontal(gsFont, gsMaster):
     return lineMetricsHorizontal
 
 
-def fontraGlyphAxesToGSSmartComponentAxes(variableGlyph, gsGlyph):
-    smartComponentAxesByName = {axis.name: axis for axis in gsGlyph.smartComponentAxes}
-    gsGlyph.smartComponentAxes = []
+def setupSmartComponentAxes(variableGlyph):
+    smartComponentAxes = []
     for axis in variableGlyph.axes:
         if axis.defaultValue not in [axis.minValue, axis.maxValue]:
             # NOTE: GlyphsApp does not have axis.defaultValue,
@@ -1079,13 +1078,12 @@ def fontraGlyphAxesToGSSmartComponentAxes(variableGlyph, gsGlyph):
                 f"GlyphsApp Backend: Glyph axis '{axis.name}' "
                 "defaultValue must be at MIN or MAX."
             )
-        gsAxis = smartComponentAxesByName.get(axis.name)
-        if gsAxis is None:
-            gsAxis = glyphsLib.classes.GSSmartComponentAxis()
-            gsAxis.name = axis.name
+        gsAxis = glyphsLib.classes.GSSmartComponentAxis()
+        gsAxis.name = axis.name
         gsAxis.bottomValue = axis.minValue
         gsAxis.topValue = axis.maxValue
-        gsGlyph.smartComponentAxes.append(gsAxis)
+        smartComponentAxes.append(gsAxis)
+    return smartComponentAxes
 
 
 def setupPoleMapping(glyphAxes, location):
