@@ -766,8 +766,14 @@ def isGlyphsUUID(maybeUUID):
 
 
 def getBraceLayerName(location):
-    values = [str(int(x) if x.is_integer() else x) for x in location.values()]
+    values = [str(makeIntIfInt(value)) for value in location.values()]
     return f"{{{','.join(values)}}}"
+
+
+def makeIntIfInt(n):
+    if isinstance(n, int):
+        return n
+    return int(n) if n.is_integer() else n
 
 
 def storeInDict(d, key, value, doStore):
