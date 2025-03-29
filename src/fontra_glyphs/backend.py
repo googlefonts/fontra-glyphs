@@ -731,6 +731,7 @@ def updateGSLayer(
     if layerInfo.isBackgroundLayer:
         return gsLayer.background
 
+    assert gsLayer.layerId == layerInfo.gsLayerId
     gsLayer.name = layerInfo.gsLayerName
     gsLayer.associatedMasterId = sourceInfo.associatedMasterId
     if layerInfo.isMainLayer and variableGlyph.axes:
