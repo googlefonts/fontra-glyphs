@@ -242,10 +242,12 @@ async def test_updateSourceName(writableTestFont):
 
 
 async def test_createNewGlyph(writableTestFont):
+    fontSources = await writableTestFont.getSources()
+    sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
     glyphName = "a.ss02"
     glyph = VariableGlyph(name=glyphName)
 
-    layerName = str(uuid.uuid4()).upper()
+    layerName = sourceNameMappingToIDs["Regular"]
     glyph.sources.append(GlyphSource(name="Default", location={}, layerName=layerName))
     glyph.layers[layerName] = Layer(glyph=StaticGlyph(xAdvance=333))
 
@@ -283,7 +285,7 @@ async def test_createNewSmartGlyph(writableTestFont):
     assert glyph == savedGlyph
 
 
-async def test_extendSmartGlyphWithIntermedaiteLayer(writableTestFont):
+async def test_extendSmartGlyphWithIntermediateLayer(writableTestFont):
     # This should fail, because not yet implemented.
     glyphName = "_part.shoulder"
     glyph = await writableTestFont.getGlyph(glyphName)
