@@ -496,7 +496,6 @@ class GlyphsBackend:
         defaultGlyphLocation = getDefaultLocation(variableGlyph.axes)
 
         gsGlyph.smartComponentAxes = setupSmartComponentAxes(variableGlyph)
-        isSmartCompGlyph = bool(variableGlyph.axes)
 
         layerIdsInUse = set()
 
@@ -519,32 +518,14 @@ class GlyphsBackend:
                 gsLayer = getOrCreateGSLayer(gsGlyph, layerInfo.gsLayerId)
                 layerIdsInUse.add(layerInfo.gsLayerId)
 
-                if layerInfo.isBackgroundLayer:
-                    targetLayer = gsLayer.background
-                else:
-                    assert gsLayer.layerId == layerInfo.gsLayerId
-                    gsLayer.name = layerInfo.gsLayerName
-                    gsLayer.associatedMasterId = sourceInfo.associatedMasterId
-                    if layerInfo.isMainLayer and isSmartCompGlyph:
-                        gsLayer.smartComponentPoleMapping = setupPoleMapping(
-                            variableGlyph.axes, sourceInfo.glyphLocation
-                        )
-                    targetLayer = gsLayer
-
-                    storeInDict(
-                        gsLayer.userData,
-                        "xyz.fontra.layer-name",
-                        layerName,
-                        layerName != layerInfo.gsLayerId
-                        and layerInfo.shouldStoreFontraLayerName,
-                    )
-
-                    storeInDict(
-                        gsLayer.userData,
-                        "xyz.fontra.source-name",
-                        glyphSource.name,
-                        glyphSource.name and layerInfo.shouldStoreFontraSourceName,
-                    )
+                targetLayer = updateGSLayer(
+                    variableGlyph,
+                    layerName,
+                    glyphSource,
+                    gsLayer,
+                    sourceInfo,
+                    layerInfo,
+                )
 
                 layer = variableGlyph.layers[layerName]
                 fontraLayerToGSLayer(layer, targetLayer)
@@ -736,6 +717,41 @@ def getOrCreateGSLayer(gsGlyph, gsLayerId):
         gsLayer.layerId = gsLayerId
         gsLayer.parent = gsGlyph
         gsGlyph.layers.append(gsLayer)
+    return gsLayer
+
+
+def updateGSLayer(
+    variableGlyph,
+    layerName,
+    glyphSource,
+    gsLayer,
+    sourceInfo,
+    layerInfo,
+):
+    if layerInfo.isBackgroundLayer:
+        return gsLayer.background
+
+    gsLayer.name = layerInfo.gsLayerName
+    gsLayer.associatedMasterId = sourceInfo.associatedMasterId
+    if layerInfo.isMainLayer and variableGlyph.axes:
+        gsLayer.smartComponentPoleMapping = setupPoleMapping(
+            variableGlyph.axes, sourceInfo.glyphLocation
+        )
+
+    storeInDict(
+        gsLayer.userData,
+        "xyz.fontra.layer-name",
+        layerName,
+        layerName != layerInfo.gsLayerId and layerInfo.shouldStoreFontraLayerName,
+    )
+
+    storeInDict(
+        gsLayer.userData,
+        "xyz.fontra.source-name",
+        glyphSource.name,
+        glyphSource.name and layerInfo.shouldStoreFontraSourceName,
+    )
+
     return gsLayer
 
 
