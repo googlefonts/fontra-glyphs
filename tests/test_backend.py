@@ -176,7 +176,9 @@ async def test_putGlyph(writableTestFont, glyphName):
         for i, coordinate in enumerate(layer.glyph.path.coordinates):
             layer.glyph.path.coordinates[i] = coordinate + 10
 
+    glyphCopy = deepcopy(glyph)
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
+    assert glyphCopy == glyph  # putGlyph may not mutate
 
     savedGlyph = await writableTestFont.getGlyph(glyphName)
     assert glyph == savedGlyph
@@ -541,7 +543,12 @@ async def test_addLayoutLayerToBraceLayer(writableTestFont):
         GlyphSource(name="SemiBold", location={"Weight": 166}, layerName=layerName)
     )
 
-    # add layout layer
+    # brace layer
+    glyph.layers[layerName] = Layer(
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs["Light"]].glyph)
+    )
+
+    # secondary layer for brace layer
     glyph.layers[layerName + "^Layout Layer"] = Layer(
         glyph=deepcopy(glyph.layers[sourceNameMappingToIDs["Bold"]].glyph)
     )
