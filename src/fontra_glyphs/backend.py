@@ -527,8 +527,8 @@ class GlyphsBackend:
                     layerInfo,
                 )
 
-                layer = variableGlyph.layers[layerName]
-                fontraLayerToGSLayer(layer, targetLayer)
+                fontraLayerToGSLayer(variableGlyph.layers[layerName], targetLayer)
+
                 if sourceInfo.isBraceLayer:
                     gsLayer.attributes["coordinates"] = list(
                         sourceInfo.fontLocation.values()
