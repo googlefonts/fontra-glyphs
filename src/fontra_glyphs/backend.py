@@ -1,8 +1,11 @@
+import hashlib
 import io
 import pathlib
+import uuid
 from collections import defaultdict
 from copy import deepcopy
 from os import PathLike
+from types import SimpleNamespace
 from typing import Any
 
 import glyphsLib
@@ -26,14 +29,19 @@ from fontra.core.classes import (
     StaticGlyph,
     VariableGlyph,
 )
+from fontra.core.discretevariationmodel import findNearestLocationIndex
 from fontra.core.path import PackedPathPointPen
 from fontra.core.protocols import WritableFontBackend
-from fontra.core.varutils import makeDenseLocation, makeSparseLocation
+from fontra.core.varutils import (
+    locationToTuple,
+    makeDenseLocation,
+    makeSparseLocation,
+    mapAxesFromUserSpaceToSourceSpace,
+)
 from fontTools.designspaceLib import DesignSpaceDocument
 from fontTools.misc.transform import DecomposedTransform
 from fontTools.ufoLib.filenames import userNameToFileName
 from glyphsLib.builder.axes import (
-    AxisDefinitionFactory,
     get_axis_definitions,
     get_regular_master,
     to_designspace_axes,
@@ -43,12 +51,16 @@ from glyphsLib.types import Transform as GSTransform
 
 from .utils import (
     convertMatchesToTuples,
-    getAssociatedMasterId,
     matchTreeFont,
     matchTreeGlyph,
     openstepPlistDumps,
     splitLocation,
 )
+
+
+class GlyphsBackendError(Exception):
+    pass
+
 
 rootInfoNames = [
     "familyName",
@@ -135,12 +147,14 @@ class GlyphsBackend:
         self.axisNames = {axis.name for axis in dsAxes}
 
         self.locationByMasterID = {}
+        self.masterIDByLocationTuple = {}
         for master in self.gsFont.masters:
             location = {}
             for axisDef in get_axis_definitions(self.gsFont):
                 if axisDef.name in self.axisNames:
                     location[axisDef.name] = axisDef.get_design_loc(master)
             self.locationByMasterID[master.id] = location
+            self.masterIDByLocationTuple[locationToTuple(location)] = master.id
 
         self.glyphMap, self.kerningGroups = _readGlyphMapAndKerningGroups(
             rawGlyphsData,
@@ -164,12 +178,10 @@ class GlyphsBackend:
             axes.append(axis)
         self.axes = axes
 
-        self.defaultLocation = {}
-        for axis in self.axes:
-            self.defaultLocation[axis.name] = next(
-                (v for k, v in axis.mapping if k == axis.defaultValue),
-                axis.defaultValue,
-            )
+        axesSourceSpace = mapAxesFromUserSpaceToSourceSpace(self.axes)
+        self.defaultLocation = {
+            axis.name: axis.defaultValue for axis in axesSourceSpace
+        }
 
     @staticmethod
     def _loadFiles(path: PathLike) -> tuple[dict[str, Any], list[Any]]:
@@ -338,21 +350,33 @@ class GlyphsBackend:
                 **smartLocation,
             }
 
+            storeLayerId = True
             if location in seenLocations:
-                inactive = True
+                layerName = f"{gsLayer.associatedMasterId}^{gsLayer.name}"
+                bgSeparator = "/"
             else:
+                storeLayerId = layerName != gsLayer.layerId
                 seenLocations.append(location)
-                inactive = False
-
-            sources.append(
-                GlyphSource(
-                    name=sourceName,
-                    location=location,
-                    layerName=layerName,
-                    inactive=inactive,
+                sources.append(
+                    GlyphSource(
+                        name=sourceName,
+                        location=location,
+                        layerName=layerName,
+                    )
                 )
+                bgSeparator = "^"
+
+            layers[layerName] = gsLayerToFontraLayer(
+                gsLayer,
+                self.axisNames,
+                gsLayer.width,
+                gsLayer.layerId if storeLayerId else None,
             )
-            layers[layerName] = gsLayerToFontraLayer(gsLayer, self.axisNames)
+
+            if gsLayer.hasBackground:
+                layers[layerName + bgSeparator + "background"] = gsLayerToFontraLayer(
+                    gsLayer.background, self.axisNames, gsLayer.width, None
+                )
 
         fixSourceLocations(sources, set(smartLocation))
 
@@ -418,6 +442,8 @@ class GlyphsBackend:
     ) -> None:
         assert isinstance(codePoints, list)
         assert all(isinstance(cp, int) for cp in codePoints)
+        assert all(source.layerName in glyph.layers for source in glyph.sources)
+
         self.glyphMap[glyphName] = codePoints
 
         isNewGlyph = glyphName not in self.gsFont.glyphs
@@ -427,22 +453,18 @@ class GlyphsBackend:
             self.gsFont.glyphs.append(gsGlyph)
             self.glyphNameToIndex[glyphName] = len(self.gsFont.glyphs) - 1
 
-        # Convert VariableGlyph to GSGlyph
-        gsGlyphNew = variableGlyphToGSGlyph(
-            self.defaultLocation,
-            glyph,
-            deepcopy(self.gsFont.glyphs[glyphName]),
-            self.locationByMasterID,
-        )
+        gsGlyph = deepcopy(self.gsFont.glyphs[glyphName])
+
+        self._variableGlyphToGSGlyph(glyph, gsGlyph)
 
         # Update unicodes: need to be converted from decimal to hex strings
-        gsGlyphNew.unicodes = [str(hex(codePoint)) for codePoint in codePoints]
+        gsGlyph.unicodes = [str(hex(codePoint)) for codePoint in codePoints]
 
         # Serialize to text with glyphsLib.writer.Writer(), using io.StringIO
         f = io.StringIO()
         writer = glyphsLib.writer.Writer(f)
         writer.format_version = self.gsFont.format_version
-        writer.write(gsGlyphNew)
+        writer.write(gsGlyph)
 
         # Parse stream into "raw" object
         f.seek(0)
@@ -462,6 +484,113 @@ class GlyphsBackend:
         # Next time it needs to be parsed again.
         self.parsedGlyphNames.discard(glyphName)
 
+    def _variableGlyphToGSGlyph(self, variableGlyph, gsGlyph):
+        sourceLayers, sourceLayerNames = getSourceLayerNames(variableGlyph)
+        nonSourceLayerNames = set(variableGlyph.layers) - sourceLayerNames
+
+        if nonSourceLayerNames:
+            raise GlyphsBackendError(
+                "GlyphsApp Backend: Layer without glyph source is not supported."
+            )
+
+        defaultGlyphLocation = getDefaultLocation(variableGlyph.axes)
+
+        gsGlyph.smartComponentAxes = setupSmartComponentAxes(variableGlyph)
+
+        layerIdsInUse = set()
+
+        for glyphSource in variableGlyph.sources:
+            sourceInfo = self._setupSourceInfo(
+                glyphSource, sourceLayers, variableGlyph, defaultGlyphLocation
+            )
+
+            sourceLayerNames = [glyphSource.layerName] + sorted(
+                sourceLayers[glyphSource.layerName]
+            )
+
+            for layerName in sourceLayerNames:
+                assert layerName in variableGlyph.layers
+
+                layerInfo = setupLayerInfo(
+                    glyphSource, sourceInfo, layerName, variableGlyph, gsGlyph
+                )
+
+                gsLayer = getOrCreateGSLayer(gsGlyph, layerInfo.gsLayerId)
+                layerIdsInUse.add(layerInfo.gsLayerId)
+
+                targetLayer = updateGSLayer(
+                    variableGlyph,
+                    layerName,
+                    glyphSource,
+                    gsLayer,
+                    sourceInfo,
+                    layerInfo,
+                )
+
+                fontraLayerToGSLayer(variableGlyph.layers[layerName], targetLayer)
+
+                if sourceInfo.isBraceLayer:
+                    gsLayer.attributes["coordinates"] = list(
+                        sourceInfo.fontLocation.values()
+                    )
+
+        for gsLayer in list(gsGlyph.layers):
+            if gsLayer.layerId not in layerIdsInUse:
+                del gsGlyph.layers[gsLayer.layerId]
+
+    def _setupSourceInfo(
+        self, glyphSource, sourceLayers, variableGlyph, defaultGlyphLocation
+    ):
+        fontLocation, glyphLocation = self._getSourceLocations(
+            glyphSource, variableGlyph.axes, defaultGlyphLocation
+        )
+
+        masterId = self.masterIDByLocationTuple.get(locationToTuple(fontLocation))
+        masterName = (
+            self.gsFont.masters[masterId].name if masterId is not None else None
+        )
+        isBraceLayer = masterId is None
+        isSmartComponentLayer = glyphLocation != defaultGlyphLocation
+
+        if isBraceLayer and variableGlyph.axes:
+            raise NotImplementedError(
+                "GlyphsApp Backend: Brace layers "
+                "within smart glyphs are not yet implemented."
+            )
+
+        associatedMasterId = (
+            masterId
+            or glyphSource.customData.get("com.glyphsapp.layer.associatedMasterId")
+            or self._findNearestMasterId(fontLocation)
+        )
+        associatedMasterName = self.gsFont.masters[associatedMasterId].name
+
+        return SimpleNamespace(
+            fontLocation=fontLocation,
+            glyphLocation=glyphLocation,
+            masterId=masterId,
+            masterName=masterName,
+            isBraceLayer=isBraceLayer,
+            isSmartComponentLayer=isSmartComponentLayer,
+            associatedMasterId=associatedMasterId,
+            associatedMasterName=associatedMasterName,
+        )
+
+    def _getSourceLocations(self, glyphSource, glyphAxes, defaultGlyphLocation):
+        location = self._getSourceLocation(glyphSource)
+        fontLocation, glyphLocation = splitLocation(location, glyphAxes)
+        fontLocation = makeDenseLocation(fontLocation, self.defaultLocation)
+        glyphLocation = makeDenseLocation(glyphLocation, defaultGlyphLocation)
+        return fontLocation, glyphLocation
+
+    def _getSourceLocation(self, glyphSource):
+        baseLocation = (
+            {}
+            if glyphSource.locationBase is None
+            else self.locationByMasterID[glyphSource.locationBase]
+        )
+        return baseLocation | glyphSource.location
+
     def _writeRawGlyph(self, glyphName, isNewGlyph):
         # Write whole file with openstep_plist
         # 'glyphName' and 'isNewGlyph' arguments not used, because we write the whole file,
@@ -473,8 +602,186 @@ class GlyphsBackend:
         out = openstepPlistDumps(rawFontData)
         self.gsFilePath.write_text(out)
 
+    def _findNearestMasterId(self, fontLocation):
+        masterIDs = list(self.locationByMasterID)
+        locations = list(self.locationByMasterID.values())
+        index = findNearestLocationIndex(fontLocation, locations)
+        return masterIDs[index]
+
     async def aclose(self) -> None:
         pass
+
+
+def getSourceLayerNames(variableGlyph):
+    sourceLayers = {
+        source.layerName: [
+            layerName
+            for layerName in variableGlyph.layers
+            if layerName.startswith(source.layerName + "^")
+        ]
+        for source in variableGlyph.sources
+    }
+
+    for source in variableGlyph.sources:
+        assert source.layerName in variableGlyph.layers, source.layerName
+
+    for layerName, layerNames in sourceLayers.items():
+        assert layerName in variableGlyph.layers, layerName
+        for ln in layerNames:
+            assert ln in variableGlyph.layers
+
+    sourceLayerNames = set(sourceLayers) | {
+        layerName for layerNames in sourceLayers.values() for layerName in layerNames
+    }
+    return sourceLayers, sourceLayerNames
+
+
+def getDefaultLocation(axes):
+    return {axis.name: axis.defaultValue for axis in axes}
+
+
+def setupLayerInfo(glyphSource, sourceInfo, layerName, variableGlyph, gsGlyph):
+    isMainLayer = layerName == glyphSource.layerName
+    shouldStoreFontraSourceName = glyphSource.name != sourceInfo.associatedMasterName
+    shouldStoreFontraLayerName = True
+
+    if isMainLayer:
+        if sourceInfo.isSmartComponentLayer:
+            gsLayerName = glyphSource.name
+            gsLayerId = getLayerId(variableGlyph, layerName, None)
+        else:
+            gsLayerId = getLayerId(variableGlyph, layerName, sourceInfo.masterId)
+            gsLayerName = (
+                getBraceLayerName(sourceInfo.fontLocation)
+                if sourceInfo.isBraceLayer
+                else sourceInfo.masterName
+            )
+        if " / " in glyphSource.name:
+            masterName, sourceName = glyphSource.name.split(" / ", 1)
+            if masterName == sourceInfo.associatedMasterName:
+                gsLayerName = sourceName
+                shouldStoreFontraSourceName = False
+    else:
+        _, localLayerName = layerName.split("^", 1)
+        if localLayerName == "background" or localLayerName.endswith("/background"):
+            baseLayerName = layerName[:-11]  # minus "^background" or "/background"
+            gsLayerName = None
+            gsLayerId = getLayerId(
+                variableGlyph,
+                baseLayerName,
+                (sourceInfo.masterId if localLayerName == "background" else None),
+            )
+        else:
+            gsLayerName = localLayerName
+            gsLayerId = getLayerId(variableGlyph, layerName, None)
+            shouldStoreFontraLayerName = False
+            if gsLayerId not in gsGlyph.layers:
+                if sourceInfo.isBraceLayer:
+                    raise GlyphsBackendError(
+                        "A brace layer can only have an additional source "
+                        "layer named 'background'"
+                    )
+
+    return SimpleNamespace(
+        isMainLayer=isMainLayer,
+        isBackgroundLayer=gsLayerName is None,
+        gsLayerName=gsLayerName,
+        gsLayerId=gsLayerId,
+        shouldStoreFontraSourceName=shouldStoreFontraSourceName,
+        shouldStoreFontraLayerName=shouldStoreFontraLayerName,
+    )
+
+
+def getLayerId(variableGlyph, layerName, suggestedLayerId):
+    layer = variableGlyph.layers[layerName]
+    layerId = layer.customData.get("com.glyphsapp.layer.layerId")
+
+    if layerId is None:
+        layerId = suggestedLayerId
+
+    if layerId is None:
+        if isGlyphsUUID(layerName):
+            layerId = layerName
+        else:
+            seed = f"{variableGlyph.name}/{layerName}".encode("utf-8")
+            h = hashlib.sha1(seed).digest()
+            layerId = str(uuid.UUID(bytes=h[:16])).upper()
+
+    return layerId
+
+
+def getOrCreateGSLayer(gsGlyph, gsLayerId):
+    gsLayer = gsGlyph.layers[gsLayerId]
+    if gsLayer is None:
+        gsLayer = glyphsLib.classes.GSLayer()
+        gsLayer.layerId = gsLayerId
+        gsLayer.parent = gsGlyph
+        gsGlyph.layers.append(gsLayer)
+    return gsLayer
+
+
+def updateGSLayer(
+    variableGlyph,
+    layerName,
+    glyphSource,
+    gsLayer,
+    sourceInfo,
+    layerInfo,
+):
+    if layerInfo.isBackgroundLayer:
+        return gsLayer.background
+
+    assert gsLayer.layerId == layerInfo.gsLayerId
+    gsLayer.name = layerInfo.gsLayerName
+    gsLayer.associatedMasterId = sourceInfo.associatedMasterId
+    if layerInfo.isMainLayer and variableGlyph.axes:
+        gsLayer.smartComponentPoleMapping = setupPoleMapping(
+            variableGlyph.axes, sourceInfo.glyphLocation
+        )
+
+    storeInDict(
+        gsLayer.userData,
+        "xyz.fontra.layer-name",
+        layerName,
+        layerName != layerInfo.gsLayerId and layerInfo.shouldStoreFontraLayerName,
+    )
+
+    storeInDict(
+        gsLayer.userData,
+        "xyz.fontra.source-name",
+        glyphSource.name,
+        glyphSource.name and layerInfo.shouldStoreFontraSourceName,
+    )
+
+    return gsLayer
+
+
+def isGlyphsUUID(maybeUUID):
+    try:
+        u = uuid.UUID(maybeUUID)
+    except ValueError:
+        return False
+    else:
+        return maybeUUID == str(u).upper()
+
+
+def getBraceLayerName(location):
+    values = [str(makeIntIfInt(value)) for value in location.values()]
+    return f"{{{','.join(values)}}}"
+
+
+def makeIntIfInt(n):
+    if isinstance(n, int):
+        return n
+    return int(n) if n.is_integer() else n
+
+
+def storeInDict(d, key, value, doStore):
+    if doStore:
+        d[key] = value
+    elif key in d:
+        # can't use d.pop(k, None) because glyphsLib's pop doesn't support it
+        del d[key]
 
 
 class GlyphsPackageBackend(GlyphsBackend):
@@ -572,7 +879,7 @@ def _readGlyphMapAndKerningGroups(
     return glyphMap, kerningGroups
 
 
-def gsLayerToFontraLayer(gsLayer, globalAxisNames):
+def gsLayerToFontraLayer(gsLayer, globalAxisNames, gsLayerWidth, gsLayerId):
     pen = PackedPathPointPen()
     gsLayer.drawPoints(pen)
 
@@ -586,14 +893,19 @@ def gsLayerToFontraLayer(gsLayer, globalAxisNames):
         gsGuidelineToFontraGuideline(gsGuideline) for gsGuideline in gsLayer.guides
     ]
 
+    customData = (
+        {"com.glyphsapp.layer.layerId": gsLayerId} if gsLayerId is not None else {}
+    )
+
     return Layer(
         glyph=StaticGlyph(
-            xAdvance=gsLayer.width,
+            xAdvance=gsLayerWidth,
             path=pen.getPath(),
             components=components,
             anchors=anchors,
             guidelines=guidelines,
-        )
+        ),
+        customData=customData,
     )
 
 
@@ -812,190 +1124,43 @@ def gsVerticalMetricsToFontraLineMetricsHorizontal(gsFont, gsMaster):
     return lineMetricsHorizontal
 
 
-def variableGlyphToGSGlyph(defaultLocation, variableGlyph, gsGlyph, locationByMasterID):
-    defaultGlyphLocation = {axis.name: axis.defaultValue for axis in variableGlyph.axes}
-    gsMasterAxesToIdMapping = {tuple(m.axes): m.id for m in gsGlyph.parent.masters}
-    gsMasterIdToNameMapping = {m.id: m.name for m in gsGlyph.parent.masters}
-    # Convert Fontra variableGlyph to GlyphsApp glyph
-    for gsLayerId in [gsLayer.layerId for gsLayer in gsGlyph.layers]:
-        if gsLayerId in variableGlyph.layers:
-            # This layer will be modified later.
-            continue
-        # Removing layer:
-        del gsGlyph.layers[gsLayerId]
-
-    fontraGlyphAxesToGSSmartComponentAxes(variableGlyph, gsGlyph)
-    isSmartCompGlyph = len(gsGlyph.smartComponentAxes) > 0
-
-    nonSourceLayerNames = set(variableGlyph.layers)
-    for glyphSource in variableGlyph.sources:
-        layerName = glyphSource.layerName
-        nonSourceLayerNames.discard(layerName)
-        layer = variableGlyph.layers[layerName]
-        gsLayer = gsGlyph.layers[layerName]
-        # layerName is equal to gsLayer.layerId if it comes from Glyphsapp,
-        # otherwise the layer has been newly created within Fontra.
-
-        baseLocation = (
-            {}
-            if glyphSource.locationBase is None
-            else locationByMasterID[glyphSource.locationBase]
-        )
-        location = baseLocation | glyphSource.location
-        fontLocation, glyphLocation = splitLocation(location, variableGlyph.axes)
-        fontLocation = makeDenseLocation(fontLocation, defaultLocation)
-        glyphLocation = makeDenseLocation(glyphLocation, defaultGlyphLocation)
-
-        if gsLayer is not None:
-            # gsLayer exists – modify existing gsLayer:
-            fontraLayerToGSLayer(layer, gsLayer)
-            # It might be, that we added a new glyph axis within Fontra
-            # for an existing smart comp glyph, in that case we need to add
-            # the new axis to gsLayer.smartComponentPoleMapping.
-            fontraGlyphAxesToGSLayerSmartComponentPoleMapping(
-                variableGlyph.axes, gsLayer, glyphLocation
-            )
-
-            gsLayer.smartComponentPoleMapping = {
-                axisName: pole
-                for axisName, pole in gsLayer.smartComponentPoleMapping.items()
-                if axisName in defaultGlyphLocation
-            }
-        else:
-            # gsLayer does not exist – create new layer:
-            gsLayer = glyphsLib.classes.GSLayer()
-            gsLayer.parent = gsGlyph
-
-            gsFontLocation = []
-            for axis in gsGlyph.parent.axes:
-                if axis.name in fontLocation:
-                    gsFontLocation.append(fontLocation[axis.name])
-                else:
-                    # This 'else' is necessary for GlyphsApp 2 files, only.
-                    # 'Weight' and 'Width' are always there,
-                    # even if there is no axis specified for it.
-                    factory = AxisDefinitionFactory()
-                    axis_def = factory.get(axis.axisTag, axis.name)
-                    gsFontLocation.append(axis_def.default_user_loc)
-
-            fontraGlyphAxesToGSLayerSmartComponentPoleMapping(
-                variableGlyph.axes, gsLayer, glyphLocation
-            )
-
-            masterId = gsMasterAxesToIdMapping.get(tuple(gsFontLocation))
-
-            isDefaultLayer = False
-            # It is not enough to check if it has a masterId, because in case of a smart component,
-            # the layer for each glyph axis has the same location as the master layer.
-            if masterId:
-                if not isSmartCompGlyph:
-                    isDefaultLayer = True
-                elif defaultGlyphLocation == glyphLocation:
-                    isDefaultLayer = True
-
-            gsLayer.name = (
-                gsMasterIdToNameMapping.get(masterId)
-                if isDefaultLayer
-                else glyphSource.name
-            )
-            gsLayer.layerId = masterId if isDefaultLayer else layerName
-            gsLayer.associatedMasterId = getAssociatedMasterId(
-                gsGlyph.parent, gsFontLocation
-            )
-
-            if not isDefaultLayer and not isSmartCompGlyph:
-                # This is an intermediate layer
-                gsLayer.name = "{" + ",".join(str(x) for x in gsFontLocation) + "}"
-                gsLayer.attributes["coordinates"] = gsFontLocation
-
-            if glyphSource.name:
-                gsLayer.userData["xyz.fontra.source-name"] = glyphSource.name
-            elif gsLayer.userData["xyz.fontra.source-name"]:
-                del gsLayer.userData["xyz.fontra.source-name"]
-            gsLayer.userData["xyz.fontra.layer-name"] = layerName
-
-            raiseErrorIfIntermediateLayerInSmartComponent(
-                variableGlyph, glyphLocation, masterId
-            )
-
-            fontraLayerToGSLayer(layer, gsLayer)
-            gsGlyph.layers.append(gsLayer)
-
-    if nonSourceLayerNames:
-        raise NotImplementedError(
-            "GlyphsApp Backend: Layer without glyph source is not yet implemented."
-        )
-    return gsGlyph
-
-
-def raiseErrorIfIntermediateLayerInSmartComponent(
-    variableGlyph, glyphLocation, masterId
-):
-    # We have a smart component. Check if it is an intermediate master/layer,
-    # because we currently do not support writing this to GlyphsApp files.
-    # This will be obsolute once we support this feature.
-    if glyphLocation:
-        isIntermediateLayer = False
-
-        if not masterId:
-            # If it has glyph axes (glyphLocation) and is not on any master location,
-            # it must be an intermediate master.
-            isIntermediateLayer = True
-        else:
-            # If it has glyph axes (glyphLocation) and is on a master location,
-            # but any of the glyph axes are not at min or max position,
-            # it must be an intermediate layer.
-            if any(
-                [
-                    True
-                    for axis in variableGlyph.axes
-                    if glyphLocation[axis.name] not in [axis.minValue, axis.maxValue]
-                ]
-            ):
-                isIntermediateLayer = True
-
-        if isIntermediateLayer:
-            raise NotImplementedError(
-                "GlyphsApp Backend: Intermediate layers "
-                "within smart glyphs are not yet implemented."
-            )
-
-
-def fontraGlyphAxesToGSSmartComponentAxes(variableGlyph, gsGlyph):
-    smartComponentAxesByName = {axis.name: axis for axis in gsGlyph.smartComponentAxes}
-    gsGlyph.smartComponentAxes = []
+def setupSmartComponentAxes(variableGlyph):
+    smartComponentAxes = []
     for axis in variableGlyph.axes:
         if axis.defaultValue not in [axis.minValue, axis.maxValue]:
             # NOTE: GlyphsApp does not have axis.defaultValue,
             # therefore it must be at MIN or MAX.
             # https://docu.glyphsapp.com/#GSSmartComponentAxis
-            raise TypeError(
+            raise GlyphsBackendError(
                 f"GlyphsApp Backend: Glyph axis '{axis.name}' "
                 "defaultValue must be at MIN or MAX."
             )
-        gsAxis = smartComponentAxesByName.get(axis.name)
-        if gsAxis is None:
-            gsAxis = glyphsLib.classes.GSSmartComponentAxis()
-            gsAxis.name = axis.name
+        gsAxis = glyphsLib.classes.GSSmartComponentAxis()
+        gsAxis.name = axis.name
         gsAxis.bottomValue = axis.minValue
         gsAxis.topValue = axis.maxValue
-        gsGlyph.smartComponentAxes.append(gsAxis)
+        smartComponentAxes.append(gsAxis)
+    return smartComponentAxes
 
 
-def fontraGlyphAxesToGSLayerSmartComponentPoleMapping(glyphAxes, gsLayer, location):
-    if len(glyphAxes) == 0:
-        return
+def setupPoleMapping(glyphAxes, location):
     # https://docu.glyphsapp.com/#GSLayer.smartComponentPoleMapping
-    gsLayer.smartComponentPoleMapping = {}
+    smartComponentPoleMapping = {}
     for axis in glyphAxes:
+        axisValue = location[axis.name]
+        if axisValue != axis.minValue and axisValue != axis.maxValue:
+            raise NotImplementedError(
+                "Intermediate layers within smart glyphs are not yet implemented"
+            )
         pole = (
             int(Pole.MIN)  # convert to int for Python <= 3.10
-            if axis.minValue == location[axis.name]
+            if axis.minValue == axisValue
             else int(Pole.MAX)  # convert to int for Python <= 3.10
         )
         # Set pole, only MIN or MAX possible.
         # NOTE: In GlyphsApp these are checkboxes, either: on or off.
-        gsLayer.smartComponentPoleMapping[axis.name] = pole
+        smartComponentPoleMapping[axis.name] = pole
+    return smartComponentPoleMapping
 
 
 def fontraLayerToGSLayer(layer, gsLayer):

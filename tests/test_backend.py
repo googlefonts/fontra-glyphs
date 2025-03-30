@@ -20,6 +20,8 @@ from fontra.core.classes import (
     structure,
 )
 
+from fontra_glyphs.backend import GlyphsBackendError
+
 dataDir = pathlib.Path(__file__).resolve().parent / "data"
 
 glyphs2Path = dataDir / "GlyphsUnitTestSans.glyphs"
@@ -28,11 +30,11 @@ glyphsPackagePath = dataDir / "GlyphsUnitTestSans3.glyphspackage"
 referenceFontPath = dataDir / "GlyphsUnitTestSans3.fontra"
 
 
-mappingMasterIDs = {
-    "Light": "C4872ECA-A3A9-40AB-960A-1DB2202F16DE",
-    "Regular": "3E7589AA-8194-470F-8E2F-13C1C581BE24",
-    "Bold": "BFFFD157-90D3-4B85-B99D-9A2F366F03CA",
-}
+def sourceNameMappingFromSources(fontSources):
+    return {
+        source.name: sourceIdentifier
+        for sourceIdentifier, source in fontSources.items()
+    }
 
 
 @pytest.fixture(scope="module", params=[glyphs2Path, glyphs3Path, glyphsPackagePath])
@@ -174,7 +176,9 @@ async def test_putGlyph(writableTestFont, glyphName):
         for i, coordinate in enumerate(layer.glyph.path.coordinates):
             layer.glyph.path.coordinates[i] = coordinate + 10
 
+    glyphCopy = deepcopy(glyph)
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
+    assert glyphCopy == glyph  # putGlyph may not mutate
 
     savedGlyph = await writableTestFont.getGlyph(glyphName)
     assert glyph == savedGlyph
@@ -184,13 +188,21 @@ async def test_putGlyph(writableTestFont, glyphName):
     assert glyph == reopenedGlyph
 
 
-async def test_duplicateGlyph(writableTestFont):
-    glyphName = "a.ss01"
-    glyph = deepcopy(await writableTestFont.getGlyph("a"))
+@pytest.mark.asyncio
+@pytest.mark.parametrize("gName", ["a", "A"])
+async def test_duplicateGlyph(writableTestFont, gName):
+    glyphName = f"{gName}.ss01"
+    glyph = deepcopy(await writableTestFont.getGlyph(gName))
     glyph.name = glyphName
     await writableTestFont.putGlyph(glyphName, glyph, [])
 
     savedGlyph = await writableTestFont.getGlyph(glyphName)
+
+    # glyphsLib doesn't read the color attr from Glyphs-2 files,
+    # so let's monkeypatch the data
+    glyph.customData["com.glyphsapp.glyph-color"] = [120, 220, 20, 4]
+    savedGlyph.customData["com.glyphsapp.glyph-color"] = [120, 220, 20, 4]
+
     assert glyph == savedGlyph
 
     if os.path.isdir(writableTestFont.gsFilePath):
@@ -216,11 +228,26 @@ async def test_updateGlyphCodePoints(writableTestFont):
     assert reopenedGlyphMap["A"] == [0x0041, 0x0061]
 
 
+async def test_updateSourceName(writableTestFont):
+    glyphName = "a"
+    glyph = await writableTestFont.getGlyph(glyphName)
+
+    for i, source in enumerate(glyph.sources):
+        source.name = f"source#{i}"
+
+    await writableTestFont.putGlyph(glyphName, glyph, [ord("a")])
+
+    savedGlyph = await writableTestFont.getGlyph(glyphName)
+    assert glyph == savedGlyph
+
+
 async def test_createNewGlyph(writableTestFont):
+    fontSources = await writableTestFont.getSources()
+    sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
     glyphName = "a.ss02"
     glyph = VariableGlyph(name=glyphName)
 
-    layerName = str(uuid.uuid4()).upper()
+    layerName = sourceNameMappingToIDs["Regular"]
     glyph.sources.append(GlyphSource(name="Default", location={}, layerName=layerName))
     glyph.layers[layerName] = Layer(glyph=StaticGlyph(xAdvance=333))
 
@@ -231,6 +258,8 @@ async def test_createNewGlyph(writableTestFont):
 
 
 async def test_createNewSmartGlyph(writableTestFont):
+    fontSources = await writableTestFont.getSources()
+    sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
     glyphName = "a.smart"
     glyphAxis = GlyphAxis(name="Height", minValue=0, maxValue=100, defaultValue=0)
     glyph = VariableGlyph(name=glyphName, axes=[glyphAxis])
@@ -244,7 +273,7 @@ async def test_createNewSmartGlyph(writableTestFont):
         "Bold": {"Weight": 220},
         "Bold-Height": {"Weight": 220, "Height": 100},
     }.items():
-        layerName = mappingMasterIDs.get(sourceName) or str(uuid.uuid4()).upper()
+        layerName = sourceNameMappingToIDs.get(sourceName) or str(uuid.uuid4()).upper()
         glyph.sources.append(
             GlyphSource(name=sourceName, location=location, layerName=layerName)
         )
@@ -256,7 +285,7 @@ async def test_createNewSmartGlyph(writableTestFont):
     assert glyph == savedGlyph
 
 
-async def test_extendSmartGlyphWithIntermedaiteLayer(writableTestFont):
+async def test_extendSmartGlyphWithIntermediateLayerOnFontAxis(writableTestFont):
     # This should fail, because not yet implemented.
     glyphName = "_part.shoulder"
     glyph = await writableTestFont.getGlyph(glyphName)
@@ -265,6 +294,28 @@ async def test_extendSmartGlyphWithIntermedaiteLayer(writableTestFont):
     glyph.sources.append(
         GlyphSource(
             name="Intermediate Layer", location={"Weight": 99}, layerName=layerName
+        )
+    )
+    glyph.layers[layerName] = Layer(glyph=StaticGlyph(xAdvance=100))
+
+    with pytest.raises(
+        NotImplementedError,
+        match="Brace layers within smart glyphs are not yet implemented",
+    ):
+        await writableTestFont.putGlyph(glyphName, glyph, [])
+
+
+async def test_extendSmartGlyphWithIntermediateLayerOnGlyphAxis(writableTestFont):
+    # This should fail, because not yet implemented.
+    glyphName = "_part.shoulder"
+    glyph = await writableTestFont.getGlyph(glyphName)
+
+    layerName = str(uuid.uuid4()).upper()
+    glyph.sources.append(
+        GlyphSource(
+            name="Intermediate Layer",
+            location={"shoulderWidth": 50},
+            layerName=layerName,
         )
     )
     glyph.layers[layerName] = Layer(glyph=StaticGlyph(xAdvance=100))
@@ -284,7 +335,7 @@ async def test_smartGlyphAddGlyphAxisWithDefaultNotMinOrMax(writableTestFont):
     glyph.axes.append(glyphAxis)
 
     with pytest.raises(
-        TypeError,
+        GlyphsBackendError,
         match="Glyph axis 'Height' defaultValue must be at MIN or MAX.",
     ):
         await writableTestFont.putGlyph(glyphName, glyph, [])
@@ -298,7 +349,7 @@ async def test_smartGlyphUpdateGlyphAxisWithDefaultNotMinOrMax(writableTestFont)
     glyphAxis.defaultValue = 50
 
     with pytest.raises(
-        TypeError,
+        GlyphsBackendError,
         match="defaultValue must be at MIN or MAX.",
     ):
         await writableTestFont.putGlyph(glyphName, glyph, [])
@@ -356,6 +407,7 @@ async def test_deleteLayer(writableTestFont):
 
     # delete intermediate layer
     sourceIndex = 1
+    del glyph.layers[glyph.sources[sourceIndex].layerName + "^background"]
     del glyph.layers[glyph.sources[sourceIndex].layerName]
     del glyph.sources[sourceIndex]
 
@@ -366,6 +418,8 @@ async def test_deleteLayer(writableTestFont):
 
 
 async def test_addLayer(writableTestFont):
+    fontSources = await writableTestFont.getSources()
+    sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
     glyphName = "a"
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
@@ -376,7 +430,7 @@ async def test_addLayer(writableTestFont):
     )
     # Copy StaticGlyph from Bold:
     glyph.layers[layerName] = Layer(
-        glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs["Bold"]].glyph)
     )
 
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
@@ -385,7 +439,82 @@ async def test_addLayer(writableTestFont):
     assert glyph == savedGlyph
 
 
+async def test_addBackgroundLayer(writableTestFont):
+    fontSources = await writableTestFont.getSources()
+    sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
+    glyphName = "a"
+    glyphMap = await writableTestFont.getGlyphMap()
+    glyph = await writableTestFont.getGlyph(glyphName)
+
+    # add background layer:
+    glyph.layers[sourceNameMappingToIDs.get("Regular") + "^background"] = Layer(
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs.get("Regular")].glyph)
+    )
+
+    await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
+
+    savedGlyph = await writableTestFont.getGlyph(glyphName)
+    assert glyph == savedGlyph
+
+
+async def test_addBackgroundLayerToLayer(writableTestFont):
+    # This is a nested behaviour.
+    fontSources = await writableTestFont.getSources()
+    sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
+    glyphName = "A"
+    glyphMap = await writableTestFont.getGlyphMap()
+    glyph = await writableTestFont.getGlyph(glyphName)
+
+    # add layout layer:
+    glyph.layers[sourceNameMappingToIDs.get("Regular") + "^Testing"] = Layer(
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs.get("Regular")].glyph),
+        # Add explicit layerId for perfect round tripping
+        customData={"com.glyphsapp.layer.layerId": str(uuid.uuid4()).upper()},
+    )
+
+    # add background to layout layer:
+    glyph.layers[sourceNameMappingToIDs.get("Regular") + "^Testing/background"] = Layer(
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs.get("Regular")].glyph)
+    )
+
+    await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
+
+    savedGlyph = await writableTestFont.getGlyph(glyphName)
+    assert glyph == savedGlyph
+
+
+async def test_addLayoutLayer(writableTestFont):
+    fontSources = await writableTestFont.getSources()
+    sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
+    glyphName = "A"
+    glyphMap = await writableTestFont.getGlyphMap()
+    glyph = await writableTestFont.getGlyph(glyphName)
+
+    # add layout layer:
+    glyph.layers[sourceNameMappingToIDs.get("Regular") + "^Layout Layer"] = Layer(
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs["Bold"]].glyph),
+        # Add explicit layerId for perfect round tripping
+        customData={"com.glyphsapp.layer.layerId": str(uuid.uuid4()).upper()},
+    )
+
+    await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
+
+    savedGlyph = await writableTestFont.getGlyph(glyphName)
+    assert glyph == savedGlyph
+
+
+async def test_readBackgroundLayer(writableTestFont):
+    glyphName = "a"
+    glyph = await writableTestFont.getGlyph(glyphName)
+
+    # every master layer of /a should have a background layer.
+    for glyphSource in glyph.sources:
+        assert f"{glyphSource.layerName}^background" in glyph.layers
+
+
 async def test_addLayerWithoutSource(writableTestFont):
+    fontSources = await writableTestFont.getSources()
+    sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
     glyphName = "a"
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
@@ -393,16 +522,18 @@ async def test_addLayerWithoutSource(writableTestFont):
     layerName = str(uuid.uuid4()).upper()
     # Copy StaticGlyph from Bold:
     glyph.layers[layerName] = Layer(
-        glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs["Bold"]].glyph)
     )
 
     with pytest.raises(
-        NotImplementedError, match="Layer without glyph source is not yet implemented"
+        GlyphsBackendError, match="Layer without glyph source is not supported"
     ):
         await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
 
 
 async def test_addLayerWithComponent(writableTestFont):
+    fontSources = await writableTestFont.getSources()
+    sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
     glyphName = "n"  # n is made from components
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
@@ -413,13 +544,48 @@ async def test_addLayerWithComponent(writableTestFont):
     )
     # Copy StaticGlyph of Bold:
     glyph.layers[layerName] = Layer(
-        glyph=deepcopy(glyph.layers["BFFFD157-90D3-4B85-B99D-9A2F366F03CA"].glyph)
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs["Bold"]].glyph)
+    )
+
+    # add background layer
+    glyph.layers[layerName + "^background"] = Layer(
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs["Bold"]].glyph)
     )
 
     await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
 
     savedGlyph = await writableTestFont.getGlyph(glyphName)
     assert glyph == savedGlyph
+
+
+async def test_addLayoutLayerToBraceLayer(writableTestFont):
+    # This is a fundamental difference between Fontra and Glyphs. Therefore raise error.
+    fontSources = await writableTestFont.getSources()
+    sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
+    glyphName = "n"
+    glyphMap = await writableTestFont.getGlyphMap()
+    glyph = await writableTestFont.getGlyph(glyphName)
+
+    layerName = str(uuid.uuid4()).upper()
+    glyph.sources.append(
+        GlyphSource(name="SemiBold", location={"Weight": 166}, layerName=layerName)
+    )
+
+    # brace layer
+    glyph.layers[layerName] = Layer(
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs["Light"]].glyph)
+    )
+
+    # secondary layer for brace layer
+    glyph.layers[layerName + "^Layout Layer"] = Layer(
+        glyph=deepcopy(glyph.layers[sourceNameMappingToIDs["Bold"]].glyph)
+    )
+
+    with pytest.raises(
+        GlyphsBackendError,
+        match="A brace layer can only have an additional source layer named 'background'",
+    ):
+        await writableTestFont.putGlyph(glyphName, glyph, glyphMap[glyphName])
 
 
 expectedSkewErrors = [
@@ -431,11 +597,13 @@ expectedSkewErrors = [
 
 @pytest.mark.parametrize("skewValue,expectedErrorMatch", expectedSkewErrors)
 async def test_skewComponent(writableTestFont, skewValue, expectedErrorMatch):
+    fontSources = await writableTestFont.getSources()
+    sourceNameMappingToIDs = sourceNameMappingFromSources(fontSources)
     glyphName = "Adieresis"  # Adieresis is made from components
     glyphMap = await writableTestFont.getGlyphMap()
     glyph = await writableTestFont.getGlyph(glyphName)
 
-    glyph.layers[mappingMasterIDs.get("Light")].glyph.components[
+    glyph.layers[sourceNameMappingToIDs.get("Light")].glyph.components[
         0
     ].transformation.skewX = skewValue
     with pytest.raises(TypeError, match=expectedErrorMatch):

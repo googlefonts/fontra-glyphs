@@ -11,7 +11,6 @@ from test_backend import expectedGlyphMap
 
 from fontra_glyphs.utils import (
     convertMatchesToTuples,
-    getAssociatedMasterId,
     getSourceFromLayerName,
     matchTreeFont,
     openstepPlistDumps,
@@ -124,25 +123,6 @@ async def test_splitLocation(
     assert glyphLocation == expectedGlyphLocation
 
 
-expectedAssociatedMasterId = [
-    # gsLocation, associatedMasterId
-    [[14, 155, 900], "MasterID-TextWideBold"],
-    [[14, 155, 100], "MasterID-TextWideLight"],
-    [[14, 55, 900], "MasterID-TextCondBold"],
-    [[14, 55, 110], "MasterID-TextCondLight"],
-    [[55, 155, 900], "MasterID-PosterWideBold"],
-    [[55, 155, 100], "MasterID-PosterWideLight"],
-    [[55, 55, 900], "MasterID-PosterCondBold"],
-    [[55, 55, 110], "MasterID-PosterCondLight"],
-    [[30, 100, 399], "MasterID-TextCondRegular"],
-]
-
-
-@pytest.mark.parametrize("gsLocation,expected", expectedAssociatedMasterId)
-def test_getAssociatedMasterId(testGSFontWW, gsLocation, expected):
-    assert getAssociatedMasterId(testGSFontWW, gsLocation) == expected
-
-
 @pytest.mark.parametrize("path", [glyphs3Path])
 def test_roundtripGlyphsFileDumps(path):
     root = openstep_plist.loads(path.read_text(), use_numbers=True)
@@ -183,19 +163,20 @@ async def test_roundtripGlyphsFile(tmpdir, path):
         compareFilesByLines(path, testFont.gsFilePath)
 
 
-def compareFilesByLines(path, path2):
-    lineIndex = 0
-    for orig_line in path.read_text().splitlines():
-        if "kernTop" in orig_line or "kernBottom" in orig_line:
-            # kernTop and kernBottom are not yet supported by glyphsLib.
-            # There it's expected, that these are missing. Skip these lines.
-            continue
-        if "rememberToMakeCoffee" in orig_line:
-            # It is expected, that this is not written brack to the glyphs file.
-            continue
-        new_line = path2.read_text().splitlines()[lineIndex]
-        assert orig_line == new_line
-        lineIndex += 1
+def compareFilesByLines(pathA, pathB):
+    linesA = pathA.read_text().splitlines()
+    linesB = pathB.read_text().splitlines()
+
+    skipWords = [
+        "kernTop",
+        "kernBottom",
+        "rememberToMakeCoffee",
+        "bottomName",
+        "topName",
+    ]
+    linesA = [line for line in linesA if not any(w in line for w in skipWords)]
+
+    assert linesA == linesB
 
 
 def getGlyhphsPackageFilePath(path, packageFile):
