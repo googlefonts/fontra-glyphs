@@ -411,6 +411,8 @@ class GlyphsBackend:
                 componentNames.add(component.name)
 
         for compoName in sorted(componentNames):
+            if compoName not in self.glyphNameToIndex:
+                continue
             self._ensureGlyphIsParsed(compoName)
 
     def _getBraceLayerLocation(self, gsLayer):
