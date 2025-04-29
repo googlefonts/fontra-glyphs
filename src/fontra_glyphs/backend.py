@@ -409,6 +409,9 @@ class GlyphsBackend:
         for layer in gsGlyph.layers:
             for component in layer.components:
                 componentNames.add(component.name)
+            if layer.hasBackground:
+                for component in layer.background.components:
+                    componentNames.add(component.name)
 
         for compoName in sorted(componentNames):
             if compoName not in self.glyphNameToIndex:
