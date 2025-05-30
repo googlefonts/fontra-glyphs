@@ -658,6 +658,10 @@ async def test_getKerning(testFont, referenceFont):
     assert await testFont.getKerning() == await referenceFont.getKerning()
 
 
+async def test_getFeatures(testFont, referenceFont):
+    assert await testFont.getFeatures() == await referenceFont.getFeatures()
+
+
 async def test_getSources(testFont, referenceFont):
     assert await testFont.getSources() == await referenceFont.getSources()
 
