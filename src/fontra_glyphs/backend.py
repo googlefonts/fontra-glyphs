@@ -274,8 +274,9 @@ class GlyphsBackend:
         )
 
     async def getFeatures(self) -> OpenTypeFeatures:
-        self.featureText = glyphsLib.builder.features._to_ufo_features(self.gsFont)
-        return OpenTypeFeatures(language="fea", text=self.featureText)
+        return OpenTypeFeatures(
+            text=glyphsLib.builder.features._to_ufo_features(self.gsFont),
+        )
 
     async def putFeatures(self, features: OpenTypeFeatures) -> None:
         if features.language != "fea":
