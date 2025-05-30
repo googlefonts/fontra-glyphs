@@ -161,9 +161,6 @@ class GlyphsBackend:
             self.gsFont.format_version,
         )
 
-        ufos = glyphsLib.to_ufos(self.gsFont)
-        self.featureText = ufos[0].features.text
-
         axis: FontAxis | DiscreteFontAxis
         axes: list[FontAxis | DiscreteFontAxis] = []
         for dsAxis in dsAxes:
@@ -277,6 +274,8 @@ class GlyphsBackend:
         )
 
     async def getFeatures(self) -> OpenTypeFeatures:
+        ufos = glyphsLib.to_ufos(self.gsFont)
+        self.featureText = ufos[0].features.text
         return OpenTypeFeatures(language="fea", text=self.featureText)
 
     async def putFeatures(self, features: OpenTypeFeatures) -> None:
