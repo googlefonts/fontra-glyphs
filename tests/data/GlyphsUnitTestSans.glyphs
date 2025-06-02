@@ -13,10 +13,6 @@ code = a.sc;
 name = c2sc_target;
 },
 {
-code = "";
-name = numbers;
-},
-{
 code = a;
 name = smcp_source;
 },
@@ -63,11 +59,11 @@ code = "feature c2sc;\012feature smcp;\012";
 name = aalt;
 },
 {
-code = "# Small Capitals From Capitals\012\012    sub @c2sc_source by @c2sc_target; ";
+code = "# Small Capitals From Capitals\012\012    sub @c2sc_source by @c2sc_target;";
 name = c2sc;
 },
 {
-code = "# Small Capitals\012\012    sub @smcp_source by @smcp_target; ";
+code = "# Small Capitals\012\012    sub @smcp_source by @smcp_target;";
 name = smcp;
 }
 );
