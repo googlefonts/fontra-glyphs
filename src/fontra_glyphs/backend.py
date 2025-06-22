@@ -303,11 +303,17 @@ class GlyphsBackend:
                 f"GlyphsApp Backend: Error while parsing features: {e}"
             )
 
+        self._writeFontData()
+
+    def _writeFontData(self):
         # Set self.gsFont.glyphs to an empty list temporarily, so no time is wasted on these.
-        gsFontTemp = deepcopy(self.gsFont)
-        gsFontTemp.glyphs = []
-        self.rawFontData = self._getRawData(gsFontTemp)
-        self._writeRawFontData()
+        originalGlyphs = self.gsFont.glyphs
+        self.gsFont.glyphs.glyphs = []
+        try:
+            self.rawFontData = self._getRawData(self.gsFont)
+            self._writeRawFontData()
+        finally:
+            self.gsFont.glyphs = originalGlyphs
 
     async def getBackgroundImage(self, imageIdentifier: str) -> ImageData | None:
         return None
