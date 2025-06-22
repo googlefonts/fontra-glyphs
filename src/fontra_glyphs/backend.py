@@ -274,13 +274,46 @@ class GlyphsBackend:
         )
 
     async def getFeatures(self) -> OpenTypeFeatures:
-        # TODO: extract features
-        return OpenTypeFeatures()
+        return OpenTypeFeatures(
+            text=glyphsLib.builder.features._to_ufo_features(self.gsFont),
+        )
 
     async def putFeatures(self, features: OpenTypeFeatures) -> None:
-        raise NotImplementedError(
-            "GlyphsApp Backend: Editing OpenTypeFeatures is not yet implemented."
-        )
+        if features.language != "fea":
+            raise NotImplementedError(
+                "GlyphsApp Backend: skip writing features in unsupported language: "
+                f"{features.language!r}"
+            )
+
+        # Delete existing features, prefixes and classes
+        # This is needed, because glyphsLib.builder.features._to_glyphs_features()
+        # will not overwrite existing features, prefixes and classes.
+        # '_to_glyphs_features' only adds new ones to self.gsFont.
+        self.gsFont.featurePrefixes = []
+        self.gsFont.features = []
+        self.gsFont.classes = []
+
+        # Convert feature.text into Glyphs featurePrefixes, features and classes
+        try:
+            glyphsLib.builder.features._to_glyphs_features(
+                self.gsFont, features.text, glyph_names=self.glyphNameToIndex.keys()
+            )
+        except Exception as e:
+            raise GlyphsBackendError(
+                f"GlyphsApp Backend: Error while parsing features: {e}"
+            )
+
+        self._writeFontData()
+
+    def _writeFontData(self):
+        # Set self.gsFont.glyphs to an empty list temporarily, so no time is wasted on these.
+        originalGlyphs = self.gsFont.glyphs
+        self.gsFont.glyphs.glyphs = []
+        try:
+            self.rawFontData = self._getRawData(self.gsFont)
+            self._writeRawFontData()
+        finally:
+            self.gsFont.glyphs = originalGlyphs
 
     async def getBackgroundImage(self, imageIdentifier: str) -> ImageData | None:
         return None
@@ -442,6 +475,17 @@ class GlyphsBackend:
             if value != localAxesByName[name].defaultValue
         }
 
+    def _getRawData(self, object):
+        # Serialize to text with glyphsLib.writer.Writer(), using io.StringIO
+        f = io.StringIO()
+        writer = glyphsLib.writer.Writer(f)
+        writer.format_version = self.gsFont.format_version
+        writer.write(object)
+
+        # Parse stream into "raw" object
+        f.seek(0)
+        return openstep_plist.load(f, use_numbers=True)
+
     async def putGlyph(
         self, glyphName: str, glyph: VariableGlyph, codePoints: list[int]
     ) -> None:
@@ -465,16 +509,7 @@ class GlyphsBackend:
         # Update unicodes: need to be converted from decimal to hex strings
         gsGlyph.unicodes = [str(hex(codePoint)) for codePoint in codePoints]
 
-        # Serialize to text with glyphsLib.writer.Writer(), using io.StringIO
-        f = io.StringIO()
-        writer = glyphsLib.writer.Writer(f)
-        writer.format_version = self.gsFont.format_version
-        writer.write(gsGlyph)
-
-        # Parse stream into "raw" object
-        f.seek(0)
-        rawGlyphData = openstep_plist.load(f, use_numbers=True)
-
+        rawGlyphData = self._getRawData(gsGlyph)
         # Replace original "raw" object with new "raw" object
         glyphIndex = self.glyphNameToIndex[glyphName]
         if isNewGlyph:
@@ -596,16 +631,19 @@ class GlyphsBackend:
         )
         return baseLocation | glyphSource.location
 
-    def _writeRawGlyph(self, glyphName, isNewGlyph):
-        # Write whole file with openstep_plist
-        # 'glyphName' and 'isNewGlyph' arguments not used, because we write the whole file,
-        # but is required for the glyphspackge backend
+    def _writeRawFontData(self):
         rawFontData = dict(self.rawFontData)
         rawFontData["glyphs"] = self.rawGlyphsData
 
         rawFontData = convertMatchesToTuples(rawFontData, matchTreeFont)
         out = openstepPlistDumps(rawFontData)
         self.gsFilePath.write_text(out)
+
+    def _writeRawGlyph(self, glyphName, isNewGlyph):
+        # Write whole file with openstep_plist
+        # 'glyphName' and 'isNewGlyph' arguments not used, because we write the whole file,
+        # but is required for the glyphspackage backend
+        self._writeRawFontData()
 
     def _findNearestMasterId(self, fontLocation):
         masterIDs = list(self.locationByMasterID)
@@ -825,6 +863,12 @@ class GlyphsPackageBackend(GlyphsBackend):
         rawGlyphsData.sort(key=sortKey)
 
         return rawFontData, rawGlyphsData
+
+    def _writeRawFontData(self):
+        rawFontData = convertMatchesToTuples(self.rawFontData, matchTreeFont)
+        out = openstepPlistDumps(rawFontData)
+        filePath = self.gsFilePath / "fontinfo.plist"
+        filePath.write_text(out, encoding="utf=8")
 
     def _writeRawGlyph(self, glyphName, isNewGlyph):
         rawGlyphData = self.rawGlyphsData[self.glyphNameToIndex[glyphName]]

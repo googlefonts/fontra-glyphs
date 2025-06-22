@@ -21,10 +21,6 @@ code = a.sc;
 name = c2sc_target;
 },
 {
-code = "";
-name = numbers;
-},
-{
 code = a;
 name = smcp_source;
 },
@@ -81,13 +77,13 @@ tag = aalt;
 {
 code = "# Small Capitals From Capitals
 
-    sub @c2sc_source by @c2sc_target; ";
+    sub @c2sc_source by @c2sc_target;";
 tag = c2sc;
 },
 {
 code = "# Small Capitals
 
-    sub @smcp_source by @smcp_target; ";
+    sub @smcp_source by @smcp_target;";
 tag = smcp;
 }
 );
