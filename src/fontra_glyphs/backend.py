@@ -636,7 +636,7 @@ class GlyphsBackend:
     def _writeRawGlyph(self, glyphName, isNewGlyph):
         # Write whole file with openstep_plist
         # 'glyphName' and 'isNewGlyph' arguments not used, because we write the whole file,
-        # but is required for the glyphspackge backend
+        # but is required for the glyphspackage backend
         self._writeRawFontData()
 
     def _findNearestMasterId(self, fontLocation):
