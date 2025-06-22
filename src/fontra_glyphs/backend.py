@@ -303,23 +303,7 @@ class GlyphsBackend:
                 f"GlyphsApp Backend: Error while parsing features: {e}"
             )
 
-        # Serialize to text with glyphsLib.writer.Writer(), using io.StringIO
-        f = io.StringIO()
-        writer = glyphsLib.writer.Writer(f)
-        writer.format_version = self.gsFont.format_version
-        writer.write(self.gsFont)
-
-        # Parse stream into "raw" object
-        f.seek(0)
-        rawData = openstep_plist.load(f, use_numbers=True)
-
-        for item in ["featurePrefixes", "classes", "features"]:
-            itemData = rawData.get(item, None)
-            if itemData is None:
-                del self.rawFontData[item]
-                continue
-            self.rawFontData[item] = itemData
-
+        self.rawFontData = self._getRawData(self.gsFont)
         self._writeRawFontData()
 
     async def getBackgroundImage(self, imageIdentifier: str) -> ImageData | None:
@@ -482,6 +466,17 @@ class GlyphsBackend:
             if value != localAxesByName[name].defaultValue
         }
 
+    def _getRawData(self, object):
+        # Serialize to text with glyphsLib.writer.Writer(), using io.StringIO
+        f = io.StringIO()
+        writer = glyphsLib.writer.Writer(f)
+        writer.format_version = self.gsFont.format_version
+        writer.write(object)
+
+        # Parse stream into "raw" object
+        f.seek(0)
+        return openstep_plist.load(f, use_numbers=True)
+
     async def putGlyph(
         self, glyphName: str, glyph: VariableGlyph, codePoints: list[int]
     ) -> None:
@@ -505,16 +500,7 @@ class GlyphsBackend:
         # Update unicodes: need to be converted from decimal to hex strings
         gsGlyph.unicodes = [str(hex(codePoint)) for codePoint in codePoints]
 
-        # Serialize to text with glyphsLib.writer.Writer(), using io.StringIO
-        f = io.StringIO()
-        writer = glyphsLib.writer.Writer(f)
-        writer.format_version = self.gsFont.format_version
-        writer.write(gsGlyph)
-
-        # Parse stream into "raw" object
-        f.seek(0)
-        rawGlyphData = openstep_plist.load(f, use_numbers=True)
-
+        rawGlyphData = self._getRawData(gsGlyph)
         # Replace original "raw" object with new "raw" object
         glyphIndex = self.glyphNameToIndex[glyphName]
         if isNewGlyph:
