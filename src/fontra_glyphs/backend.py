@@ -308,7 +308,7 @@ class GlyphsBackend:
     def _writeFontData(self):
         # Set self.gsFont.glyphs to an empty list temporarily, so no time is wasted on these.
         originalGlyphs = self.gsFont.glyphs
-        self.gsFont.glyphs.glyphs = []
+        self.gsFont.glyphs = []
         try:
             self.rawFontData = self._getRawData(self.gsFont)
             self._writeRawFontData()
