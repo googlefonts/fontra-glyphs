@@ -85,12 +85,6 @@ infoNamesMapping = [
 GS_KERN_GROUP_PREFIXES = {
     side: f"@MMK_{side[0].upper()}_" for side in ["left", "right", "top", "bottom"]
 }
-FONTRA_KERN_GROUP_PREFIXES = {
-    "left": "public.kern1.",
-    "right": "public.kern2.",
-    "top": "kern.top.",
-    "bottom": "kern.bottom.",
-}
 GS_FORMAT_2_KERN_SIDES = [
     # pair side, glyph side
     ("left", "rightKerningGroup"),
@@ -921,9 +915,7 @@ def _readGlyphMapAndKerningGroups(
         for pairSide, glyphSideAttr in sideAttrs:
             groupName = glyphData.get(glyphSideAttr)
             if groupName is not None:
-                kerningGroups[pairSide][
-                    FONTRA_KERN_GROUP_PREFIXES[pairSide] + groupName
-                ].append(glyphName)
+                kerningGroups[pairSide][groupName].append(glyphName)
 
     return glyphMap, kerningGroups
 
@@ -1070,10 +1062,9 @@ def gsKerningToFontraKerning(
 ) -> Kerning:
     gsPrefix1 = GS_KERN_GROUP_PREFIXES[side1]
     gsPrefix2 = GS_KERN_GROUP_PREFIXES[side2]
-    fontraPrefix1 = FONTRA_KERN_GROUP_PREFIXES[side1]
-    fontraPrefix2 = FONTRA_KERN_GROUP_PREFIXES[side2]
 
-    groups = dict(groupsBySide[side1] | groupsBySide[side2])
+    groupsSide1 = dict(groupsBySide[side1])
+    groupsSide2 = dict(groupsBySide[side2])
 
     sourceIdentifiers = []
     valueDicts: dict[str, dict[str, dict]] = defaultdict(lambda: defaultdict(dict))
@@ -1091,10 +1082,10 @@ def gsKerningToFontraKerning(
         sourceIdentifiers.append(gsMaster.id)
 
         for name1, name2Dict in kernDict.items():
-            name1 = translateGroupName(name1, gsPrefix1, fontraPrefix1)
+            name1 = translateGroupName(name1, gsPrefix1, "@")
 
             for name2, value in name2Dict.items():
-                name2 = translateGroupName(name2, gsPrefix2, fontraPrefix2)
+                name2 = translateGroupName(name2, gsPrefix2, "@")
                 valueDicts[name1][name2][gsMaster.id] = value
 
     values = {
@@ -1105,7 +1096,12 @@ def gsKerningToFontraKerning(
         for left, rightDict in valueDicts.items()
     }
 
-    return Kerning(groups=groups, sourceIdentifiers=sourceIdentifiers, values=values)
+    return Kerning(
+        groupsSide1=groupsSide1,
+        groupsSide2=groupsSide2,
+        sourceIdentifiers=sourceIdentifiers,
+        values=values,
+    )
 
 
 def gsMastersToFontraFontSources(gsFont, locationByMasterID):
