@@ -185,17 +185,19 @@ class GlyphsBackend:
         rawFontData["glyphs"] = []
         return rawFontData, rawGlyphsData
 
+    @property
+    def _kerningSideAttrs(self):
+        return (
+            GS_FORMAT_2_KERN_SIDES
+            if self.gsFont.format_version == 2
+            else GS_FORMAT_3_KERN_SIDES
+        )
+
     def _readGlyphMapAndKerningGroups(
         self,
     ) -> tuple[dict[str, list[int]], dict[str, tuple[str, str]]]:
         glyphMap = {}
         kerningGroups: dict = defaultdict(lambda: defaultdict(list))
-
-        sideAttrs = (
-            GS_FORMAT_2_KERN_SIDES
-            if self.gsFont.format_version == 2
-            else GS_FORMAT_3_KERN_SIDES
-        )
 
         for glyphData in self.rawGlyphsData:
             glyphName = glyphData["glyphname"]
@@ -220,7 +222,7 @@ class GlyphsBackend:
             glyphMap[glyphName] = codePoints
 
             # extract kern groups
-            for pairSide, glyphSideAttr in sideAttrs:
+            for pairSide, glyphSideAttr in self._kerningSideAttrs:
                 groupName = glyphData.get(glyphSideAttr)
                 if groupName is not None:
                     kerningGroups[pairSide][groupName].append(glyphName)
@@ -228,7 +230,28 @@ class GlyphsBackend:
         return glyphMap, kerningGroups
 
     def _updateKerningGroups(self):
-        raise NotImplementedError()
+        changedGlyphs = set()
+
+        for glyphData in self.rawGlyphsData:
+            glyphName = glyphData["glyphname"]
+
+            for pairSide, glyphSideAttr in self._kerningSideAttrs:
+                groups = self.kerningGroups.get(pairSide)
+                currentGroupName = glyphData.get(glyphSideAttr)
+                newGroupName = None
+                for groupName, group in groups.items():
+                    if glyphName in group:
+                        newGroupName = groupName
+                        break
+                if currentGroupName != newGroupName:
+                    changedGlyphs.add(glyphName)
+                    if newGroupName:
+                        glyphData[glyphSideAttr] = newGroupName
+                    else:
+                        glyphData.pop(glyphSideAttr, None)
+                    self.parsedGlyphNames.discard(glyphName)
+
+        return changedGlyphs
 
     async def getGlyphMap(self) -> dict[str, list[int]]:
         return deepcopy(self.glyphMap)
@@ -320,8 +343,8 @@ class GlyphsBackend:
             kerning.get("vkrn"), self._verticalKerningAttr, "top", "bottom"
         )
 
-        self._updateKerningGroups()
-        self._writeFontData()
+        changedGlyphs = self._updateKerningGroups()
+        self._writeFontData(changedGlyphs)
 
     def _gsKerningToFontraKerning(self, kerningAttr, side1, side2):
         gsPrefix1 = GS_KERN_GROUP_PREFIXES[side1]
@@ -408,13 +431,13 @@ class GlyphsBackend:
 
         self._writeFontData()
 
-    def _writeFontData(self):
+    def _writeFontData(self, changedGlyphs=None):
         # Set self.gsFont.glyphs to an empty list temporarily, so no time is wasted on these.
         originalGlyphs = self.gsFont.glyphs
         self.gsFont.glyphs = []
         try:
             self.rawFontData = self._getRawData(self.gsFont)
-            self._writeRawFontData()
+            self._writeRawFontData(changedGlyphs)
         finally:
             self.gsFont.glyphs = originalGlyphs
 
@@ -734,7 +757,8 @@ class GlyphsBackend:
         )
         return baseLocation | glyphSource.location
 
-    def _writeRawFontData(self):
+    def _writeRawFontData(self, changedGlyphs=None):
+        # `changedGlyphs` is ignored, needed for glyphsPackage
         rawFontData = dict(self.rawFontData)
         rawFontData["glyphs"] = self.rawGlyphsData
 
@@ -967,11 +991,14 @@ class GlyphsPackageBackend(GlyphsBackend):
 
         return rawFontData, rawGlyphsData
 
-    def _writeRawFontData(self):
+    def _writeRawFontData(self, changedGlyphs=None):
         rawFontData = convertMatchesToTuples(self.rawFontData, matchTreeFont)
         out = openstepPlistDumps(rawFontData)
         filePath = self.gsFilePath / "fontinfo.plist"
         filePath.write_text(out, encoding="utf=8")
+        if changedGlyphs:
+            for glyphName in sorted(changedGlyphs):
+                self._writeRawGlyph(glyphName, False)
 
     def _writeRawGlyph(self, glyphName, isNewGlyph):
         rawGlyphData = self.rawGlyphsData[self.glyphNameToIndex[glyphName]]
