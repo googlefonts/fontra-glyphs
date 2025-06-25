@@ -1063,8 +1063,8 @@ def gsKerningToFontraKerning(
     gsPrefix1 = GS_KERN_GROUP_PREFIXES[side1]
     gsPrefix2 = GS_KERN_GROUP_PREFIXES[side2]
 
-    groupsSide1 = dict(groupsBySide[side1])
-    groupsSide2 = dict(groupsBySide[side2])
+    groupsSide1 = deepcopy(groupsBySide[side1])
+    groupsSide2 = deepcopy(groupsBySide[side2])
 
     sourceIdentifiers = []
     valueDicts: dict[str, dict[str, dict]] = defaultdict(lambda: defaultdict(dict))
