@@ -126,9 +126,8 @@ class GlyphsBackend:
         self.rawFontData = rawFontData
         self.rawGlyphsData = rawGlyphsData
 
-        self.glyphNameToIndex = {
-            glyphData["glyphname"]: i for i, glyphData in enumerate(rawGlyphsData)
-        }
+        self._updateGlyphNameToIndex()
+
         self.parsedGlyphNames: set[str] = set()
 
         dsAxes = [
@@ -184,6 +183,11 @@ class GlyphsBackend:
         rawGlyphsData = rawFontData["glyphs"]
         rawFontData["glyphs"] = []
         return rawFontData, rawGlyphsData
+
+    def _updateGlyphNameToIndex(self):
+        self.glyphNameToIndex = {
+            glyphData["glyphname"]: i for i, glyphData in enumerate(self.rawGlyphsData)
+        }
 
     @property
     def _kerningSideAttrs(self):
@@ -259,10 +263,18 @@ class GlyphsBackend:
     async def putGlyphMap(self, value: dict[str, list[int]]) -> None:
         pass
 
-    async def deleteGlyph(self, glyphName):
-        raise NotImplementedError(
-            "GlyphsApp Backend: Deleting glyphs is not yet implemented."
-        )
+    async def deleteGlyph(self, glyphName: str) -> None:
+        if glyphName not in self.glyphNameToIndex:
+            raise KeyError(f"Glyph '{glyphName}' does not exist")
+
+        del self.glyphMap[glyphName]
+        index = self.glyphNameToIndex[glyphName]
+        assert self.rawGlyphsData[index]["glyphname"] == glyphName
+        del self.rawGlyphsData[index]
+        del self.gsFont.glyphs[index]
+        self.parsedGlyphNames.discard(glyphName)
+        self._updateGlyphNameToIndex()
+        self._updateDeletedGlyph(glyphName)
 
     async def getFontInfo(self) -> FontInfo:
         infoDict = {}
@@ -816,6 +828,10 @@ class GlyphsBackend:
         # but is required for the glyphspackage backend
         self._writeRawFontData()
 
+    def _updateDeletedGlyph(self, glyphName):
+        # `glyphName` is ignored, needed for glyphsPackage
+        self._writeRawFontData()
+
     def _findNearestMasterId(self, fontLocation):
         masterIDs = list(self.locationByMasterID)
         locations = list(self.locationByMasterID.values())
@@ -1037,6 +1053,11 @@ class GlyphsPackageBackend(GlyphsBackend):
 
     def _writeRawFontData(self, changedGlyphs=None):
         rawFontData = convertMatchesToTuples(self.rawFontData, matchTreeFont)
+
+        # There can be an empty glyphs list at this point, which we don't want
+        # to write
+        rawFontData.pop("glyphs", None)
+
         out = openstepPlistDumps(rawFontData)
         filePath = self.gsFilePath / "fontinfo.plist"
         filePath.write_text(out, encoding="utf=8")
@@ -1053,10 +1074,18 @@ class GlyphsPackageBackend(GlyphsBackend):
         filePath.write_text(out, encoding="utf=8")
 
         if isNewGlyph:
-            filePathGlyphOrder = self.gsFilePath / "order.plist"
-            glyphOrder = [glyph["glyphname"] for glyph in self.rawGlyphsData]
-            out = openstepPlistDumps(glyphOrder)
-            filePathGlyphOrder.write_text(out, encoding="utf=8")
+            self._updateGlyphOrder()
+
+    def _updateDeletedGlyph(self, glyphName):
+        filePath = self.getGlyphFilePath(glyphName)
+        filePath.unlink()
+        self._updateGlyphOrder()
+
+    def _updateGlyphOrder(self):
+        filePathGlyphOrder = self.gsFilePath / "order.plist"
+        glyphOrder = [glyph["glyphname"] for glyph in self.rawGlyphsData]
+        out = openstepPlistDumps(glyphOrder)
+        filePathGlyphOrder.write_text(out, encoding="utf=8")
 
     def getGlyphFilePath(self, glyphName):
         glyphsPath = self.gsFilePath / "glyphs"
