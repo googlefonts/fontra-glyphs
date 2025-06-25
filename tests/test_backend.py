@@ -660,37 +660,39 @@ async def test_getKerning(testFont, referenceFont):
     assert await testFont.getKerning() == await referenceFont.getKerning()
 
 
-async def test_putKerning_modify_pair(writableTestFont):
-    kerning = await writableTestFont.getKerning()
-
+def modifyKerningPair(kerning):
     kerning["kern"].values["@A"]["@J"][0] = -40
-
-    async with aclosing(writableTestFont):
-        await writableTestFont.putKerning(kerning)
-
-    reopened = getFileSystemBackend(writableTestFont.gsFilePath)
-    reopenedKerning = await reopened.getKerning()
-    assert reopenedKerning == kerning
+    return
 
 
-async def test_putKerning_delete_pair(writableTestFont):
-    kerning = await writableTestFont.getKerning()
-
+def deleteKerningPair(kerning):
     del kerning["kern"].values["@A"]["@J"]
-
-    async with aclosing(writableTestFont):
-        await writableTestFont.putKerning(kerning)
-
-    reopened = getFileSystemBackend(writableTestFont.gsFilePath)
-    reopenedKerning = await reopened.getKerning()
-    assert reopenedKerning == kerning
+    return
 
 
-async def test_putKerning_modify_groups(writableTestFont):
-    kerning = await writableTestFont.getKerning()
-
+def modifyKerningGroups(kerning):
     kerning["kern"].groupsSide1["A"].append("Adieresis")
     kerning["kern"].groupsSide2["A"].append("Adieresis")
+    return
+
+
+def deleteAllKerning(kerning):
+    return {}
+
+
+putKerningTestData = [
+    (modifyKerningPair, None),
+    (deleteKerningPair, None),
+    (modifyKerningGroups, None),
+    (deleteAllKerning, None),
+]
+
+
+@pytest.mark.parametrize("modifierFunction, expectedException", putKerningTestData)
+async def test_putKerning(writableTestFont, modifierFunction, expectedException):
+    kerning = await writableTestFont.getKerning()
+
+    kerning = modifierFunction(kerning)
 
     async with aclosing(writableTestFont):
         await writableTestFont.putKerning(kerning)
@@ -698,15 +700,6 @@ async def test_putKerning_modify_groups(writableTestFont):
     reopened = getFileSystemBackend(writableTestFont.gsFilePath)
     reopenedKerning = await reopened.getKerning()
     assert reopenedKerning == kerning
-
-
-async def test_putKerning_delete_all_kerning(writableTestFont):
-    async with aclosing(writableTestFont):
-        await writableTestFont.putKerning({})
-
-    reopened = getFileSystemBackend(writableTestFont.gsFilePath)
-    kerning = await reopened.getKerning()
-    assert kerning == {}
 
 
 async def test_getFeatures(testFont, referenceFont):
