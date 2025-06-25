@@ -263,17 +263,16 @@ class GlyphsBackend:
             "vertKerning" if self.gsFont.format_version == 2 else "kerningVertical"
         )
 
-        for kernTag, kerningTable in kerning.items():
-            if kernTag == "kern":
-                self._fontraKerningToGSKerning(kerningTable, "kerning", "left", "right")
-            elif kernTag == "vkrn":
-                self._fontraKerningToGSKerning(
-                    kerningTable, kerningAttr, "top", "bottom"
-                )
-            else:
-                raise NotImplementedError(
-                    f"GlyphsApp Backend: '{kernTag}' kern type not supported."
-                )
+        self._fontraKerningToGSKerning(kerning.get("kern"), "kerning", "left", "right")
+        self._fontraKerningToGSKerning(
+            kerning.get("vkrn"), kerningAttr, "top", "bottom"
+        )
+        unknownKerningTypes = set(kerning) - set(["kern", "vkrn"])
+        if unknownKerningTypes:
+            unknownKerningTypes = ", ".join(sorted(unknownKerningTypes))
+            raise GlyphsBackendError(
+                f"GlyphsApp Backend: '{unknownKerningTypes}' kern type(s) not supported."
+            )
 
     def _gsKerningToFontraKerning(self, kerningAttr, side1, side2):
         gsPrefix1 = GS_KERN_GROUP_PREFIXES[side1]
