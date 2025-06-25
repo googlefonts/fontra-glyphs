@@ -255,9 +255,13 @@ class GlyphsBackend:
         )
 
         kerning = {}
-        if kerningLTR.values:
+        if kerningLTR.values or kerningLTR.groupsSide1 or kerningLTR.groupsSide2:
             kerning["kern"] = kerningLTR
-        if kerningVertical.values:
+        if (
+            kerningVertical.values
+            or kerningVertical.groupsSide1
+            or kerningVertical.groupsSide2
+        ):
             kerning["vkrn"] = kerningVertical
         return kerning
 
