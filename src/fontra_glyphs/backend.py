@@ -350,8 +350,8 @@ class GlyphsBackend:
         gsPrefix1 = GS_KERN_GROUP_PREFIXES[side1]
         gsPrefix2 = GS_KERN_GROUP_PREFIXES[side2]
 
-        groupsSide1 = deepcopy(self.kerningGroups[side1])
-        groupsSide2 = deepcopy(self.kerningGroups[side2])
+        groupsSide1 = deepcopy(dict(self.kerningGroups[side1]))
+        groupsSide2 = deepcopy(dict(self.kerningGroups[side2]))
 
         sourceIdentifiers = []
         valueDicts: dict[str, dict[str, dict]] = defaultdict(lambda: defaultdict(dict))
@@ -397,7 +397,13 @@ class GlyphsBackend:
             self.kerningGroups[side2].clear()
             return
 
-        raise NotImplementedError()
+        if kerningAttr == "vertKerning":
+            raise GlyphsBackendError(
+                "Writing vertical kerning is not supported for the Glyphs 2 format"
+            )
+
+        self.kerningGroups[side1] = deepcopy(kerning.groupsSide1)
+        self.kerningGroups[side2] = deepcopy(kerning.groupsSide2)
 
     async def getFeatures(self) -> OpenTypeFeatures:
         return OpenTypeFeatures(
