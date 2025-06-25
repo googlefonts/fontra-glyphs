@@ -245,11 +245,11 @@ class GlyphsBackend:
                         break
                 if currentGroupName != newGroupName:
                     changedGlyphs.add(glyphName)
+                    self.parsedGlyphNames.discard(glyphName)
                     if newGroupName:
                         glyphData[glyphSideAttr] = newGroupName
                     else:
                         glyphData.pop(glyphSideAttr, None)
-                    self.parsedGlyphNames.discard(glyphName)
 
         return changedGlyphs
 
