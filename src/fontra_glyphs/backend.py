@@ -392,7 +392,9 @@ class GlyphsBackend:
             values=values,
         )
 
-    def _fontraKerningToGSKerning(self, kerning, kerningAttr, side1, side2):
+    def _fontraKerningToGSKerning(
+        self, kerning: Kerning | None, kerningAttr: str, side1: str, side2: str
+    ) -> None:
         if kerning is None:
             setattr(self.gsFont, kerningAttr, {})
             self.kerningGroups[side1].clear()
@@ -410,14 +412,14 @@ class GlyphsBackend:
         )
 
         if unknownSourceIdentifiers:
-            unknownSourceIdentifiers = ", ".join(sorted(unknownSourceIdentifiers))
+            s = ", ".join(sorted(unknownSourceIdentifiers))
             raise GlyphsBackendError(
-                f"Can't write kerning, found unknown source identifiers: {unknownSourceIdentifiers}"
+                f"Can't write kerning, found unknown source identifiers: {s}"
             )
 
         gsPrefix1 = GS_KERN_GROUP_PREFIXES[side1]
         gsPrefix2 = GS_KERN_GROUP_PREFIXES[side2]
-        kerningPerSource = defaultdict(lambda: defaultdict(dict))
+        kerningPerSource: dict = defaultdict(lambda: defaultdict(dict))
 
         for leftName, rightDict in kerning.values.items():
             if leftName.startswith("@"):
