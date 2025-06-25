@@ -15,6 +15,7 @@ from fontra.core.classes import (
     GlyphAxis,
     GlyphSource,
     Guideline,
+    Kerning,
     Layer,
     OpenTypeFeatures,
     StaticGlyph,
@@ -680,11 +681,20 @@ def deleteAllKerning(kerning):
     return {}
 
 
+def addUnknownSourceKerning(kerning):
+    return {
+        "kern": Kerning(
+            groupsSide1={}, groupsSide2={}, sourceIdentifiers=["X"], values={}
+        )
+    }
+
+
 putKerningTestData = [
     (modifyKerningPair, None),
     (deleteKerningPair, None),
     (modifyKerningGroups, None),
     (deleteAllKerning, None),
+    (addUnknownSourceKerning, GlyphsBackendError),
 ]
 
 
@@ -699,12 +709,17 @@ async def test_putKerning(writableTestFont, modifierFunction, expectedException)
 
     kerning = modifierFunction(kerning)
 
-    async with aclosing(writableTestFont):
-        await writableTestFont.putKerning(kerning)
+    if expectedException:
+        with pytest.raises(GlyphsBackendError):
+            async with aclosing(writableTestFont):
+                await writableTestFont.putKerning(kerning)
+    else:
+        async with aclosing(writableTestFont):
+            await writableTestFont.putKerning(kerning)
 
-    reopened = getFileSystemBackend(writableTestFont.gsFilePath)
-    reopenedKerning = await reopened.getKerning()
-    assert reopenedKerning == kerning
+        reopened = getFileSystemBackend(writableTestFont.gsFilePath)
+        reopenedKerning = await reopened.getKerning()
+        assert reopenedKerning == kerning
 
 
 async def test_getFeatures(testFont, referenceFont):
