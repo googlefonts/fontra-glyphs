@@ -402,6 +402,35 @@ class GlyphsBackend:
                 "Writing vertical kerning is not supported for the Glyphs 2 format"
             )
 
+        sourceIdentifiers = kerning.sourceIdentifiers
+        unknownSourceIdentifiers = set(sourceIdentifiers) - set(
+            gsMaster.id for gsMaster in self.gsFont.masters
+        )
+
+        if unknownSourceIdentifiers:
+            unknownSourceIdentifiers = ", ".join(sorted(unknownSourceIdentifiers))
+            raise GlyphsBackendError(
+                f"Can't write kerning, found unknown source identifiers: {unknownSourceIdentifiers}"
+            )
+
+        gsPrefix1 = GS_KERN_GROUP_PREFIXES[side1]
+        gsPrefix2 = GS_KERN_GROUP_PREFIXES[side2]
+        kerningPerSource = defaultdict(lambda: defaultdict(dict))
+
+        for leftName, rightDict in kerning.values.items():
+            if leftName.startswith("@"):
+                leftName = gsPrefix1 + leftName[1:]
+            for rightName, values in rightDict.items():
+                if rightName.startswith("@"):
+                    rightName = gsPrefix2 + rightName[1:]
+                for sourceIdentifier, value in zip(sourceIdentifiers, values):
+                    if value is not None:
+                        kerningPerSource[sourceIdentifier][leftName][rightName] = value
+
+        kerningPerSource = {k: dict(v) for k, v in kerningPerSource.items()}
+
+        setattr(self.gsFont, kerningAttr, kerningPerSource)
+
         self.kerningGroups[side1] = deepcopy(kerning.groupsSide1)
         self.kerningGroups[side2] = deepcopy(kerning.groupsSide2)
 
