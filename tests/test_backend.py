@@ -662,18 +662,18 @@ async def test_getKerning(testFont, referenceFont):
 
 def modifyKerningPair(kerning):
     kerning["kern"].values["@A"]["@J"][0] = -40
-    return
+    return kerning
 
 
 def deleteKerningPair(kerning):
     del kerning["kern"].values["@A"]["@J"]
-    return
+    return kerning
 
 
 def modifyKerningGroups(kerning):
     kerning["kern"].groupsSide1["A"].append("Adieresis")
     kerning["kern"].groupsSide2["A"].append("Adieresis")
-    return
+    return kerning
 
 
 def deleteAllKerning(kerning):
