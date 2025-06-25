@@ -15,6 +15,7 @@ from fontra.core.classes import (
     GlyphAxis,
     GlyphSource,
     Guideline,
+    Kerning,
     Layer,
     OpenTypeFeatures,
     StaticGlyph,
@@ -658,6 +659,80 @@ async def test_addGuideline(writableTestFont):
 
 async def test_getKerning(testFont, referenceFont):
     assert await testFont.getKerning() == await referenceFont.getKerning()
+
+
+def modifyKerningPair(kerning):
+    kerning["kern"].values["@A"]["@J"][0] = -40
+    return kerning
+
+
+def deleteKerningPair(kerning):
+    del kerning["kern"].values["@A"]["@J"]
+    return kerning
+
+
+def modifyKerningGroups(kerning):
+    kerning["kern"].groupsSide1["A"].append("Adieresis")
+    kerning["kern"].groupsSide2["A"].append("Adieresis")
+    return kerning
+
+
+def deleteAllKerning(kerning):
+    return {}
+
+
+def addUnknownSourceKerning(kerning):
+    return {
+        "kern": Kerning(
+            groupsSide1={}, groupsSide2={}, sourceIdentifiers=["X"], values={}
+        )
+    }
+
+
+putKerningTestData = [
+    (modifyKerningPair, None),
+    (deleteKerningPair, None),
+    (modifyKerningGroups, None),
+    (deleteAllKerning, None),
+    (addUnknownSourceKerning, GlyphsBackendError),
+]
+
+
+@pytest.mark.parametrize("modifierFunction, expectedException", putKerningTestData)
+async def test_putKerning(writableTestFont, modifierFunction, expectedException):
+    kerning = await writableTestFont.getKerning()
+
+    if writableTestFont.gsFont.format_version == 2:
+        kerning.pop(
+            "vkrn", None
+        )  # glyphsLib does not support writing of vertical kerning
+
+    kerning = modifierFunction(kerning)
+
+    if expectedException:
+        with pytest.raises(GlyphsBackendError):
+            async with aclosing(writableTestFont):
+                await writableTestFont.putKerning(kerning)
+    else:
+        async with aclosing(writableTestFont):
+            await writableTestFont.putKerning(kerning)
+
+        reopened = getFileSystemBackend(writableTestFont.gsFilePath)
+        reopenedKerning = await reopened.getKerning()
+        assert reopenedKerning == kerning
+
+
+async def test_putKerning_master_order(tmpdir):
+    tmpdir = pathlib.Path(tmpdir)
+    srcPath = pathlib.Path(glyphs3Path)
+    dstPath = tmpdir / srcPath.name
+    shutil.copy(srcPath, dstPath)
+
+    testFont = getFileSystemBackend(dstPath)
+    async with aclosing(testFont):
+        await testFont.putKerning(await testFont.getKerning())
+
+    assert srcPath.read_text() == dstPath.read_text()
 
 
 async def test_getFeatures(testFont, referenceFont):
