@@ -834,3 +834,17 @@ async def test_locationBaseWrite(writableTestFont):
         ), glyphSource
 
     assert glyph.layers == savedGlyph.layers
+
+
+async def test_deleteGlyph(writableTestFont):
+    glyphName = "A"
+
+    async with aclosing(writableTestFont):
+        await writableTestFont.deleteGlyph(glyphName)
+
+    reopened = getFileSystemBackend(writableTestFont.gsFilePath)
+    glyphMap = await reopened.getGlyphMap()
+    assert glyphName not in glyphMap
+
+    glyph = await reopened.getGlyph(glyphName)
+    assert glyph is None
