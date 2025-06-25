@@ -692,6 +692,11 @@ putKerningTestData = [
 async def test_putKerning(writableTestFont, modifierFunction, expectedException):
     kerning = await writableTestFont.getKerning()
 
+    if writableTestFont.gsFont.format_version == 2:
+        kerning.pop(
+            "vkrn", None
+        )  # glyphsLib does not support writing of vertical kerning
+
     kerning = modifierFunction(kerning)
 
     async with aclosing(writableTestFont):
