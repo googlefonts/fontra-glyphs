@@ -660,6 +660,55 @@ async def test_getKerning(testFont, referenceFont):
     assert await testFont.getKerning() == await referenceFont.getKerning()
 
 
+async def test_putKerning_modify_pair(writableTestFont):
+    kerning = await writableTestFont.getKerning()
+
+    kerning["kern"].values["@A"]["@J"][0] = -40
+
+    async with aclosing(writableTestFont):
+        await writableTestFont.putKerning(kerning)
+
+    reopened = getFileSystemBackend(writableTestFont.gsFilePath)
+    reopenedKerning = await reopened.getKerning()
+    assert reopenedKerning == kerning
+
+
+async def test_putKerning_delete_pair(writableTestFont):
+    kerning = await writableTestFont.getKerning()
+
+    del kerning["kern"].values["@A"]["@J"]
+
+    async with aclosing(writableTestFont):
+        await writableTestFont.putKerning(kerning)
+
+    reopened = getFileSystemBackend(writableTestFont.gsFilePath)
+    reopenedKerning = await reopened.getKerning()
+    assert reopenedKerning == kerning
+
+
+async def test_putKerning_modify_groups(writableTestFont):
+    kerning = await writableTestFont.getKerning()
+
+    kerning["kern"].groupsSide1["A"].append("Adieresis")
+    kerning["kern"].groupsSide2["A"].append("Adieresis")
+
+    async with aclosing(writableTestFont):
+        await writableTestFont.putKerning(kerning)
+
+    reopened = getFileSystemBackend(writableTestFont.gsFilePath)
+    reopenedKerning = await reopened.getKerning()
+    assert reopenedKerning == kerning
+
+
+async def test_putKerning_delete_all_kerning(writableTestFont):
+    async with aclosing(writableTestFont):
+        await writableTestFont.putKerning({})
+
+    reopened = getFileSystemBackend(writableTestFont.gsFilePath)
+    kerning = await reopened.getKerning()
+    assert kerning == {}
+
+
 async def test_getFeatures(testFont, referenceFont):
     assert await testFont.getFeatures() == await referenceFont.getFeatures()
 
