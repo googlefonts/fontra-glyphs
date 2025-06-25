@@ -243,13 +243,16 @@ class GlyphsBackend:
             "GlyphsApp Backend: Editing UnitsPerEm is not yet implemented."
         )
 
+    @property
+    def _verticalKerningAttr(self):
+        return "vertKerning" if self.gsFont.format_version == 2 else "kerningVertical"
+
     async def getKerning(self) -> dict[str, Kerning]:
         # TODO: RTL kerning: https://docu.glyphsapp.com/#GSFont.kerningRTL
         kerningLTR = self._gsKerningToFontraKerning("kerning", "left", "right")
-        kerningAttr = (
-            "vertKerning" if self.gsFont.format_version == 2 else "kerningVertical"
+        kerningVertical = self._gsKerningToFontraKerning(
+            self._verticalKerningAttr, "top", "bottom"
         )
-        kerningVertical = self._gsKerningToFontraKerning(kerningAttr, "top", "bottom")
 
         kerning = {}
         if kerningLTR.values:
@@ -259,20 +262,19 @@ class GlyphsBackend:
         return kerning
 
     async def putKerning(self, kerning: dict[str, Kerning]) -> None:
-        kerningAttr = (
-            "vertKerning" if self.gsFont.format_version == 2 else "kerningVertical"
-        )
-
-        self._fontraKerningToGSKerning(kerning.get("kern"), "kerning", "left", "right")
-        self._fontraKerningToGSKerning(
-            kerning.get("vkrn"), kerningAttr, "top", "bottom"
-        )
         unknownKerningTypes = set(kerning) - set(["kern", "vkrn"])
         if unknownKerningTypes:
             unknownKerningTypes = ", ".join(sorted(unknownKerningTypes))
             raise GlyphsBackendError(
                 f"GlyphsApp Backend: '{unknownKerningTypes}' kern type(s) not supported."
             )
+
+        self._fontraKerningToGSKerning(kerning.get("kern"), "kerning", "left", "right")
+        self._fontraKerningToGSKerning(
+            kerning.get("vkrn"), self._verticalKerningAttr, "top", "bottom"
+        )
+
+        self._writeFontData()
 
     def _gsKerningToFontraKerning(self, kerningAttr, side1, side2):
         gsPrefix1 = GS_KERN_GROUP_PREFIXES[side1]
@@ -319,6 +321,10 @@ class GlyphsBackend:
         )
 
     def _fontraKerningToGSKerning(self, kerning, kerningAttr, side1, side2):
+        if kerning is None:
+            setattr(self.gsFont, kerningAttr, {})
+            return
+
         raise NotImplementedError()
 
     async def getFeatures(self) -> OpenTypeFeatures:
