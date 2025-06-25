@@ -1036,6 +1036,7 @@ class GlyphsPackageBackend(GlyphsBackend):
         out = openstepPlistDumps(rawFontData)
         filePath = self.gsFilePath / "fontinfo.plist"
         filePath.write_text(out, encoding="utf=8")
+
         if changedGlyphs:
             for glyphName in sorted(changedGlyphs):
                 self._writeRawGlyph(glyphName, False)
