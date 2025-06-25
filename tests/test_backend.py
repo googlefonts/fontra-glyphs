@@ -848,3 +848,20 @@ async def test_deleteGlyph(writableTestFont):
 
     glyph = await reopened.getGlyph(glyphName)
     assert glyph is None
+
+
+async def test_writeFontData_glyphspackage_empty_glyphs_list(tmpdir):
+    tmpdir = pathlib.Path(tmpdir)
+    srcPath = pathlib.Path(glyphsPackagePath)
+    dstPath = tmpdir / srcPath.name
+    fontInfoPath = dstPath / "fontinfo.plist"
+    shutil.copytree(srcPath, dstPath)
+    fontInfoBefore = fontInfoPath.read_text()
+
+    testFont = getFileSystemBackend(dstPath)
+    async with aclosing(testFont):
+        await testFont.putKerning(await testFont.getKerning())
+
+    fontInfoAfter = fontInfoPath.read_text()
+
+    assert fontInfoAfter == fontInfoBefore
