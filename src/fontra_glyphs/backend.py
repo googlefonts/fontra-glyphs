@@ -1053,6 +1053,11 @@ class GlyphsPackageBackend(GlyphsBackend):
 
     def _writeRawFontData(self, changedGlyphs=None):
         rawFontData = convertMatchesToTuples(self.rawFontData, matchTreeFont)
+
+        # There can be an empty glyphs list at this point, which we don't want
+        # to write
+        rawFontData.pop("glyphs", None)
+
         out = openstepPlistDumps(rawFontData)
         filePath = self.gsFilePath / "fontinfo.plist"
         filePath.write_text(out, encoding="utf=8")
