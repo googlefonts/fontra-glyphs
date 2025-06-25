@@ -263,9 +263,24 @@ class GlyphsBackend:
         return kerning
 
     async def putKerning(self, kerning: dict[str, Kerning]) -> None:
-        raise NotImplementedError(
-            "GlyphsApp Backend: Editing Kerning is not yet implemented."
+        kerningAttr = (
+            "vertKerning" if self.gsFont.format_version == 2 else "kerningVertical"
         )
+
+        for kernTag, kerningTable in kerning.items():
+            if kernTag == "kern":
+                self._fontraKerningToGSKerning(kerningTable, "kerning", "left", "right")
+            elif kernTag == "vkrn":
+                self._fontraKerningToGSKerning(
+                    kerningTable, kerningAttr, "top", "bottom"
+                )
+            else:
+                raise NotImplementedError(
+                    f"GlyphsApp Backend: '{kernTag}' kern type not supported."
+                )
+
+    def _fontraKerningToGSKerning(self, kerning, kerningAttr, side1, side2):
+        raise NotImplementedError()
 
     async def getFeatures(self) -> OpenTypeFeatures:
         return OpenTypeFeatures(
