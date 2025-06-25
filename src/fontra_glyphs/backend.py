@@ -245,15 +245,11 @@ class GlyphsBackend:
 
     async def getKerning(self) -> dict[str, Kerning]:
         # TODO: RTL kerning: https://docu.glyphsapp.com/#GSFont.kerningRTL
-        kerningLTR = gsKerningToFontraKerning(
-            self.gsFont, self.kerningGroups, "kerning", "left", "right"
-        )
+        kerningLTR = self._gsKerningToFontraKerning("kerning", "left", "right")
         kerningAttr = (
             "vertKerning" if self.gsFont.format_version == 2 else "kerningVertical"
         )
-        kerningVertical = gsKerningToFontraKerning(
-            self.gsFont, self.kerningGroups, kerningAttr, "top", "bottom"
-        )
+        kerningVertical = self._gsKerningToFontraKerning(kerningAttr, "top", "bottom")
 
         kerning = {}
         if kerningLTR.values:
@@ -278,6 +274,50 @@ class GlyphsBackend:
                 raise NotImplementedError(
                     f"GlyphsApp Backend: '{kernTag}' kern type not supported."
                 )
+
+    def _gsKerningToFontraKerning(self, kerningAttr, side1, side2):
+        gsPrefix1 = GS_KERN_GROUP_PREFIXES[side1]
+        gsPrefix2 = GS_KERN_GROUP_PREFIXES[side2]
+
+        groupsSide1 = deepcopy(self.kerningGroups[side1])
+        groupsSide2 = deepcopy(self.kerningGroups[side2])
+
+        sourceIdentifiers = []
+        valueDicts: dict[str, dict[str, dict]] = defaultdict(lambda: defaultdict(dict))
+
+        defaultMasterID = get_regular_master(self.gsFont).id
+
+        for gsMaster in self.gsFont.masters:
+            kernDict = getattr(self.gsFont, kerningAttr, {}).get(gsMaster.id, {})
+            if not kernDict and gsMaster.id != defaultMasterID:
+                # Even if the default master does not contain kerning, it makes life
+                # easier down the road if we include this empty kerning, lest we run
+                # into "missing base master"-type interpolation errors.
+                continue
+
+            sourceIdentifiers.append(gsMaster.id)
+
+            for name1, name2Dict in kernDict.items():
+                name1 = translateGroupName(name1, gsPrefix1, "@")
+
+                for name2, value in name2Dict.items():
+                    name2 = translateGroupName(name2, gsPrefix2, "@")
+                    valueDicts[name1][name2][gsMaster.id] = value
+
+        values = {
+            left: {
+                right: [valueDict.get(key) for key in sourceIdentifiers]
+                for right, valueDict in rightDict.items()
+            }
+            for left, rightDict in valueDicts.items()
+        }
+
+        return Kerning(
+            groupsSide1=groupsSide1,
+            groupsSide2=groupsSide2,
+            sourceIdentifiers=sourceIdentifiers,
+            values=values,
+        )
 
     def _fontraKerningToGSKerning(self, kerning, kerningAttr, side1, side2):
         raise NotImplementedError()
@@ -1070,53 +1110,6 @@ def fixSourceLocations(sources, smartAxisNames):
 
 def translateGroupName(name, oldPrefix, newPrefix):
     return newPrefix + name[len(oldPrefix) :] if name.startswith(oldPrefix) else name
-
-
-def gsKerningToFontraKerning(
-    gsFont, groupsBySide, kerningAttr, side1, side2
-) -> Kerning:
-    gsPrefix1 = GS_KERN_GROUP_PREFIXES[side1]
-    gsPrefix2 = GS_KERN_GROUP_PREFIXES[side2]
-
-    groupsSide1 = deepcopy(groupsBySide[side1])
-    groupsSide2 = deepcopy(groupsBySide[side2])
-
-    sourceIdentifiers = []
-    valueDicts: dict[str, dict[str, dict]] = defaultdict(lambda: defaultdict(dict))
-
-    defaultMasterID = get_regular_master(gsFont).id
-
-    for gsMaster in gsFont.masters:
-        kernDict = getattr(gsFont, kerningAttr, {}).get(gsMaster.id, {})
-        if not kernDict and gsMaster.id != defaultMasterID:
-            # Even if the default master does not contain kerning, it makes life
-            # easier down the road if we include this empty kerning, lest we run
-            # into "missing base master"-type interpolation errors.
-            continue
-
-        sourceIdentifiers.append(gsMaster.id)
-
-        for name1, name2Dict in kernDict.items():
-            name1 = translateGroupName(name1, gsPrefix1, "@")
-
-            for name2, value in name2Dict.items():
-                name2 = translateGroupName(name2, gsPrefix2, "@")
-                valueDicts[name1][name2][gsMaster.id] = value
-
-    values = {
-        left: {
-            right: [valueDict.get(key) for key in sourceIdentifiers]
-            for right, valueDict in rightDict.items()
-        }
-        for left, rightDict in valueDicts.items()
-    }
-
-    return Kerning(
-        groupsSide1=groupsSide1,
-        groupsSide2=groupsSide2,
-        sourceIdentifiers=sourceIdentifiers,
-        values=values,
-    )
 
 
 def gsMastersToFontraFontSources(gsFont, locationByMasterID):
