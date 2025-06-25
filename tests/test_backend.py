@@ -722,6 +722,19 @@ async def test_putKerning(writableTestFont, modifierFunction, expectedException)
         assert reopenedKerning == kerning
 
 
+async def test_putKerning_master_order(tmpdir):
+    tmpdir = pathlib.Path(tmpdir)
+    srcPath = pathlib.Path(glyphs3Path)
+    dstPath = tmpdir / srcPath.name
+    shutil.copy(srcPath, dstPath)
+
+    testFont = getFileSystemBackend(dstPath)
+    async with aclosing(testFont):
+        await testFont.putKerning(await testFont.getKerning())
+
+    assert srcPath.read_text() == dstPath.read_text()
+
+
 async def test_getFeatures(testFont, referenceFont):
     assert await testFont.getFeatures() == await referenceFont.getFeatures()
 
