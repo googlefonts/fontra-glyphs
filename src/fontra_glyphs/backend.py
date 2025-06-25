@@ -2,7 +2,7 @@ import hashlib
 import io
 import pathlib
 import uuid
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 from copy import deepcopy
 from os import PathLike
 from types import SimpleNamespace
@@ -427,7 +427,12 @@ class GlyphsBackend:
                     if value is not None:
                         kerningPerSource[sourceIdentifier][leftName][rightName] = value
 
-        kerningPerSource = {k: dict(v) for k, v in kerningPerSource.items()}
+        kerningPerSource = OrderedDict(
+            {
+                gsMaster.id: dict(kerningPerSource.get(gsMaster.id, {}))
+                for gsMaster in self.gsFont.masters
+            }
+        )
 
         setattr(self.gsFont, kerningAttr, kerningPerSource)
 
