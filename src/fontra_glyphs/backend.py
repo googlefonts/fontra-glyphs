@@ -278,6 +278,7 @@ class GlyphsBackend:
             kerning.get("vkrn"), self._verticalKerningAttr, "top", "bottom"
         )
 
+        self._updateKerningGroups()
         self._writeFontData()
 
     def _gsKerningToFontraKerning(self, kerningAttr, side1, side2):
@@ -327,8 +328,13 @@ class GlyphsBackend:
     def _fontraKerningToGSKerning(self, kerning, kerningAttr, side1, side2):
         if kerning is None:
             setattr(self.gsFont, kerningAttr, {})
+            self.kerningGroups[side1].clear()
+            self.kerningGroups[side2].clear()
             return
 
+        raise NotImplementedError()
+
+    def _updateKerningGroups(self):
         raise NotImplementedError()
 
     async def getFeatures(self) -> OpenTypeFeatures:
