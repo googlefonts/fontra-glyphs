@@ -195,7 +195,7 @@ class GlyphsBackend:
 
     def _readGlyphMapAndKerningGroups(
         self,
-    ) -> tuple[dict[str, list[int]], dict[str, tuple[str, str]]]:
+    ) -> tuple[dict[str, list[int]], dict[str, dict[str, list[str]]]]:
         glyphMap = {}
         kerningGroups: dict = defaultdict(lambda: defaultdict(list))
 
@@ -333,9 +333,9 @@ class GlyphsBackend:
     async def putKerning(self, kerning: dict[str, Kerning]) -> None:
         unknownKerningTypes = set(kerning) - set(["kern", "vkrn"])
         if unknownKerningTypes:
-            unknownKerningTypes = ", ".join(sorted(unknownKerningTypes))
+            s = ", ".join(sorted(unknownKerningTypes))
             raise GlyphsBackendError(
-                f"GlyphsApp Backend: '{unknownKerningTypes}' kern type(s) not supported."
+                f"GlyphsApp Backend: '{s}' kern type(s) not supported."
             )
 
         self._fontraKerningToGSKerning(kerning.get("kern"), "kerning", "left", "right")
@@ -346,7 +346,9 @@ class GlyphsBackend:
         changedGlyphs = self._updateKerningGroups()
         self._writeFontData(changedGlyphs)
 
-    def _gsKerningToFontraKerning(self, kerningAttr, side1, side2):
+    def _gsKerningToFontraKerning(
+        self, kerningAttr: str, side1: str, side2: str
+    ) -> Kerning:
         gsPrefix1 = GS_KERN_GROUP_PREFIXES[side1]
         gsPrefix2 = GS_KERN_GROUP_PREFIXES[side2]
 
