@@ -150,9 +150,7 @@ class GlyphsBackend:
             self.locationByMasterID[master.id] = location
             self.masterIDByLocationTuple[locationToTuple(location)] = master.id
 
-        self.glyphMap, self.kerningGroups = self._readGlyphMapAndKerningGroups(
-            rawGlyphsData
-        )
+        self.glyphMap, self.kerningGroups = self._readGlyphMapAndKerningGroups()
 
         axis: FontAxis | DiscreteFontAxis
         axes: list[FontAxis | DiscreteFontAxis] = []
@@ -188,7 +186,7 @@ class GlyphsBackend:
         return rawFontData, rawGlyphsData
 
     def _readGlyphMapAndKerningGroups(
-        self, rawGlyphsData: list
+        self,
     ) -> tuple[dict[str, list[int]], dict[str, tuple[str, str]]]:
         glyphMap = {}
         kerningGroups: dict = defaultdict(lambda: defaultdict(list))
@@ -199,7 +197,7 @@ class GlyphsBackend:
             else GS_FORMAT_3_KERN_SIDES
         )
 
-        for glyphData in rawGlyphsData:
+        for glyphData in self.rawGlyphsData:
             glyphName = glyphData["glyphname"]
 
             # extract code points
