@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import io
 import pathlib
@@ -32,6 +33,7 @@ from fontra.core.classes import (
 from fontra.core.discretevariationmodel import findNearestLocationIndex
 from fontra.core.path import PackedPathPointPen
 from fontra.core.protocols import WritableFontBackend
+from fontra.core.threading import runInThread
 from fontra.core.varutils import (
     locationToTuple,
     makeDenseLocation,
@@ -107,6 +109,9 @@ class GlyphsBackend:
         self = cls()
         self._setupFromPath(path)
         return self
+
+    def __init__(self):
+        self._writeLock = asyncio.Lock()
 
     def _setupFromPath(self, path: PathLike) -> None:
         gsFont = glyphsLib.classes.GSFont()
@@ -343,6 +348,10 @@ class GlyphsBackend:
         return kerning
 
     async def putKerning(self, kerning: dict[str, Kerning]) -> None:
+        async with self._writeLock:
+            return await runInThread(self._putKerning, kerning)
+
+    def _putKerning(self, kerning: dict[str, Kerning]) -> None:
         unknownKerningTypes = set(kerning) - set(["kern", "vkrn"])
         if unknownKerningTypes:
             s = ", ".join(sorted(unknownKerningTypes))
@@ -461,6 +470,10 @@ class GlyphsBackend:
         )
 
     async def putFeatures(self, features: OpenTypeFeatures) -> None:
+        async with self._writeLock:
+            return await runInThread(self._putFeatures, features)
+
+    def _putFeatures(self, features: OpenTypeFeatures) -> None:
         if features.language != "fea":
             raise NotImplementedError(
                 "GlyphsApp Backend: skip writing features in unsupported language: "
@@ -669,6 +682,12 @@ class GlyphsBackend:
         return openstep_plist.load(f, use_numbers=True)
 
     async def putGlyph(
+        self, glyphName: str, glyph: VariableGlyph, codePoints: list[int]
+    ) -> None:
+        async with self._writeLock:
+            return await runInThread(self._putGlyph, glyphName, glyph, codePoints)
+
+    def _putGlyph(
         self, glyphName: str, glyph: VariableGlyph, codePoints: list[int]
     ) -> None:
         assert isinstance(codePoints, list)
