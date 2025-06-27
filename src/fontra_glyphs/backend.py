@@ -689,7 +689,7 @@ class GlyphsBackend:
         self._variableGlyphToGSGlyph(glyph, gsGlyph)
 
         # Update unicodes: need to be converted from decimal to hex strings
-        gsGlyph.unicodes = [str(hex(codePoint)) for codePoint in codePoints]
+        gsGlyph.unicodes = [f"{codePoint:04X}" for codePoint in codePoints]
 
         rawGlyphData = self._getRawData(gsGlyph)
         # Replace original "raw" object with new "raw" object
