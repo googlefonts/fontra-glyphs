@@ -865,3 +865,19 @@ async def test_writeFontData_glyphspackage_empty_glyphs_list(tmpdir):
     fontInfoAfter = fontInfoPath.read_text()
 
     assert fontInfoAfter == fontInfoBefore
+
+
+@pytest.mark.parametrize(
+    "glyphName, expectedUsedBy",
+    [
+        ("A", ["A-cy", "Adieresis"]),
+        ("a", ["adieresis"]),
+        ("_part.shoulder", ["h", "m", "n"]),
+        ("dieresis", ["Adieresis", "adieresis"]),
+        ("V", []),
+        ("V.undefined", []),
+    ],
+)
+async def test_findGlyphsThatUseGlyph(testFont, glyphName, expectedUsedBy):
+    usedBy = await testFont.findGlyphsThatUseGlyph(glyphName)
+    assert usedBy == expectedUsedBy
