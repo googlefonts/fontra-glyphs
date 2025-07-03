@@ -860,6 +860,21 @@ class GlyphsBackend:
     async def aclose(self) -> None:
         pass
 
+    async def findGlyphsThatUseGlyph(self, glyphName: str) -> list[str]:
+        componentsKey = "components" if self.gsFont.format_version == 2 else "shapes"
+        baseGlyphKey = "name" if self.gsFont.format_version == 2 else "ref"
+
+        usedBy = set()
+
+        for glyphData in self.rawGlyphsData:
+            for layerData in glyphData["layers"]:
+                for compo in layerData.get(componentsKey, []):
+                    baseGlyph = compo.get(baseGlyphKey)
+                    if baseGlyph == glyphName:
+                        usedBy.add(glyphData["glyphname"])
+
+        return sorted(usedBy)
+
 
 def getSourceLayerNames(variableGlyph):
     sourceLayers = {
