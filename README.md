@@ -1,3 +1,5 @@
+This repository is now archived. Go to https://github.com/fontra/fontra-glyphs for new development.
+
 # fontra-glyphs
 
 Fontra file system backend for the Glyphs app file format.
